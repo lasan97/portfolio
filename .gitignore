@@ -1,3 +1,7 @@
+HELP.md
+.gradle
+build/
+
 # Default ignored files
 /shelf/
 /.idea/workspace.xml
