@@ -1,3 +1,5 @@
-import App from './App.vue'
+import App from './App.vue';
+import router from './providers/router';
+import store from './providers/store';
 
-export default App
+export { App, router, store };

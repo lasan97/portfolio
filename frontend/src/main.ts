@@ -1,17 +1,8 @@
-import { createApp } from 'vue'
-import App from './app/App.vue'
-import router from './app/router'
-import store from './app/store'
+import { createApp } from 'vue';
+import { App, router, store } from './app';
+import './shared/assets/styles/main.css';
 
-// Tailwind CSS 가져오기
-import './app/styles/main.css'
-
-// 앱 생성 및 마운트
-const app = createApp(App)
-
-// 플러그인 사용
-app.use(store)
-app.use(router)
-
-// 앱 마운트
-app.mount('#app')
+createApp(App)
+  .use(router)
+  .use(store)
+  .mount('#app');
