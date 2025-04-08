@@ -1,14 +1,5 @@
 // 환경 변수 및 앱 설정
-
-/**
- * API 기본 URL
- */
-export const API_URL = process.env.VUE_APP_API_URL || 'http://localhost:8081/api';
-
-/**
- * 프론트엔드 기본 URL
- */
-export const BASE_URL = process.env.VUE_APP_BASE_URL || 'http://localhost:8080';
+export * from './env';
 
 /**
  * 페이지네이션 기본 설정

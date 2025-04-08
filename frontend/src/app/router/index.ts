@@ -32,7 +32,8 @@ const routes: Array<RouteRecordRaw> = [
 ]
 
 const router = createRouter({
-  history: createWebHistory(process.env.BASE_URL),
+  // Vite에서는 import.meta.env를 사용합니다
+  history: createWebHistory(import.meta.env.BASE_URL as string || '/'),
   routes
 })
 

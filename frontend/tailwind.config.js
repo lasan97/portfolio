@@ -1,11 +1,13 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
-    "./src/**/*.{vue,js,ts,jsx,tsx}",
-    "./public/index.html",
+    "./index.html",
+    "./src/**/*.{vue,js,ts,jsx,tsx}"
   ],
   theme: {
-    extend: {},
+    extend: {
+      // 추가 테마 설정
+    },
   },
   plugins: [],
 }

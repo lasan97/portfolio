@@ -1,7 +1,5 @@
 import axios from 'axios'
-
-// API 기본 설정
-const API_URL = process.env.VUE_APP_API_URL || 'http://localhost:8081/api'
+import { API_URL } from '../config'
 
 // Axios 인스턴스 생성
 export const apiInstance = axios.create({
