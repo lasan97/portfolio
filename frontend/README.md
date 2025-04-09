@@ -45,6 +45,7 @@ npm run lint
   NODE_ENV=development
   VITE_API_URL=http://localhost:8081/api  # 백엔드 API URL
   VITE_BASE_URL=http://localhost:8080     # 프론트엔드 URL
+  VITE_GITHUB_CLIENT_ID=your_github_client_id # Github Client_id
   ```
 - `vite.config.ts`: Vite 설정
 
