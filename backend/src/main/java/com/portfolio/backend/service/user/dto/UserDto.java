@@ -1,5 +1,6 @@
-package com.portfolio.backend.domain.user.dto;
+package com.portfolio.backend.service.user.dto;
 
+import com.portfolio.backend.domain.user.entity.User;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -14,4 +15,5 @@ public class UserDto {
     private String email;
     private String nickname;
     private String profileImageUrl;
+    private User.Role role;
 }

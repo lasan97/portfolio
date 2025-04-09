@@ -1,6 +1,4 @@
 spring:
-  config:
-    import: .env[.properties]
   datasource:
     url: jdbc:h2:mem:testdb
     driver-class-name: org.h2.Driver
@@ -25,16 +23,10 @@ spring:
           github:
             client-id: ${GITHUB_CLIENT_ID}
             client-secret: ${GITHUB_CLIENT_SECRET}
-            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
-            scope:
-              - user:email
-              - read:user
 
 jwt:
   secret: ${JWT_SECRET:12345678901234567890123456789012}
   expiration: 86400000 # 24시간
 
-test-env: ${TEST_STR}
-
 server:
-  port: 8080
+  port: 8081

@@ -1,8 +1,8 @@
-package com.portfolio.backend.domain.user.controller;
+package com.portfolio.backend.controller.user;
 
 import com.portfolio.backend.common.security.UserDetailsImpl;
-import com.portfolio.backend.domain.user.dto.UserDto;
-import com.portfolio.backend.domain.user.service.UserService;
+import com.portfolio.backend.service.user.dto.UserDto;
+import com.portfolio.backend.service.user.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;

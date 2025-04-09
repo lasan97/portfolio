@@ -1,6 +1,6 @@
-package com.portfolio.backend.domain.user.service;
+package com.portfolio.backend.service.user;
 
-import com.portfolio.backend.domain.user.dto.UserDto;
+import com.portfolio.backend.service.user.dto.UserDto;
 import com.portfolio.backend.domain.user.entity.User;
 import com.portfolio.backend.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;

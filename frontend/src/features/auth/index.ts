@@ -2,3 +2,4 @@
 export { default as LoginForm } from './ui/LoginForm.vue';
 export { default as authModule } from './model/store';
 export * from './model/types';
+export * from './api';

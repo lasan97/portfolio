@@ -1,5 +1,6 @@
 package com.portfolio.backend.common.exception;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -12,6 +13,7 @@ import java.time.LocalDateTime;
  * 전역 예외 처리를 담당하는 클래스
  */
 @ControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
 
 	/**
@@ -38,6 +40,7 @@ public class GlobalExceptionHandler {
 	public ResponseEntity<ErrorResponse> handleGlobalException(
 			Exception ex, WebRequest request) {
 
+		log.error("{}: ",ex.getClass(), ex);
 		ErrorResponse errorResponse = new ErrorResponse(
 				LocalDateTime.now(),
 				HttpStatus.INTERNAL_SERVER_ERROR.value(),

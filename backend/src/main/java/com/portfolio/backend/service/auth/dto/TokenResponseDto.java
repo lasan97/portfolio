@@ -1,6 +1,6 @@
-package com.portfolio.backend.domain.auth.dto;
+package com.portfolio.backend.service.auth.dto;
 
-import com.portfolio.backend.domain.user.dto.UserDto;
+import com.portfolio.backend.service.user.dto.UserDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

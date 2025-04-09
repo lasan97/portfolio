@@ -25,7 +25,8 @@ export const ROUTES = {
   LOGIN: '/login',
   REGISTER: '/register',
   PROFILE: '/profile',
-  NOT_FOUND: '/404'
+  NOT_FOUND: '/404',
+  OAUTH_CALLBACK: '/oauth/callback'
 };
 
 /**

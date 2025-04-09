@@ -42,13 +42,16 @@ export default defineComponent({
 
     onMounted(async () => {
       try {
-        const token = route.query.token as string;
+        const code = route.query.code as string;
         
-        if (!token) {
-          throw new Error('토큰이 없습니다.');
+        if (!code) {
+          throw new Error('인증 코드가 없습니다.');
         }
         
-        await store.dispatch('auth/handleTokenFromCallback', token);
+        // GitHub OAuth 콜백 코드로 로그인/회원가입 처리
+        await store.dispatch('auth/handleOAuthCallback', code);
+        
+        // 로그인 성공 시 홈으로 이동
         router.push('/');
       } catch (err: any) {
         error.value = err.message || '로그인 처리 중 오류가 발생했습니다.';

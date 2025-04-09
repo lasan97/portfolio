@@ -1,7 +1,8 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
-import HomePage from '@/pages/home'
+import { HomePage } from '@/pages/home'
 import { LoginForm } from '@/features/auth/login'
 import { RegisterForm } from '@/features/auth/register'
+import { OAuthCallbackPage } from '@/pages/auth'
 import { ROUTES } from '@/shared/config'
 
 const routes: Array<RouteRecordRaw> = [
@@ -19,6 +20,11 @@ const routes: Array<RouteRecordRaw> = [
     path: ROUTES.REGISTER,
     name: 'register',
     component: RegisterForm
+  },
+  {
+    path: ROUTES.OAUTH_CALLBACK,
+    name: 'oauth-callback',
+    component: OAuthCallbackPage
   },
   {
     path: ROUTES.NOT_FOUND,

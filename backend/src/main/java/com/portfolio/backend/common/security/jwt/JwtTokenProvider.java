@@ -13,7 +13,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.Map;
 
 @Slf4j
 @Component
@@ -34,25 +37,38 @@ public class JwtTokenProvider {
     }
 
     public String createToken(User user) {
-        Date now = new Date();
-        Date validity = new Date(now.getTime() + this.tokenValidityInMilliseconds);
+        return createToken(user.getId(), user.getEmail(), user.getRole());
+    }
+    
+    public String createToken(Long userId) {
+        // 유저 ID만 있는 경우 기본 ROLE_USER로 생성
+        return createToken(userId, "user_" + userId + "@example.com", User.Role.USER);
+    }
+    
+    private String createToken(Long userId, String email, User.Role role) {
+        Instant now = Instant.now();
+        Instant validity = now.plus(tokenValidityInMilliseconds, ChronoUnit.MILLIS);
+
+        Map<String, Object> claims = Map.of(
+            "id", userId,
+            "role", role.name()
+        );
 
         return Jwts.builder()
-                .setSubject(user.getEmail())
-                .claim("id", user.getId())
-                .claim("role", user.getRole().name())
-                .setIssuedAt(now)
-                .setExpiration(validity)
+                .subject(email)
+                .claims(claims)
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(validity))
                 .signWith(key)
                 .compact();
     }
 
     public Authentication getAuthentication(String token) {
-        Claims claims = Jwts.parserBuilder()
-                .setSigningKey(key)
+        var claims = Jwts.parser()
+                .verifyWith((javax.crypto.SecretKey) key)
                 .build()
-                .parseClaimsJws(token)
-                .getBody();
+                .parseSignedClaims(token)
+                .getPayload();
 
         User.Role role = User.Role.valueOf(claims.get("role", String.class));
         
@@ -69,7 +85,7 @@ public class JwtTokenProvider {
 
     public boolean validateToken(String token) {
         try {
-            Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+            Jwts.parser().verifyWith((javax.crypto.SecretKey) key).build().parseSignedClaims(token);
             return true;
         } catch (SecurityException | MalformedJwtException e) {
             log.error("Invalid JWT signature");

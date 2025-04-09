@@ -25,7 +25,7 @@ public class User {
     private String nickname;
 
     @Column(nullable = false)
-    private String provider;
+    private Oauth2ProviderType provider;
 
     @Column(nullable = false, unique = true)
     private String providerId;
