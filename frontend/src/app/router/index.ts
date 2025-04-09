@@ -2,6 +2,7 @@ import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
 import { HomePage } from '@pages/home'
 import { LoginPage, OAuthCallbackPage } from '@pages/auth'
 import { ProfilePage } from '@pages/profile'
+import { SsrPage } from '@pages/ssr'
 import { ROUTES } from '@shared/config'
 
 const routes: Array<RouteRecordRaw> = [
@@ -25,6 +26,12 @@ const routes: Array<RouteRecordRaw> = [
     name: 'profile',
     component: ProfilePage,
     meta: { requiresAuth: true }
+  },
+  {
+    path: ROUTES.SSR,
+    name: 'ssr',
+    component: SsrPage,
+    meta: { ssr: true } // SSR로 처리할 페이지
   },
   {
     path: ROUTES.NOT_FOUND,

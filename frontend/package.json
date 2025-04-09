@@ -4,9 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "vite",
-    "build": "vite build --mode local",
+    "build": "vite build",
     "build:dev": "vite build --mode development",
     "build:prod": "vite build --mode production",
+    "build:ssr": "npm run build:client && npm run build:server",
+    "build:client": "vite build --mode production --outDir dist/client",
+    "build:server": "cross-env SSR=true vite build --mode production --outDir dist/server --ssr src/entry-server.ts",
+    "serve:ssr": "node server.js",
     "type-check": "vue-tsc --noEmit",
     "preview": "vite preview --port 8080",
     "serve": "serve -s dist -p 8080",
@@ -14,6 +18,7 @@
   },
   "dependencies": {
     "axios": "^1.8.4",
+    "express": "^4.18.3",
     "vue": "^3.3.4",
     "vue-router": "^4.2.4",
     "pinia": "^2.1.4",
@@ -23,6 +28,7 @@
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^4.2.3",
+    "cross-env": "^7.0.3",
     "typescript": "~4.9.5",
     "vite": "^4.4.9",
     "vue-tsc": "^1.8.5",

@@ -1,0 +1,104 @@
+# SSR(Server-Side Rendering) 구현 가이드
+
+본 문서는 Vue 3 + Vite 환경에서 SSR(Server-Side Rendering)을 구현하는 방법에 대한 가이드입니다.
+
+## 개요
+
+SSR은 웹 애플리케이션의 초기 렌더링을 서버에서 수행하여 다음과 같은 이점을 제공합니다:
+
+- 초기 페이지 로딩 속도 향상
+- 검색 엔진 최적화(SEO) 개선
+- 소셜 미디어 공유 시 메타데이터 제공
+- 느린 네트워크 환경에서 더 나은 사용자 경험
+
+## 구현 구조
+
+SSR 구현은
+ 다음 주요 파일로 구성되어 있습니다:
+
+1. **진입점 파일**
+   - `src/entry-client.ts`: 클라이언트 측 하이드레이션을 담당
+   - `src/entry-server.ts`: 서버 측 렌더링을 담당
+
+2. **서버 파일**
+   - `server.js`: Express 기반의 Node.js 서버 구현
+
+3. **설정 파일**
+   - `vite.config.ts`: SSR 관련 Vite 설정
+   - `package.json`: SSR 관련 스크립트
+
+## 작동 방식
+
+1. 사용자가 웹사이트에 접속하면 서버는 `entry-server.ts`를 사용하여 Vue 앱을 HTML 문자열로 렌더링합니다.
+2. 렌더링된 HTML은 초기 페이지 로드 시 클라이언트에 전송됩니다.
+3. 클라이언트에서는 `entry-client.ts`가 로드되어 서버에서 렌더링된 HTML에 이벤트 리스너와 상태를 "하이드레이션(hydration)"합니다.
+4. 하이드레이션 이후에는 일반적인 SPA처럼 작동합니다.
+
+## 사용 방법
+
+### 개발 모드
+
+개발 중에는 일반적인 SPA 방식으로 작업할 수 있습니다:
+
+```bash
+npm run dev
+```
+
+### SSR 빌드 및 실행
+
+SSR 모드로 애플리케이션을 빌드하고 실행하려면:
+
+```bash
+# 클라이언트 및 서버 번들 빌드
+npm run build:ssr
+
+# SSR 서버 실행
+npm run serve:ssr
+```
+
+## 메타데이터 및 SEO
+
+SSR 환경에서 메타데이터와 SEO 최적화를 위해 다음과 같은 방법을 사용할 수 있습니다:
+
+```vue
+<script setup>
+import { useHead } from '@vueuse/head';
+
+// 메타데이터 설정
+useHead({
+  title: '페이지 제목',
+  meta: [
+    { name: 'description', content: '페이지 설명' },
+    { property: 'og:title', content: '공유 제목' },
+    { property: 'og:description', content: '공유 설명' },
+    { property: 'og:image', content: '공유 이미지 URL' }
+  ]
+});
+</script>
+```
+
+## 주의사항
+
+1. **window 및 document 접근**: 서버에서는 window나 document 객체가 없으므로, 이에 의존하는 코드는 조건부로 실행해야 합니다.
+
+```typescript
+if (typeof window !== 'undefined') {
+  // 클라이언트 측에서만 실행할 코드
+}
+```
+
+2. **데이터 페칭**: 데이터 페칭은 서버에서 발생한 후 클라이언트에 전달되어야 합니다.
+
+3. **상태 관리**: Pinia 스토어 상태가 서버에서 클라이언트로 전달되도록 설정해야 합니다.
+
+## 확장 및 개선 방안
+
+- **코드 분할**: 경로 기반 코드 분할을 통해 성능 최적화
+- **프리페치**: 링크에 마우스 오버 시 데이터 프리페치로 인터랙션 속도 향상
+- **성능 모니터링**: 서버 및 클라이언트 렌더링 성능 모니터링 추가
+- **스트리밍 SSR**: 대규모 페이지를 위한 스트리밍 렌더링 구현
+
+## 참고 자료
+
+- [Vue.js SSR 가이드](https://v3.vuejs.org/guide/ssr/introduction.html)
+- [Vite SSR 문서](https://vitejs.dev/guide/ssr.html)

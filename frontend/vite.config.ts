@@ -3,7 +3,9 @@ import vue from '@vitejs/plugin-vue'
 import path from 'path'
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => {
+export default defineConfig(({ mode, command }) => {
+  const isSSR = process.env.SSR === 'true'
+  
   return {
     plugins: [vue()],
     resolve: {
@@ -16,6 +18,12 @@ export default defineConfig(({ mode }) => {
         '@entities': path.resolve(__dirname, './src/entities'),
         '@shared': path.resolve(__dirname, './src/shared')
       }
+    },
+    build: {
+      minify: mode === 'production',
+      sourcemap: mode !== 'production',
+      ssrManifest: isSSR,
+      outDir: isSSR ? 'dist/server' : 'dist/client',
     },
     server: {
       port: 8080,

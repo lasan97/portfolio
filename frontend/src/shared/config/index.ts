@@ -25,7 +25,8 @@ export const ROUTES = {
   LOGIN: '/login',
   PROFILE: '/profile',
   NOT_FOUND: '/404',
-  OAUTH_CALLBACK: '/oauth2/callback'
+  OAUTH_CALLBACK: '/oauth2/callback',
+  SSR: '/ssr'
 };
 
 /**
