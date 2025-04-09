@@ -1,47 +1,27 @@
 <template>
-  <div class="bg-white rounded-lg overflow-hidden" :class="{ 'shadow-md': shadow }">
-    <div v-if="$slots.header" class="px-4 py-3 border-b border-gray-200 font-semibold">
-      <slot name="header"></slot>
+  <div class="bg-white rounded-lg shadow-md overflow-hidden">
+    <div v-if="title" class="px-6 py-4 border-b border-gray-200">
+      <h3 class="text-lg font-medium text-gray-900">{{ title }}</h3>
     </div>
-    <div class="p-4" :style="customPadding">
+    <div class="px-6 py-4">
       <slot></slot>
     </div>
-    <div v-if="$slots.footer" class="px-4 py-3 border-t border-gray-200">
+    <div v-if="$slots.footer" class="px-6 py-4 bg-gray-50 border-t border-gray-200">
       <slot name="footer"></slot>
     </div>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, computed } from 'vue';
+import { defineComponent } from 'vue';
 
 export default defineComponent({
-  name: 'BaseCard',
+  name: 'Card',
   props: {
-    /**
-     * 그림자 활성화 여부
-     */
-    shadow: {
-      type: Boolean,
-      default: true
-    },
-    /**
-     * 카드 내부 패딩
-     */
-    padding: {
+    title: {
       type: String,
-      default: '16px'
+      default: ''
     }
-  },
-  setup(props) {
-    // 커스텀 패딩이 있는 경우 적용
-    const customPadding = computed(() => {
-      return props.padding !== '16px' ? { padding: props.padding } : {};
-    });
-
-    return {
-      customPadding
-    };
   }
 });
 </script>

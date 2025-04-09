@@ -20,8 +20,8 @@
 <script lang="ts">
 import { defineComponent, ref, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import { useStore } from 'vuex';
-import { Button } from '@/shared/ui';
+import { useAuthStore } from '@features/auth';
+import { Button } from '@shared/ui';
 
 export default defineComponent({
   name: 'OAuthCallbackPage',
@@ -31,7 +31,7 @@ export default defineComponent({
   setup() {
     const router = useRouter();
     const route = useRoute();
-    const store = useStore();
+    const authStore = useAuthStore();
     
     const loading = ref(true);
     const error = ref<string | null>(null);
@@ -49,7 +49,7 @@ export default defineComponent({
         }
         
         // GitHub OAuth 콜백 코드로 로그인/회원가입 처리
-        await store.dispatch('auth/handleOAuthCallback', code);
+        await authStore.handleOAuthCallback(code);
         
         // 로그인 성공 시 홈으로 이동
         router.push('/');

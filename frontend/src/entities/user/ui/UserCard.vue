@@ -23,7 +23,7 @@
 
 <script lang="ts">
 import { defineComponent, computed } from 'vue';
-import { Card } from '@/shared/ui';
+import { Card } from '@shared/ui';
 import { User } from '../model/types';
 
 export default defineComponent({

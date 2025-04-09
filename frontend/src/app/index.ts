@@ -1,5 +1,5 @@
 import App from './App.vue';
-import router from './providers/router';
-import store from './providers/store';
+import router from './router';
+import pinia from './store';
 
-export { App, router, store };
+export { App, router, pinia };

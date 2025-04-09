@@ -28,19 +28,19 @@
 
 <script lang="ts">
 import { defineComponent, computed } from 'vue';
-import { useStore } from 'vuex';
+import { useAuthStore } from '@features/auth';
 import { useRouter } from 'vue-router';
 
 export default defineComponent({
   name: 'Header',
   setup() {
-    const store = useStore();
+    const authStore = useAuthStore();
     const router = useRouter();
     
-    const isAuthenticated = computed(() => store.getters['auth/isAuthenticated']);
+    const isAuthenticated = computed(() => authStore.isAuthenticated);
     
     const handleLogout = () => {
-      store.dispatch('auth/logout');
+      authStore.logout();
       router.push('/');
     };
     

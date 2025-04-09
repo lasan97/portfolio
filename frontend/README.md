@@ -9,7 +9,7 @@
 - **핵심 프레임워크**: Vue 3
 - **언어**: TypeScript
 - **빌드 도구**: Vite (Vue CLI에서 마이그레이션 완료)
-- **상태 관리**: Vuex 4
+- **상태 관리**: Pinia
 - **라우팅**: Vue Router 4
 - **HTTP 클라이언트**: Axios
 - **스타일링**: Tailwind CSS
@@ -71,13 +71,28 @@ npm run lint
 4. **라우터 설정**:
    - `createWebHistory(process.env.BASE_URL)` → `createWebHistory(import.meta.env.BASE_URL)`
 
+## Vuex에서 Pinia로 마이그레이션
+
+프로젝트는 Vuex 4에서 Pinia로 상태 관리 라이브러리를 마이그레이션했습니다:
+
+1. **의존성 변경**:
+   - Vuex 4 제거, Pinia 패키지 추가
+
+2. **상태 관리 변경**:
+   - Vuex 모듈 대신 Pinia 스토어 사용
+   - Composition API와 통합된 더 간결하고 타입 안전한 상태 관리 제공
+
+3. **컴포지션 API 활용**:
+   - `ref`, `computed` 등을 활용한 반응형 상태 관리
+   - 컴포넌트에서 `useStore()` 훅을 사용하여 스토어 접근
+
 ## 주요 디렉토리 구조 (FSD 아키텍처)
 
 ```
 src/
 ├── app/            # 애플리케이션 초기화, 전역 스타일, 프로바이더
 │   ├── router/     # Vue Router 설정
-│   ├── store/      # Vuex 스토어
+│   ├── store/      # Pinia 스토어 설정
 │   ├── styles/     # 전역 스타일 (Tailwind CSS)
 │   └── App.vue     # 루트 컴포넌트
 ├── pages/          # 페이지 컴포넌트
@@ -114,8 +129,8 @@ src/
 
 3. **공개 API (Public API)**:
    - 각 모듈은 `index.ts` 파일을 통해서만 외부에 노출
-   - 직접적인 내부 파일 임포트 금지 (예: `@/features/auth/login/ui/LoginForm.vue`)
-   - 올바른 예: `import { LoginForm } from '@/features/auth/login'`
+   - 직접적인 내부 파일 임포트 금지 (예: `@features/auth/login/ui/LoginForm.vue`)
+   - 올바른 예: `import { LoginForm } from '@features/auth/login'`
 
 ## 개발 가이드
 
@@ -124,7 +139,7 @@ src/
 1. 해당 기능이 속하는 계층(`features`, `entities` 등) 결정
 2. 새 디렉토리 생성 및 다음과 같은 세그먼트로 구성:
    - `ui/`: 컴포넌트
-   - `model/`: 상태 관리 (Vuex, Composition API)
+   - `model/`: 상태 관리 (Pinia, Composition API)
    - `api/`: API 요청
    - `lib/`: 유틸리티 함수
    - `config/`: 설정
@@ -138,7 +153,7 @@ features/auth/login/
 │   ├── loginUser.ts     # 로그인 API 함수
 │   └── index.ts         # API 내보내기
 ├── model/               # 로그인 상태 관리
-│   ├── useLogin.ts      # 로그인 컴포저블
+│   ├── loginStore.ts    # Pinia 스토어
 │   └── index.ts         # 모델 내보내기
 ├── ui/                  # 로그인 UI 요소
 │   └── LoginForm.vue    # 로그인 폼 컴포넌트
@@ -149,11 +164,55 @@ features/auth/login/
 ```typescript
 // Public API - 이 파일을 통해서만 모듈 내부 요소를 외부로 노출
 export { default as LoginForm } from './ui/LoginForm.vue';
-export { useLogin } from './model';
+export { useLoginStore } from './model/loginStore';
 export * from './api';
 ```
 
-### Vite 관련 주의사항
+### Composition API 사용 예시
+
+```typescript
+<script setup lang="ts">
+import { ref, computed, onMounted } from 'vue';
+import { useAuthStore } from '@features/auth';
+
+// 스토어 사용
+const authStore = useAuthStore();
+
+// 반응형 상태 정의
+const email = ref('');
+const password = ref('');
+const errorMessage = ref('');
+
+// 계산된 속성
+const isFormValid = computed(() => 
+  email.value.includes('@') && password.value.length >= 6
+);
+
+// 메서드
+async function handleSubmit() {
+  if (!isFormValid.value) {
+    errorMessage.value = '유효하지 않은 입력입니다.';
+    return;
+  }
+  
+  try {
+    await authStore.login({
+      email: email.value,
+      password: password.value
+    });
+  } catch (error: any) {
+    errorMessage.value = error.message;
+  }
+}
+
+// 생명주기 훅
+onMounted(() => {
+  // 컴포넌트 마운트 시 실행할 로직
+});
+</script>
+```
+
+## Vite 관련 주의사항
 
 1. **환경 변수 사용**:
    ```typescript
@@ -167,126 +226,165 @@ export * from './api';
 2. **동적 임포트**:
    ```typescript
    // 잘못된 사용 (Webpack 주석)
-   const HomePage = () => import(/* webpackChunkName: "home" */ '@/pages/home');
+   const HomePage = () => import(/* webpackChunkName: "home" */ '@pages/home');
    
    // 올바른 사용 (Vite)
-   const HomePage = () => import('@/pages/home');
+   const HomePage = () => import('@pages/home');
    ```
 
 3. **경로 별칭 (@)**:
    - Vite 설정에서 경로 별칭이 올바르게 설정되어 있는지 확인
    - `import` 문에서 항상 `.vue` 확장자 포함
 
-## Vuex 사용 가이드
+## Pinia 사용 가이드
+
+### 스토어 정의
 
 ```typescript
-// store/modules/auth.ts
-import { Module } from 'vuex';
-import { RootState } from '../types';
+// stores/authStore.ts
+import { defineStore } from 'pinia';
+import { ref, computed } from 'vue';
 
-export interface AuthState {
-  user: any | null;
-  token: string | null;
-}
-
-const auth: Module<AuthState, RootState> = {
-  namespaced: true,
-  state: () => ({
-    user: null,
-    token: null
-  }),
-  mutations: {
-    // ...
-  },
-  actions: {
-    // ...
-  },
-  getters: {
-    // ...
+export const useAuthStore = defineStore('auth', () => {
+  // 상태 (state)
+  const user = ref(null);
+  const token = ref(localStorage.getItem('token'));
+  const loading = ref(false);
+  
+  // 게터 (getters)
+  const isAuthenticated = computed(() => !!token.value);
+  const userName = computed(() => user.value?.name || 'Guest');
+  
+  // 액션 (actions)
+  function setToken(newToken) {
+    token.value = newToken;
+    localStorage.setItem('token', newToken);
   }
-};
-
-export default auth;
-```
-
-## 타입스크립트 사용 예시
-
-### 컴포넌트 정의
-
-```typescript
-<script lang="ts">
-import { defineComponent } from 'vue';
-
-export default defineComponent({
-  name: 'MyComponent',
-  props: {
-    title: {
-      type: String,
-      required: true
+  
+  async function login(credentials) {
+    loading.value = true;
+    try {
+      // 로그인 로직
+    } finally {
+      loading.value = false;
     }
   }
+  
+  function logout() {
+    token.value = null;
+    user.value = null;
+    localStorage.removeItem('token');
+  }
+  
+  return {
+    // 상태
+    user,
+    token,
+    loading,
+    
+    // 게터
+    isAuthenticated,
+    userName,
+    
+    // 액션
+    setToken,
+    login,
+    logout
+  };
 });
-</script>
 ```
 
-### Composition API 사용
+### 컴포넌트에서 스토어 사용하기
 
-```typescript
-<script setup lang="ts">
-import { ref, computed } from 'vue';
-import { useStore } from 'vuex';
-
-// 타입 정의
-interface User {
-  id: number;
-  name: string;
-  email: string;
-}
-
-// 스토어 사용
-const store = useStore();
-
-// 상태 정의
-const user = ref<User | null>(null);
-const isAuthenticated = computed(() => user.value !== null);
-</script>
-```
-
-## 스타일 가이드 (Tailwind CSS)
-
-프로젝트는 Tailwind CSS를 사용하며, 다음과 같은 방식으로 스타일을 적용합니다:
-
-```html
+```vue
 <template>
-  <div class="flex items-center justify-between p-4 bg-white shadow rounded-lg">
-    <h2 class="text-xl font-semibold text-gray-800">{{ title }}</h2>
-    <button class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-      {{ buttonText }}
-    </button>
+  <div>
+    <div v-if="authStore.loading">로딩 중...</div>
+    <div v-else>
+      <p v-if="authStore.isAuthenticated">
+        안녕하세요, {{ authStore.userName }}님!
+        <button @click="handleLogout">로그아웃</button>
+      </p>
+      <p v-else>
+        <button @click="navigateToLogin">로그인</button>
+      </p>
+    </div>
   </div>
 </template>
+
+<script setup lang="ts">
+import { useAuthStore } from '@features/auth';
+import { useRouter } from 'vue-router';
+
+const authStore = useAuthStore();
+const router = useRouter();
+
+function handleLogout() {
+  authStore.logout();
+  router.push('/login');
+}
+
+function navigateToLogin() {
+  router.push('/login');
+}
+</script>
+```
+
+### 스토어 간 상호작용
+
+```typescript
+// userStore.ts 내부
+import { useAuthStore } from '@features/auth';
+
+export const useUserStore = defineStore('user', () => {
+  // ...
+  
+  async function fetchUserProfile() {
+    const authStore = useAuthStore();
+    if (!authStore.isAuthenticated) {
+      throw new Error('인증이 필요합니다.');
+    }
+    
+    // 사용자 프로필 가져오기 로직
+  }
+  
+  // ...
+});
 ```
 
 ## 문제 해결 가이드
 
-### Vite 관련 오류
+### Pinia 관련 오류
 
-1. **환경 변수 접근 오류**:
-   - 모든 환경 변수가 `VITE_` 접두사로 시작하는지 확인
-   - `import.meta.env`를 통해 접근하는지 확인
+1. **defineStore 오류**:
+   - Pinia 패키지가 올바르게 설치되었는지 확인
+   - `createPinia`와 `app.use(pinia)` 호출이 있는지 확인
 
-2. **모듈 해석 오류**:
-   - 파일 확장자가 포함되어 있는지 확인 (특히 `.vue` 파일)
-   - `vite.config.ts`의 별칭 설정 확인
+2. **구독 오류**:
+   - `watchEffect` 또는 `watch`를 사용하여 스토어 상태 변화 감지
+   - `storeToRefs`를 사용하여 반응형 참조 분해
 
-3. **HMR (핫 모듈 리로딩) 문제**:
-   - Vite 개발 서버 재시작
-   - 순환 의존성 확인
-   - 대소문자 구분 확인 (특히 Windows 환경)
+3. **State 업데이트 안됨**:
+   - ref/reactive를 사용하여 상태를 올바르게 초기화했는지 확인
+   - 변이는 직접 수행하고 있는지 확인 (Vuex 모듈과 달리 커밋이 필요 없음)
+
+## 변경 사항 요약
+
+1. **Vuex에서 Pinia로 전환**:
+   - 네임스페이스 모듈 대신 독립 스토어
+   - mutations/actions 대신 함수 형태의 액션
+   - mapState/mapGetters 대신 useStore() 훅 사용
+
+2. **Options API에서 Composition API로 전환**:
+   - 컴포넌트 내 `setup` 스크립트 사용
+   - `data`, `methods`, `computed` 대신 `ref`, `reactive`, `computed` 사용
+   - 생명주기 메서드 대신 생명주기 훅 함수 사용
 
 ## 참고 자료
 
 - [Feature-Sliced Design 공식 웹사이트](https://feature-sliced.design/)
 - [Vue 3 문서](https://v3.vuejs.org/)
 - [Vite 문서](https://vitejs.dev/guide/)
+- [Pinia 문서](https://pinia.vuejs.org/)
+- [Vue Composition API 문서](https://v3.vuejs.org/guide/composition-api-introduction.html)
 - [Tailwind CSS 문서](https://tailwindcss.com/docs)

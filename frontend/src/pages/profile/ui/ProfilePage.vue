@@ -27,10 +27,11 @@
 
 <script lang="ts">
 import { defineComponent, computed, onMounted } from 'vue';
-import { useStore } from 'vuex';
+import { useAuthStore } from '@features/auth';
+import { useUserStore } from '@entities/user';
 import { useRouter } from 'vue-router';
-import { UserCard } from '@/entities/user';
-import { Button } from '@/shared/ui';
+import { UserCard } from '@entities/user';
+import { Button } from '@shared/ui';
 
 export default defineComponent({
   name: 'ProfilePage',
@@ -39,19 +40,20 @@ export default defineComponent({
     Button
   },
   setup() {
-    const store = useStore();
+    const authStore = useAuthStore();
+    const userStore = useUserStore();
     const router = useRouter();
     
-    const user = computed(() => store.state.user.user);
-    const loading = computed(() => store.state.user.loading);
-    const error = computed(() => store.state.user.error);
+    const user = computed(() => userStore.user);
+    const loading = computed(() => userStore.loading);
+    const error = computed(() => userStore.error);
     
     onMounted(() => {
-      store.dispatch('auth/fetchCurrentUser');
+      authStore.fetchCurrentUser();
     });
     
     const handleLogout = () => {
-      store.dispatch('auth/logout');
+      authStore.logout();
       router.push('/');
     };
     

@@ -19,8 +19,8 @@
 
 <script lang="ts">
 import { defineComponent } from 'vue';
-import { Button } from '@/shared/ui';
-import { getGithubLoginUrl } from '@/shared/lib';
+import { Button } from '@shared/ui';
+import { getGithubLoginUrl } from '@shared/lib';
 
 export default defineComponent({
   name: 'LoginForm',

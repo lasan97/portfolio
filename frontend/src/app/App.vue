@@ -10,8 +10,9 @@
 
 <script lang="ts">
 import { defineComponent, onMounted } from 'vue';
-import { useStore } from 'vuex';
-import { Header, Footer } from '@/widgets';
+import { useAuthStore } from '@features/auth';
+import { Header } from '@widgets/header';
+import { Footer } from '@widgets/footer';
 
 export default defineComponent({
   name: 'App',
@@ -20,13 +21,13 @@ export default defineComponent({
     Footer
   },
   setup() {
-    const store = useStore();
+    const authStore = useAuthStore();
 
     onMounted(() => {
       // 로컬 스토리지에서 토큰을 확인하고 사용자 정보 가져오기
       const token = localStorage.getItem('token');
       if (token) {
-        store.dispatch('auth/fetchCurrentUser');
+        authStore.fetchCurrentUser();
       }
     });
 

@@ -1,8 +1,8 @@
 import { createApp } from 'vue';
-import { App, router, store } from './app';
+import { App, router, pinia } from './app';
 import './shared/assets/styles/main.css';
 
 createApp(App)
   .use(router)
-  .use(store)
+  .use(pinia)
   .mount('#app');

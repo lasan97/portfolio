@@ -23,10 +23,9 @@ export const APP_CONFIG = {
 export const ROUTES = {
   HOME: '/',
   LOGIN: '/login',
-  REGISTER: '/register',
   PROFILE: '/profile',
   NOT_FOUND: '/404',
-  OAUTH_CALLBACK: '/oauth/callback'
+  OAUTH_CALLBACK: '/oauth2/callback'
 };
 
 /**

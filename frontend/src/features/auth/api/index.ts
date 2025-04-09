@@ -1,4 +1,4 @@
-import { api } from '@/shared/api';
+import { api } from '@shared/api';
 import { TokenResponse } from '../model/types';
 
 /**

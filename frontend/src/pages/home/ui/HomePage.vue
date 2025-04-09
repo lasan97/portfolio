@@ -21,9 +21,9 @@
 
 <script lang="ts">
 import { defineComponent, computed } from 'vue';
-import { useStore } from 'vuex';
+import { useAuthStore } from '@features/auth';
 import { useRouter } from 'vue-router';
-import { Card, Button } from '@/shared/ui';
+import { Card, Button } from '@shared/ui';
 
 export default defineComponent({
   name: 'HomePage',
@@ -32,10 +32,10 @@ export default defineComponent({
     Button
   },
   setup() {
-    const store = useStore();
+    const authStore = useAuthStore();
     const router = useRouter();
 
-    const isAuthenticated = computed(() => store.getters['auth/isAuthenticated']);
+    const isAuthenticated = computed(() => authStore.isAuthenticated);
 
     const navigateToLogin = () => {
       router.push('/login');

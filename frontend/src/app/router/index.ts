@@ -1,9 +1,8 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
-import { HomePage } from '@/pages/home'
-import { LoginForm } from '@/features/auth/login'
-import { RegisterForm } from '@/features/auth/register'
-import { OAuthCallbackPage } from '@/pages/auth'
-import { ROUTES } from '@/shared/config'
+import { HomePage } from '@pages/home'
+import { LoginPage, OAuthCallbackPage } from '@pages/auth'
+import { ProfilePage } from '@pages/profile'
+import { ROUTES } from '@shared/config'
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -14,12 +13,7 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: ROUTES.LOGIN,
     name: 'login',
-    component: LoginForm
-  },
-  {
-    path: ROUTES.REGISTER,
-    name: 'register',
-    component: RegisterForm
+    component: LoginPage
   },
   {
     path: ROUTES.OAUTH_CALLBACK,
@@ -27,9 +21,15 @@ const routes: Array<RouteRecordRaw> = [
     component: OAuthCallbackPage
   },
   {
+    path: ROUTES.PROFILE,
+    name: 'profile',
+    component: ProfilePage,
+    meta: { requiresAuth: true }
+  },
+  {
     path: ROUTES.NOT_FOUND,
     name: 'notFound',
-    component: () => import('@/pages/notFound/ui/NotFoundPage.vue')
+    component: () => import('@pages/notFound/ui/NotFoundPage.vue')
   },
   {
     path: '/:pathMatch(.*)*',
@@ -38,9 +38,23 @@ const routes: Array<RouteRecordRaw> = [
 ]
 
 const router = createRouter({
-  // Vite에서는 import.meta.env를 사용합니다
   history: createWebHistory(import.meta.env.BASE_URL as string || '/'),
   routes
 })
+
+// 인증 미들웨어
+router.beforeEach((to, from, next) => {
+  const isAuthenticated = !!localStorage.getItem('token');
+  
+  if (to.matched.some(record => record.meta.requiresAuth)) {
+    if (!isAuthenticated) {
+      next({ name: 'login' });
+    } else {
+      next();
+    }
+  } else {
+    next();
+  }
+});
 
 export default router
