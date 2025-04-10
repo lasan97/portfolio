@@ -1,11 +1,15 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import path from 'path'
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode, command }) => {
+  const env = loadEnv(mode, process.cwd(), '');
   const isSSR = process.env.SSR === 'true'
-  
+  const port = Number(env.VITE_BASE_PORT || 8080);
+
+
+
   return {
     plugins: [vue()],
     resolve: {
@@ -26,11 +30,11 @@ export default defineConfig(({ mode, command }) => {
       outDir: isSSR ? 'dist/server' : 'dist/client',
     },
     server: {
-      port: 8080,
-      open: true
+      port: port,
+      open: false
     },
     preview: {
-      port: 8080
+      port: port
     },
     css: {
       postcss: './postcss.config.js'

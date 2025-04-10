@@ -21,6 +21,7 @@
 import { defineComponent, ref, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '@features/auth';
+import { useUserStore } from '@entities/user';
 import { Button } from '@shared/ui';
 
 export default defineComponent({
@@ -32,6 +33,7 @@ export default defineComponent({
     const router = useRouter();
     const route = useRoute();
     const authStore = useAuthStore();
+    const userStore = useUserStore();
     
     const loading = ref(true);
     const error = ref<string | null>(null);
@@ -50,6 +52,10 @@ export default defineComponent({
         
         // GitHub OAuth 콜백 코드로 로그인/회원가입 처리
         await authStore.handleOAuthCallback(code);
+        
+        // 두 스토어 모두 상태 리셋
+        authStore.reset();
+        userStore.reset();
         
         // 로그인 성공 시 홈으로 이동
         router.push('/');

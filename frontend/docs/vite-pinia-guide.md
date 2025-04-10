@@ -15,10 +15,8 @@
 
 Vite는 다음과 같은 환경 변수 파일을 지원합니다:
 
-- `.env`: 모든 환경에서 적용되는 기본 변수
-- `.env.development`: 개발 환경에서만 적용
-- `.env.production`: 프로덕션 환경에서만 적용
-- `.env.local`: 로컬 환경에만 적용되며 Git에 커밋되지 않음
+- `.env.production`: 프로덕션 환경에서만 적용되며 Git에 커밋되지 않음
+- `.env.local`: 개발, 로컬 환경에만 적용되며 Git에 커밋되지 않음
 
 ### 환경 변수 형식
 
@@ -28,7 +26,9 @@ Vite에서 클라이언트 코드에서 환경 변수를 사용하려면 `VITE_`
 # .env
 VITE_API_URL=http://localhost:8081/api
 VITE_BASE_URL=http://localhost:8080
+VITE_BASE_PORT=8080
 VITE_GITHUB_CLIENT_ID=your_github_client_id
+VITE_SSR_DEBUG=ture
 ```
 
 ### 환경 변수 접근 방법

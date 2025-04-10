@@ -3,20 +3,39 @@ import { ref, computed } from 'vue';
 import { useUserStore } from '@entities/user/model/userStore';
 import { processOAuthCallback } from '../api';
 import type { TokenResponse } from './types';
+import { setAuthToken, getAuthToken, logout as logoutAuth, isAuthenticated as checkAuth } from '@shared/lib';
+import { useRouter } from 'vue-router';
 
 export const useAuthStore = defineStore('auth', () => {
+  // 라우터 (직접 import 대신 필요할 때 가져오기)
+  let router: any = null;
+  try {
+    // SSR 환경에서는 오류가 발생할 수 있으므로 try-catch로 감싸기
+    const vueRouter = import('vue-router');
+    if (typeof window !== 'undefined') {
+      router = useRouter();
+    }
+  } catch (e) {
+    console.log('Router not available in current context');
+  }
+  
   // 상태(state)
-  const token = ref<string | null>(localStorage.getItem('token'));
+  const token = ref<string | null>(getAuthToken());
   const loading = ref(false);
   const error = ref<string | null>(null);
+  // 인증 상태를 내부적으로 관리
+  const authenticated = ref(!!token.value);
   
   // 게터(getters)
-  const isAuthenticated = computed(() => !!token.value);
+  const isAuthenticated = computed(() => authenticated.value);
   
   // 액션(actions)
   function setToken(newToken: string) {
     token.value = newToken;
-    localStorage.setItem('token', newToken);
+    // 쿠키와 localStorage에 저장
+    setAuthToken(newToken);
+    // 내부 상태 업데이트
+    authenticated.value = true;
   }
   
   function setLoading(isLoading: boolean) {
@@ -29,7 +48,10 @@ export const useAuthStore = defineStore('auth', () => {
   
   function clearAuth() {
     token.value = null;
-    localStorage.removeItem('token');
+    // 쿠키와 localStorage에서 삭제
+    logoutAuth();
+    // 내부 상태 업데이트
+    authenticated.value = false;
   }
   
   async function handleOAuthCallback(code: string) {
@@ -42,7 +64,7 @@ export const useAuthStore = defineStore('auth', () => {
       // 백엔드에 OAuth 콜백 코드 전송하여 로그인/회원가입 처리
       const response = await processOAuthCallback(code);
       
-      // 토큰 저장
+      // 토큰 저장 (localStorage 및 쿠키)
       setToken(response.token);
       
       // 사용자 정보 저장
@@ -73,10 +95,14 @@ export const useAuthStore = defineStore('auth', () => {
       const { api } = await import('@shared/api');
       const response = await api.get('/api/users/me');
       userStore.setUser(response.data);
+      // 사용자 정보를 성공적으로 가져왔으면 인증됨으로 표시
+      authenticated.value = true;
     } catch (err: any) {
       setError(err.response?.data?.message || '사용자 정보를 가져오는데 실패했습니다.');
       clearAuth();
       userStore.clearUser();
+      // 인증 실패
+      authenticated.value = false;
     } finally {
       setLoading(false);
     }
@@ -84,8 +110,29 @@ export const useAuthStore = defineStore('auth', () => {
   
   function logout() {
     const userStore = useUserStore();
+    // 인증 상태 및 사용자 정보 초기화
     clearAuth();
     userStore.clearUser();
+    
+    // 홈페이지로 리다이렉트 (선택사항)
+    if (router) {
+      router.push('/');
+    } else if (typeof window !== 'undefined') {
+      window.location.href = '/';
+    }
+  }
+  
+  // 초기화 시 토큰이 있으면 사용자 정보 가져오기
+  if (token.value && typeof window !== 'undefined') {
+    fetchCurrentUser();
+  }
+  
+  // 상태 리셋 함수 구현
+  function reset() {
+    token.value = getAuthToken();
+    loading.value = false;
+    error.value = null;
+    authenticated.value = !!token.value;
   }
   
   return {
@@ -105,6 +152,7 @@ export const useAuthStore = defineStore('auth', () => {
     handleOAuthCallback,
     handleTokenFromCallback,
     fetchCurrentUser,
-    logout
+    logout,
+    reset  // reset 함수 추가
   };
 });

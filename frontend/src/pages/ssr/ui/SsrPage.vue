@@ -89,12 +89,16 @@ export default {
   name: 'SsrPage',
   
   // SSR 전용 데이터 프리페칭 메서드
-  ssrPrefetch({ route, store }) {
+  ssrPrefetch({ route, store, cookie }: {
+    route: any;
+    store: any;
+    cookie?: string
+  }) {
     // 실제 구현에서는 여기서 스토어 액션을 호출하여 서버에서 데이터를 가져옵니다
     console.log('서버에서 데이터 프리페칭:', route.path);
     
     // 예제를 위한 간단한 비동기 작업 반환
-    return new Promise(resolve => {
+    return new Promise<void>(resolve => {
       setTimeout(() => {
         // 실제로는 여기서 store를 업데이트합니다
         resolve();

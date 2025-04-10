@@ -22,7 +22,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed } from 'vue';
+import {defineComponent, computed, PropType} from 'vue';
 import { Card } from '@shared/ui';
 import { User } from '../model/types';
 
@@ -33,7 +33,7 @@ export default defineComponent({
   },
   props: {
     user: {
-      type: Object as () => User,
+      type: Object as PropType<User>,
       required: true
     }
   },

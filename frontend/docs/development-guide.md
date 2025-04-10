@@ -284,3 +284,42 @@ import { Button } from '../../shared/ui';
 3. **State 업데이트 안됨**:
    - ref/reactive를 사용하여 상태를 올바르게 초기화했는지 확인
    - 변이는 직접 수행하고 있는지 확인 (Vuex 모듈과 달리 커밋이 필요 없음)
+   
+4. **Reset 메서드 관련 오류**:
+   - Setup 구문으로 작성된 Pinia 스토어는 자동 `$reset()` 지원 안함
+   - 커스텀 reset 메서드 정의 필요:
+   ```typescript
+   // 상태 리셋 함수 구현
+   function reset() {
+     token.value = getAuthToken();
+     loading.value = false;
+     error.value = null;
+     authenticated.value = !!token.value;
+   }
+   
+   return {
+     // ...
+     reset  // reset 함수 추가
+   };
+   ```
+
+#### SSR 관련 오류
+
+1. **"window is not defined" 오류**:
+   - 서버에서 브라우저 API 접근 시 발생
+   - 모든 브라우저 API 사용 코드는 조건부 체크 필요:
+   ```typescript
+   if (typeof window !== 'undefined') {
+     // 브라우저 API 사용 코드
+   }
+   ```
+
+2. **로그인 상태가 새로고침 시 초기화**:
+   - localStorage 대신 쿠키 기반 인증 사용
+   - `auth.ts` 유틸리티에서 쿠키와 localStorage 모두 확인
+
+3. **하이드레이션 불일치 오류**:
+   - 서버와 클라이언트 렌더링 결과 차이로 발생
+   - 비결정적 값(날짜, 랜덤 값 등) 사용 주의
+   - 조건부 렌더링은 동일한 조건으로 서버/클라이언트 일치 필요#
+

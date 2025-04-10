@@ -17,3 +17,6 @@ export interface AuthToken {
   email: string;
   nickname: string;
 }
+
+// SSR 타입 익스포트
+export * from './ssr';

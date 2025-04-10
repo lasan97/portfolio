@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
+import { createRouter, createWebHistory, createMemoryHistory, RouteRecordRaw } from 'vue-router'
 import { HomePage } from '@pages/home'
 import { LoginPage, OAuthCallbackPage } from '@pages/auth'
 import { ProfilePage } from '@pages/profile'
@@ -44,24 +44,46 @@ const routes: Array<RouteRecordRaw> = [
   }
 ]
 
+// SSR을 위한 라우터 히스토리 분기 처리
+const isServer = typeof window === 'undefined'
+const history = isServer
+  ? createMemoryHistory()
+  : createWebHistory(import.meta.env.BASE_URL as string || '/')
+
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL as string || '/'),
+  history,
   routes
 })
 
-// 인증 미들웨어
-router.beforeEach((to, from, next) => {
-  const isAuthenticated = !!localStorage.getItem('token');
-  
-  if (to.matched.some(record => record.meta.requiresAuth)) {
-    if (!isAuthenticated) {
-      next({ name: 'login' });
-    } else {
-      next();
+// 인증 관련 유틸리티 import
+import { isAuthenticated } from '@shared/lib/auth';
+import { storeToRefs } from 'pinia';
+import { useAuthStore } from '@features/auth';
+
+// 인증 미들웨어 (서버와 클라이언트 모두 동작)
+router.beforeEach(async (to, from, next) => {
+  // 클라이언트 환경에서만 실행되는 코드
+  if (typeof window !== 'undefined') {
+    // 인증 상태를 실시간으로 확인
+    const authStore = useAuthStore();
+    const { isAuthenticated } = storeToRefs(authStore);
+    
+    // 인증이 필요한 페이지인지 확인
+    if (to.matched.some(record => record.meta.requiresAuth)) {
+      if (!isAuthenticated.value) {
+        // 비인증 상태에서 인증이 필요한 페이지 접근 시 로그인 페이지로 리다이렉트
+        next({ name: 'login' });
+        return;
+      }
+    } else if (to.name === 'login' && isAuthenticated.value) {
+      // 이미 로그인된 상태에서 로그인 페이지 접근 시 홈으로 리다이렉트
+      next({ name: 'home' });
+      return;
     }
-  } else {
-    next();
   }
+  
+  // 다른 모든 경우에는 정상적으로 페이지 이동
+  next();
 });
 
 export default router

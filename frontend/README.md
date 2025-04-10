@@ -43,9 +43,11 @@ npm run lint
 - `.env`: 환경 변수 기본값
   ```
   NODE_ENV=development
-  VITE_API_URL=http://localhost:8081/api  # 백엔드 API URL
-  VITE_BASE_URL=http://localhost:8080     # 프론트엔드 URL
+  VITE_API_URL=http://localhost:8081/api      # 백엔드 API URL
+  VITE_BASE_URL=http://localhost:8080         # 프론트엔드 URL
+  VITE_BASE_PORT=8080                         # 프론트엔드 Port
   VITE_GITHUB_CLIENT_ID=your_github_client_id # Github Client_id
+  VITE_SSR_DEBUG=ture                              # SSR 렌더링 로깅 모드
   ```
 - `vite.config.ts`: Vite 설정
 

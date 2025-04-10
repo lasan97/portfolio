@@ -2,8 +2,14 @@ import { createSSRApp } from 'vue';
 import { renderToString } from 'vue/server-renderer';
 import { App, router, pinia } from './app';
 import { ROUTES } from '@shared/config';
+import { isAuthenticated, getUserInfo } from '@shared/lib/auth';
 
-export async function render(url: string, manifest?: any) {
+export { router };
+
+export async function render(url: string, context?: any, manifest?: any) {
+  // 서버에서 전달된 쿠키 정보
+  const cookieString = context?.cookie || '';
+  
   // 라우터 설정
   await router.push(url);
   await router.isReady();
@@ -15,7 +21,7 @@ export async function render(url: string, manifest?: any) {
 
   // 필요한 경우 데이터 프리페칭
   const matchedComponents = router.currentRoute.value.matched.flatMap(
-    record => Object.values(record.components)
+    record => Object.values(record.components || {})
   );
   
   // SSR 전용 데이터 프리페칭 처리
@@ -24,7 +30,8 @@ export async function render(url: string, manifest?: any) {
     if (comp.ssrPrefetch) {
       return comp.ssrPrefetch({
         route: router.currentRoute.value,
-        store: pinia
+        store: pinia,
+        cookie: cookieString
       });
     }
     return null;
@@ -44,7 +51,7 @@ export async function render(url: string, manifest?: any) {
     // manifest를 사용하여 현재 경로에 필요한 리소스를 프리로드
     const matchedComponents = router.currentRoute.value.matched;
     const matchedComponentsNames = matchedComponents.map(
-      (record) => record.components.default.name
+      (record) => record.components?.default?.name || ''
     );
 
     const componentsToPreload = [];

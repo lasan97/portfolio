@@ -167,14 +167,20 @@ frontend/
 
 ```javascript
 // server.js에서
-const SSR_ROUTES = ['/ssr', '/about', '/product'];
+app.use('*', async (req, res, next) => {
 
-app.use('*', async (req, res) => {
   const url = req.originalUrl;
-  
-  // SSR 적용 여부 결정
-  const shouldSSR = SSR_ROUTES.some(route => url.startsWith(route));
-  
+
+   // entry-server 모듈 로드
+   const { render, router } = await vite.ssrLoadModule('/src/entry-server.ts');
+
+   // 라우터를 URL로 이동
+   await router.push(url);
+   await router.isReady();
+
+   // SSR 적용 여부 결정
+   const shouldSSR = router.currentRoute.value.meta.ssr === true;
+   
   if (shouldSSR) {
     // SSR 로직 실행
     // ...
@@ -390,6 +396,23 @@ if (typeof window !== 'undefined') {
 2. **데이터 페칭**: 데이터 페칭은 서버에서 발생한 후 클라이언트에 전달되어야 합니다.
 
 3. **상태 관리**: Pinia 스토어 상태가 서버에서 클라이언트로 전달되도록 설정해야 합니다.
+
+4. **인증 처리**: SSR 환경에서는 인증 정보를 쿠키를 통해 관리해야 합니다.
+
+```typescript
+// 브라우저와 서버 모두에서 작동하는 쿠키 기반 인증
+export function getAuthToken(cookieString?: string): string | null {
+  // 브라우저 환경
+  if (typeof document !== 'undefined' && !cookieString) {
+    cookieString = document.cookie;
+  }
+  
+  // 쿠키에서 토큰 가져오기
+  const cookies = (cookieString || '').split('; ');
+  const token = cookies.find(c => c.startsWith('auth_token='));
+  return token ? decodeURIComponent(token.split('=')[1]) : null;
+}
+```
 
 ## 문제 해결
 
