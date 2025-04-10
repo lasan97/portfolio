@@ -52,12 +52,20 @@ async function createDevSsrServer() {
       // SSR이 필요한 경로만 서버 렌더링 수행
       if (shouldSSR) {
         try {
-          // 쿠키 전달
+          // 쿠키 및 요청 헤더 전달
           const cookieHeader = req.headers.cookie || '';
           
-          // 렌더링된 HTML 가져오기 (쿠키 포함)
+          // 디버깅 로그
+          if (isDev && isSsrDebugMode) {
+            console.log(`SSR 쿠키 헤더: ${cookieHeader}`);
+            console.log(`SSR 요청 URL: ${url}`);
+            console.log(`SSR 요청 헤더:`, req.headers);
+          }
+          
+          // 렌더링된 HTML 가져오기 (쿠키 및 헤더 포함)
           const { appHtml, preloadLinks, initialState } = await render(url, { 
-            cookie: cookieHeader 
+            cookie: cookieHeader,
+            headers: req.headers
           });
           
           // HTML에 렌더링된 앱 삽입

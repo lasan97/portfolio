@@ -16,7 +16,7 @@ export const useUserStore = defineStore('user', () => {
   // 액션(actions)
   function setUser(userData: User) {
     user.value = userData;
-    // 쿠키와 localStorage에 저장
+    // 쿠키에 저장
     setUserInfo(userData);
   }
   

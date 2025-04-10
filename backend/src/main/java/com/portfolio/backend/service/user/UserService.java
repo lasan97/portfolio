@@ -1,5 +1,6 @@
 package com.portfolio.backend.service.user;
 
+import com.portfolio.backend.common.exception.ResourceNotFoundException;
 import com.portfolio.backend.service.user.dto.UserDto;
 import com.portfolio.backend.domain.user.entity.User;
 import com.portfolio.backend.domain.user.repository.UserRepository;
@@ -16,13 +17,14 @@ public class UserService {
     @Transactional(readOnly = true)
     public UserDto getUserProfile(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 사용자가 존재하지 않습니다."));
+                .orElseThrow(() -> new ResourceNotFoundException("해당 사용자가 존재하지 않습니다."));
         
         return UserDto.builder()
                 .id(user.getId())
                 .email(user.getEmail())
                 .nickname(user.getNickname())
                 .profileImageUrl(user.getProfileImageUrl())
+                .role(user.getRole())
                 .build();
     }
 }

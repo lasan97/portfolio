@@ -3,6 +3,7 @@ export interface User {
   email: string;
   nickname: string;
   profileImageUrl: string | null;
+  role?: string; // ADMIN, USER 등 역할 정보
 }
 
 export interface UserState {

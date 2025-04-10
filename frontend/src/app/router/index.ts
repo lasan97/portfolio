@@ -3,6 +3,7 @@ import { HomePage } from '@pages/home'
 import { LoginPage, OAuthCallbackPage } from '@pages/auth'
 import { ProfilePage } from '@pages/profile'
 import { SsrPage } from '@pages/ssr'
+import Dashboard from '@pages/dashboard'
 import { ROUTES } from '@shared/config'
 
 const routes: Array<RouteRecordRaw> = [
@@ -26,6 +27,12 @@ const routes: Array<RouteRecordRaw> = [
     name: 'profile',
     component: ProfilePage,
     meta: { requiresAuth: true }
+  },
+  {
+    path: ROUTES.DASHBOARD,
+    name: 'dashboard',
+    component: Dashboard,
+    meta: { ssr: true }
   },
   {
     path: ROUTES.SSR,

@@ -6,6 +6,7 @@
         
         <nav class="flex items-center space-x-4">
           <router-link to="/" class="text-gray-700 hover:text-blue-600">홈</router-link>
+          <router-link to="/dashboard" class="text-gray-700 hover:text-blue-600">대시보드</router-link>
           <router-link to="/ssr" class="text-gray-700 hover:text-blue-600">SSR 예제</router-link>
           
           <template v-if="isAuthenticated">

@@ -1,10 +1,12 @@
 import { defineStore } from 'pinia';
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useUserStore } from '@entities/user/model/userStore';
 import { processOAuthCallback } from '../api';
 import type { TokenResponse } from './types';
 import { setAuthToken, getAuthToken, logout as logoutAuth, isAuthenticated as checkAuth } from '@shared/lib';
 import { useRouter } from 'vue-router';
+// 새로운 인증 지속성 메커니즘 추가
+import * as AuthPersistence from '@shared/lib/authPersistence';
 
 export const useAuthStore = defineStore('auth', () => {
   // 라우터 (직접 import 대신 필요할 때 가져오기)
@@ -32,10 +34,20 @@ export const useAuthStore = defineStore('auth', () => {
   // 액션(actions)
   function setToken(newToken: string) {
     token.value = newToken;
-    // 쿠키와 localStorage에 저장
+    
+    // 쿠키에 저장 (기존 방식)
     setAuthToken(newToken);
+    
+    // 새로운 방식: 다중 저장소에 토큰 저장 (강화된 지속성)
+    AuthPersistence.saveToken(newToken, 30); // 30일 유효
+    
     // 내부 상태 업데이트
     authenticated.value = true;
+    
+    console.log('토큰 설정 완료 (강화된 지속성 적용)', { 
+      토큰길이: newToken?.length,
+      쿠키상태: typeof document !== 'undefined' ? document.cookie : '서버환경'
+    });
   }
   
   function setLoading(isLoading: boolean) {
@@ -48,10 +60,20 @@ export const useAuthStore = defineStore('auth', () => {
   
   function clearAuth() {
     token.value = null;
-    // 쿠키와 localStorage에서 삭제
+    
+    // 기존 방식: 쿠키에서 삭제
     logoutAuth();
+    
+    // 새로운 방식: 모든 저장소에서 삭제 (강화된 지속성)
+    AuthPersistence.clearToken();
+    AuthPersistence.clearUserData();
+    
     // 내부 상태 업데이트
     authenticated.value = false;
+    
+    console.log('인증 정보 삭제 완료 (모든 저장소)', {
+      쿠키상태: typeof document !== 'undefined' ? document.cookie : '서버환경'
+    });
   }
   
   async function handleOAuthCallback(code: string) {
@@ -122,9 +144,61 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
   
-  // 초기화 시 토큰이 있으면 사용자 정보 가져오기
-  if (token.value && typeof window !== 'undefined') {
-    fetchCurrentUser();
+  // 초기화 함수 (명시적으로 호출 가능)
+  async function initialize() {
+    if (typeof window === 'undefined') {
+      // 서버 환경에서는 토큰이 있으면 인증된 것으로 간주
+      if (token.value) {
+        authenticated.value = true;
+      }
+      return;
+    }
+    
+    // 클라이언트 환경에서는 인증 상태 복원 시도
+    try {
+      console.log('인증 상태 초기화 중...');
+      
+      // 새로운 방식: 다중 저장소에서 인증 상태 복원
+      AuthPersistence.recoverAuthState();
+      
+      // 복원된 토큰으로 상태 업데이트
+      const persistedToken = AuthPersistence.getToken();
+      if (persistedToken) {
+        console.log('저장된 토큰 발견, 인증 상태 복원 중');
+        token.value = persistedToken;
+        authenticated.value = true;
+        
+        // 사용자 정보 가져오기
+        await fetchCurrentUser();
+      } else {
+        // 기존 방식으로도 확인
+        const legacyToken = getAuthToken();
+        if (legacyToken && !persistedToken) {
+          console.log('기존 방식으로 토큰 발견, 새 방식으로 마이그레이션 중');
+          setToken(legacyToken);
+          await fetchCurrentUser();
+        }
+      }
+    } catch (error) {
+      console.error('인증 상태 초기화 중 오류:', error);
+      clearAuth();
+    }
+  }
+  
+  // 컴포넌트 마운트 시 자동 초기화
+  if (typeof window !== 'undefined') {
+    // 페이지 로드 시 인증 상태 초기화
+    setTimeout(initialize, 0);
+    
+    // 주기적 토큰 검사 (5분마다)
+    setInterval(() => {
+      AuthPersistence.verifyAndSyncAuthState();
+    }, 5 * 60 * 1000);
+  } else {
+    // 서버 환경에서는 토큰이 있으면 인증된 것으로 간주
+    if (token.value) {
+      authenticated.value = true;
+    }
   }
   
   // 상태 리셋 함수 구현
@@ -153,6 +227,7 @@ export const useAuthStore = defineStore('auth', () => {
     handleTokenFromCallback,
     fetchCurrentUser,
     logout,
-    reset  // reset 함수 추가
+    reset,  // reset 함수 추가
+    initialize  // 초기화 함수 추가
   };
 });

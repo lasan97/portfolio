@@ -8,7 +8,12 @@ export { router };
 
 export async function render(url: string, context?: any, manifest?: any) {
   // 서버에서 전달된 쿠키 정보
-  const cookieString = context?.cookie || '';
+  const cookieString = context?.headers?.cookie || context?.cookie || '';
+  
+  // 디버깅용 로그
+  if (import.meta.env.VITE_SSR_DEBUG === 'true') {
+    console.log('[SSR] 쿠키 문자열:', cookieString);
+  }
   
   // 라우터 설정
   await router.push(url);

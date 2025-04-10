@@ -26,7 +26,8 @@ export const ROUTES = {
   PROFILE: '/profile',
   NOT_FOUND: '/404',
   OAUTH_CALLBACK: '/oauth2/callback',
-  SSR: '/ssr'
+  SSR: '/ssr',
+  DASHBOARD: '/dashboard'
 };
 
 /**

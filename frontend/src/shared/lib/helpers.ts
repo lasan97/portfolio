@@ -63,16 +63,18 @@ export function throttle<T extends (...args: unknown[]) => unknown>(
  * @returns 쿠키 값 또는 null
  */
 export function getCookie(name: string): string | null {
-  const nameEQ = name + "=";
-  const ca = document.cookie.split(';');
-  
-  for (let i = 0; i < ca.length; i++) {
-    let c = ca[i];
-    while (c.charAt(0) === ' ') c = c.substring(1, c.length);
-    if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+  try {
+    if (typeof window === 'undefined') {
+      return null;
+    }
+    
+    const Cookies = require('universal-cookie').default;
+    const cookies = new Cookies();
+    return cookies.get(name) || null;
+  } catch (error) {
+    console.error('쿠키 조회 중 오류 발생:', error);
+    return null;
   }
-  
-  return null;
 }
 
 /**
@@ -82,15 +84,29 @@ export function getCookie(name: string): string | null {
  * @param days - 유효 기간 (일)
  */
 export function setCookie(name: string, value: string, days = 7): void {
-  let expires = "";
-  
-  if (days) {
-    const date = new Date();
-    date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-    expires = "; expires=" + date.toUTCString();
+  try {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    
+    const Cookies = require('universal-cookie').default;
+    const cookies = new Cookies();
+    
+    const options: any = {
+      path: '/',
+      maxAge: days * 24 * 60 * 60, // 초 단위
+      sameSite: 'lax'
+    };
+    
+    // secure 속성은 HTTPS에서만 추가
+    if (window.location.protocol === 'https:') {
+      options.secure = true;
+    }
+    
+    cookies.set(name, value, options);
+  } catch (error) {
+    console.error('쿠키 설정 중 오류 발생:', error);
   }
-  
-  document.cookie = name + "=" + value + expires + "; path=/";
 }
 
 /**
@@ -98,5 +114,16 @@ export function setCookie(name: string, value: string, days = 7): void {
  * @param name - 쿠키 이름
  */
 export function deleteCookie(name: string): void {
-  setCookie(name, '', -1);
+  try {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    
+    const Cookies = require('universal-cookie').default;
+    const cookies = new Cookies();
+    
+    cookies.remove(name, { path: '/' });
+  } catch (error) {
+    console.error('쿠키 삭제 중 오류 발생:', error);
+  }
 }

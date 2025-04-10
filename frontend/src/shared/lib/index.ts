@@ -17,3 +17,9 @@ export const getGithubLoginUrl = () => {
 
 // 인증 관련 유틸리티 export
 export * from './auth';
+
+// 쿠키 디버깅 유틸리티 export
+export * from './cookieDebug';
+
+// 인증 지속성 매커니즘 export
+export * from './authPersistence';

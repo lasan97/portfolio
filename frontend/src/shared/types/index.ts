@@ -1,22 +1,4 @@
-export interface ApiResponse<T> {
-  success: boolean;
-  message: string;
-  data: T;
-}
-
-export interface User {
-  id: number;
-  email: string;
-  nickname: string;
-  profileImageUrl?: string;
-}
-
-export interface AuthToken {
-  token: string;
-  userId: number;
-  email: string;
-  nickname: string;
-}
-
-// SSR 타입 익스포트
+// 공통 타입 정의의 공개 API
+export * from './api';
+export * from './common';
 export * from './ssr';

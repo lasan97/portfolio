@@ -1,50 +1,132 @@
 import { APP_CONFIG } from '@shared/config';
+import Cookies from 'universal-cookie';
 
 /**
  * 쿠키를 설정하는 함수
+ * path는 기본적으로 '/'로 설정, 만료일은 기본 7일
  */
 export function setCookie(name: string, value: string, days = 7, path = '/'): void {
-  const expires = new Date(Date.now() + days * 864e5).toUTCString();
-  document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=${path}; SameSite=Lax`;
+  if (typeof window === 'undefined') return;
+  
+  try {
+    const cookies = new Cookies();
+    
+    // 쿠키 옵션 설정
+    const options: any = {
+      path: path,
+      maxAge: days * 24 * 60 * 60, // 초 단위
+      sameSite: 'lax'
+    };
+    
+    // 로컬호스트가 아닌 경우 도메인 설정
+    if (window.location.hostname !== 'localhost') {
+      options.domain = window.location.hostname;
+    }
+    
+    // HTTPS 환경에서는 secure 플래그 설정
+    if (window.location.protocol === 'https:') {
+      options.secure = true;
+    }
+    
+    // 쿠키 설정
+    cookies.set(name, value, options);
+    
+    // 쿠키가 제대로 설정되었는지 확인 (디버깅용)
+    console.log(`쿠키 설정 시도: ${name}=${value.substring(0, 10)}...`, {
+      hostname: window.location.hostname,
+      options
+    });
+    console.log(`현재 쿠키 상태:`, cookies.getAll());
+  } catch (error) {
+    console.error('쿠키 설정 중 오류 발생:', error);
+  }
 }
 
 /**
  * 쿠키를 가져오는 함수 (클라이언트/서버 모두에서 동작)
  */
 export function getCookie(name: string, cookieString?: string): string | null {
-  // 브라우저 환경
-  if (typeof document !== 'undefined' && !cookieString) {
-    cookieString = document.cookie;
+  try {
+    // 브라우저 환경
+    if (typeof window !== 'undefined') {
+      const cookies = new Cookies(cookieString);
+      const value = cookies.get(name);
+      
+      // 디버깅 로그
+      if (value) {
+        console.log(`getCookie: ${name} 값 찾음 - ${typeof value === 'string' ? value.substring(0, 10) + '...' : '[객체]'}`);
+      } else {
+        console.log(`getCookie: ${name} 값 없음`);
+      }
+      
+      return value || null;
+    }
+    
+    // 서버 환경 또는 쿠키 문자열이 제공된 경우
+    if (cookieString) {
+      const cookies = new Cookies(cookieString);
+      return cookies.get(name) || null;
+    }
+    
+    return null;
+  } catch (error) {
+    console.error(`getCookie: ${name} 조회 중 오류 발생`, error);
+    return null;
   }
-  
-  // 쿠키 문자열이 없으면 null 반환
-  if (!cookieString) return null;
-  
-  const cookies = cookieString.split('; ');
-  const cookie = cookies.find(c => c.startsWith(`${name}=`));
-  
-  return cookie ? decodeURIComponent(cookie.split('=')[1]) : null;
 }
 
 /**
  * 쿠키를 삭제하는 함수
  */
 export function deleteCookie(name: string, path = '/'): void {
-  document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=${path}; SameSite=Lax`;
+  if (typeof window === 'undefined') return;
+  
+  try {
+    const cookies = new Cookies();
+    
+    // 쿠키 삭제 (path 옵션 포함)
+    cookies.remove(name, { path });
+    
+    // 삭제 확인 (디버깅용)
+    console.log(`쿠키 삭제 시도: ${name}`);
+    console.log(`삭제 후 쿠키 상태:`, cookies.getAll());
+  } catch (error) {
+    console.error(`쿠키 삭제 중 오류 발생:`, error);
+  }
 }
 
 /**
- * 인증 토큰을 설정하는 함수 (localStorage와 쿠키 모두 사용)
+ * 인증 토큰을 설정하는 함수 (쿠키 + 로컬스토리지)
  */
 export function setAuthToken(token: string): boolean {
   try {
-    // localStorage에 저장 (기존 방식과의 호환성 유지)
-    localStorage.setItem(APP_CONFIG.tokenKey, token);
+    // 쿠키에 저장 (SSR 지원) - 만료일을 30일로 증가
+    setCookie(APP_CONFIG.tokenKey, token, 30);
     
-    // 쿠키에도 저장 (SSR 지원)
-    setCookie(APP_CONFIG.tokenKey, token);
+    // 로컬스토리지에도 저장 (CSR 백업)
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(APP_CONFIG.tokenKey, token);
+    }
     
-    return true;
+    // 쿠키가 제대로 설정되었는지 확인 (디버깅용)
+    const savedCookieToken = getCookie(APP_CONFIG.tokenKey);
+    const savedLocalToken = typeof localStorage !== 'undefined' ? localStorage.getItem(APP_CONFIG.tokenKey) : null;
+    
+    // universal-cookie로 모든 쿠키 확인
+    let allCookies = {};
+    if (typeof window !== 'undefined') {
+      const cookies = new Cookies();
+      allCookies = cookies.getAll();
+    }
+    
+    console.log('토큰 설정 결과:', { 
+      설정한_토큰: token, 
+      쿠키저장_토큰: savedCookieToken,
+      로컬저장_토큰: savedLocalToken,
+      모든쿠키: allCookies
+    });
+    
+    return !!savedCookieToken || !!savedLocalToken;
   } catch (error) {
     console.error('토큰 저장 중 오류 발생:', error);
     return false;
@@ -52,23 +134,45 @@ export function setAuthToken(token: string): boolean {
 }
 
 /**
- * 인증 토큰을 가져오는 함수 (localStorage 또는 쿠키)
+ * 인증 토큰을 가져오는 함수 (쿠키 우선, 로컬스토리지 백업)
  */
 export function getAuthToken(cookieString?: string): string | null {
-  // 먼저 쿠키에서 확인
-  const cookieToken = getCookie(APP_CONFIG.tokenKey, cookieString);
-  if (cookieToken) return cookieToken;
-  
-  // 쿠키에 없으면 localStorage 확인 (클라이언트에서만)
-  if (typeof localStorage !== 'undefined') {
-    try {
-      return localStorage.getItem(APP_CONFIG.tokenKey);
-    } catch (error) {
-      console.error('localStorage 접근 중 오류 발생:', error);
+  try {
+    // 1. 쿠키에서 토큰 조회
+    const cookieToken = getCookie(APP_CONFIG.tokenKey, cookieString);
+    
+    // 2. 쿠키에 없으면 로컬스토리지에서 조회
+    const localStorageToken = typeof localStorage !== 'undefined' ? 
+      localStorage.getItem(APP_CONFIG.tokenKey) : null;
+    
+    // 3. universal-cookie로 모든 쿠키 확인
+    let allCookies = {};
+    if (typeof window !== 'undefined') {
+      const cookies = new Cookies(cookieString);
+      allCookies = cookies.getAll();
     }
+    
+    // 4. 디버깅 로그
+    console.log('토큰 조회:', { 
+      쿠키_토큰: cookieToken, 
+      로컬저장소_토큰: localStorageToken,
+      모든쿠키: allCookies
+    });
+    
+    // 5. 쿠키 토큰이 있으면 쿠키 토큰 반환, 없으면 로컬스토리지 토큰 반환
+    const token = cookieToken || localStorageToken;
+    
+    // 6. 쿠키에 토큰이 없고 로컬스토리지에만 있는 경우, 쿠키 복원
+    if (!cookieToken && localStorageToken && typeof window !== 'undefined') {
+      console.log('쿠키 복원: 로컬스토리지에서 쿠키로 토큰 복사');
+      setCookie(APP_CONFIG.tokenKey, localStorageToken, 30);
+    }
+    
+    return token;
+  } catch (error) {
+    console.error('토큰 조회 중 오류 발생:', error);
+    return null;
   }
-  
-  return null;
 }
 
 /**
@@ -83,13 +187,17 @@ export function isAuthenticated(cookieString?: string): boolean {
  */
 export function logout(): boolean {
   try {
-    // localStorage에서 삭제
-    localStorage.removeItem(APP_CONFIG.tokenKey);
-    localStorage.removeItem(APP_CONFIG.userStorageKey);
-    
-    // 쿠키에서도 삭제
+    // 쿠키에서 삭제
     deleteCookie(APP_CONFIG.tokenKey);
+    deleteCookie(APP_CONFIG.userStorageKey);
     
+    // 로컬스토리지에서도 삭제
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem(APP_CONFIG.tokenKey);
+      localStorage.removeItem(APP_CONFIG.userStorageKey);
+    }
+    
+    console.log('로그아웃 완료 - 인증 정보 삭제됨');
     return true;
   } catch (error) {
     console.error('로그아웃 중 오류 발생:', error);
@@ -98,23 +206,14 @@ export function logout(): boolean {
 }
 
 /**
- * 사용자 정보를 저장하는 함수
+ * 사용자 정보를 저장하는 함수 (쿠키 전용)
  */
 export function setUserInfo(userInfo: any): boolean {
   try {
     const userInfoStr = JSON.stringify(userInfo);
     
-    // localStorage에 저장
-    localStorage.setItem(APP_CONFIG.userStorageKey, userInfoStr);
-    
-    // 쿠키에도 저장 (단, 중요 정보는 제외)
-    const safeUserInfo = {
-      id: userInfo.id,
-      name: userInfo.name,
-      role: userInfo.role
-    };
-    setCookie(APP_CONFIG.userStorageKey, JSON.stringify(safeUserInfo));
-    
+    // 쿠키에 저장 
+    setCookie(APP_CONFIG.userStorageKey, userInfoStr);
     return true;
   } catch (error) {
     console.error('사용자 정보 저장 중 오류 발생:', error);
@@ -123,28 +222,16 @@ export function setUserInfo(userInfo: any): boolean {
 }
 
 /**
- * 사용자 정보를 가져오는 함수
+ * 사용자 정보를 가져오는 함수 (쿠키 전용)
  */
 export function getUserInfo(cookieString?: string): any | null {
-  // 먼저 쿠키에서 확인
-  const cookieUserInfo = getCookie(APP_CONFIG.userStorageKey, cookieString);
-  if (cookieUserInfo) {
-    try {
-      return JSON.parse(cookieUserInfo);
-    } catch (e) {
-      console.error('쿠키의 사용자 정보 파싱 중 오류 발생:', e);
-    }
+  try {
+    const cookieUserInfo = getCookie(APP_CONFIG.userStorageKey, cookieString);
+    if (!cookieUserInfo) return null;
+    
+    return JSON.parse(cookieUserInfo);
+  } catch (e) {
+    console.error('쿠키의 사용자 정보 파싱 중 오류 발생:', e);
+    return null;
   }
-  
-  // 쿠키에 없으면 localStorage 확인 (클라이언트에서만)
-  if (typeof localStorage !== 'undefined') {
-    try {
-      const localUserInfo = localStorage.getItem(APP_CONFIG.userStorageKey);
-      return localUserInfo ? JSON.parse(localUserInfo) : null;
-    } catch (error) {
-      console.error('localStorage의 사용자 정보 접근 중 오류 발생:', error);
-    }
-  }
-  
-  return null;
 }
