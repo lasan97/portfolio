@@ -147,16 +147,16 @@ const routes = [
 ];
 ```
 
-자세한 내용은 [SSR 구현 가이드](docs/ssr-guide.md)와 [하이브리드 CSR/SSR 가이드](docs/hybrid-ssr-csr.md)를 참조하세요.
+자세한 내용은 [SSR 구현 가이드](ssr-guide.md)와 [하이브리드 CSR/SSR 가이드](hybrid-ssr-csr.md)를 참조하세요.
 
 ## 개발 가이드 및 문서
 
 다음 개발 가이드 및 문서는 `docs/` 디렉토리에서 확인할 수 있습니다:
 
-- [FSD 개발 가이드](docs/development-guide.md) - FSD 아키텍처 기반 개발 방법
-- [Vite 및 Pinia 가이드](docs/vite-pinia-guide.md) - Vite와 Pinia 사용 방법
-- [SSR 구현 가이드](docs/ssr-guide.md) - SSR 및 하이브리드 렌더링 구현 방법
-- [하이브리드 CSR/SSR 가이드](docs/hybrid-ssr-csr.md) - 하이브리드 렌더링 접근법
+- [FSD 개발 가이드](development-guide.md) - FSD 아키텍처 기반 개발 방법
+- [Vite 및 Pinia 가이드](vite-pinia-guide.md) - Vite와 Pinia 사용 방법
+- [SSR 구현 가이드](ssr-guide.md) - SSR 및 하이브리드 렌더링 구현 방법
+- [하이브리드 CSR/SSR 가이드](hybrid-ssr-csr.md) - 하이브리드 렌더링 접근법
 
 ## 참고 자료
 
