@@ -9,7 +9,7 @@ public class ServiceBaseResponse {
 			String url,
 			String logoUrl
 	) {
-		public ExternalLink(com.portfolio.backend.domain.dashboard.value.ExternalLink externalLink) {
+		public ExternalLink(com.portfolio.backend.domain.introduction.value.ExternalLink externalLink) {
 			this(externalLink.getName(), externalLink.getUrl(), externalLink.getLogoUrl());
 		}
 	}

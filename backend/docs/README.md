@@ -29,8 +29,8 @@ backend
    - OAuth2를 통한 GitHub 로그인
    - 사용자 프로필 관리
 
-2. **대시보드 관리**
-   - 포트폴리오 대시보드 CRUD 기능
+2. **자기소개 관리**
+   - 포트폴리오 자기소개 CRUD 기능
    - 외부 링크 관리
 
 3. **보안**
@@ -57,6 +57,6 @@ docker run -p 8081:8081 portfolio-backend
 - 인증: `/api/auth/**`
   - OAuth2 로그인: `/api/auth/oauth2/github`
 - 사용자: `/api/users/**`
-- 대시보드: `/api/dashboards/**`
+- 자기소개: `/api/introduction/**`
 
 서버는 기본적으로 8081 포트에서 실행됩니다.

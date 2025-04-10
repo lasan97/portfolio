@@ -30,15 +30,8 @@ export function setCookie(name: string, value: string, days = 7, path = '/'): vo
     
     // 쿠키 설정
     cookies.set(name, value, options);
-    
-    // 쿠키가 제대로 설정되었는지 확인 (디버깅용)
-    console.log(`쿠키 설정 시도: ${name}=${value.substring(0, 10)}...`, {
-      hostname: window.location.hostname,
-      options
-    });
-    console.log(`현재 쿠키 상태:`, cookies.getAll());
   } catch (error) {
-    console.error('쿠키 설정 중 오류 발생:', error);
+    // 오류 로그 제거
   }
 }
 
@@ -51,14 +44,6 @@ export function getCookie(name: string, cookieString?: string): string | null {
     if (typeof window !== 'undefined') {
       const cookies = new Cookies(cookieString);
       const value = cookies.get(name);
-      
-      // 디버깅 로그
-      if (value) {
-        console.log(`getCookie: ${name} 값 찾음 - ${typeof value === 'string' ? value.substring(0, 10) + '...' : '[객체]'}`);
-      } else {
-        console.log(`getCookie: ${name} 값 없음`);
-      }
-      
       return value || null;
     }
     
@@ -70,7 +55,7 @@ export function getCookie(name: string, cookieString?: string): string | null {
     
     return null;
   } catch (error) {
-    console.error(`getCookie: ${name} 조회 중 오류 발생`, error);
+    // 오류 로그 제거
     return null;
   }
 }
@@ -86,12 +71,8 @@ export function deleteCookie(name: string, path = '/'): void {
     
     // 쿠키 삭제 (path 옵션 포함)
     cookies.remove(name, { path });
-    
-    // 삭제 확인 (디버깅용)
-    console.log(`쿠키 삭제 시도: ${name}`);
-    console.log(`삭제 후 쿠키 상태:`, cookies.getAll());
   } catch (error) {
-    console.error(`쿠키 삭제 중 오류 발생:`, error);
+    // 오류 로그 제거
   }
 }
 
@@ -108,27 +89,13 @@ export function setAuthToken(token: string): boolean {
       localStorage.setItem(APP_CONFIG.tokenKey, token);
     }
     
-    // 쿠키가 제대로 설정되었는지 확인 (디버깅용)
+    // 쿠키가 제대로 설정되었는지 확인
     const savedCookieToken = getCookie(APP_CONFIG.tokenKey);
     const savedLocalToken = typeof localStorage !== 'undefined' ? localStorage.getItem(APP_CONFIG.tokenKey) : null;
     
-    // universal-cookie로 모든 쿠키 확인
-    let allCookies = {};
-    if (typeof window !== 'undefined') {
-      const cookies = new Cookies();
-      allCookies = cookies.getAll();
-    }
-    
-    console.log('토큰 설정 결과:', { 
-      설정한_토큰: token, 
-      쿠키저장_토큰: savedCookieToken,
-      로컬저장_토큰: savedLocalToken,
-      모든쿠키: allCookies
-    });
-    
     return !!savedCookieToken || !!savedLocalToken;
   } catch (error) {
-    console.error('토큰 저장 중 오류 발생:', error);
+    // 오류 로그 제거
     return false;
   }
 }
@@ -145,32 +112,17 @@ export function getAuthToken(cookieString?: string): string | null {
     const localStorageToken = typeof localStorage !== 'undefined' ? 
       localStorage.getItem(APP_CONFIG.tokenKey) : null;
     
-    // 3. universal-cookie로 모든 쿠키 확인
-    let allCookies = {};
-    if (typeof window !== 'undefined') {
-      const cookies = new Cookies(cookieString);
-      allCookies = cookies.getAll();
-    }
-    
-    // 4. 디버깅 로그
-    console.log('토큰 조회:', { 
-      쿠키_토큰: cookieToken, 
-      로컬저장소_토큰: localStorageToken,
-      모든쿠키: allCookies
-    });
-    
     // 5. 쿠키 토큰이 있으면 쿠키 토큰 반환, 없으면 로컬스토리지 토큰 반환
     const token = cookieToken || localStorageToken;
     
     // 6. 쿠키에 토큰이 없고 로컬스토리지에만 있는 경우, 쿠키 복원
     if (!cookieToken && localStorageToken && typeof window !== 'undefined') {
-      console.log('쿠키 복원: 로컬스토리지에서 쿠키로 토큰 복사');
       setCookie(APP_CONFIG.tokenKey, localStorageToken, 30);
     }
     
     return token;
   } catch (error) {
-    console.error('토큰 조회 중 오류 발생:', error);
+    // 오류 로그 제거
     return null;
   }
 }
@@ -197,10 +149,9 @@ export function logout(): boolean {
       localStorage.removeItem(APP_CONFIG.userStorageKey);
     }
     
-    console.log('로그아웃 완료 - 인증 정보 삭제됨');
     return true;
   } catch (error) {
-    console.error('로그아웃 중 오류 발생:', error);
+    // 오류 로그 제거
     return false;
   }
 }
@@ -216,7 +167,7 @@ export function setUserInfo(userInfo: any): boolean {
     setCookie(APP_CONFIG.userStorageKey, userInfoStr);
     return true;
   } catch (error) {
-    console.error('사용자 정보 저장 중 오류 발생:', error);
+    // 오류 로그 제거
     return false;
   }
 }
@@ -231,7 +182,7 @@ export function getUserInfo(cookieString?: string): any | null {
     
     return JSON.parse(cookieUserInfo);
   } catch (e) {
-    console.error('쿠키의 사용자 정보 파싱 중 오류 발생:', e);
+    // 오류 로그 제거
     return null;
   }
 }

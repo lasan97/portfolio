@@ -27,7 +27,7 @@ export const ROUTES = {
   NOT_FOUND: '/404',
   OAUTH_CALLBACK: '/oauth2/callback',
   SSR: '/ssr',
-  DASHBOARD: '/dashboard'
+  INTRODUCTION: '/introduction'
 };
 
 /**

@@ -20,7 +20,6 @@ export function setupCookieDebug(): void {
                      Object.getOwnPropertyDescriptor(HTMLDocument.prototype, 'cookie');
   
   if (!originalDesc) {
-    console.warn('쿠키 디버깅 설정 실패: cookie 속성을 찾을 수 없습니다.');
     return;
   }
   
@@ -30,35 +29,11 @@ export function setupCookieDebug(): void {
       return originalDesc.get?.call(this);
     },
     set: function(val) {
-      console.log('쿠키 변경 감지:', {
-        설정값: val,
-        현재시간: new Date().toISOString(),
-        스택: new Error().stack
-      });
-      
-      // auth_token 관련 쿠키인 경우 추가 로깅
-      if (val.includes(`${APP_CONFIG.tokenKey}=`)) {
-        console.warn('인증 토큰 쿠키 변경 감지!', {
-          쿠키설정: val,
-          현재인증상태: getAuthToken() ? '로그인됨' : '로그아웃됨',
-          universal쿠키: cookiesInstance.getAll()
-        });
-      } 
-      
-      // 만료되는 쿠키인 경우 추가 로깅
-      if (val.includes('expires=Thu, 01 Jan 1970')) {
-        console.warn('쿠키 삭제 감지!', {
-          삭제쿠키: val.split('=')[0],
-          스택: new Error().stack?.split('\n').slice(1, 4).join('\n')
-        });
-      }
-      
+      // auth_token 관련 쿠키인 경우에도 로깅 제거
       return originalDesc.set?.call(this, val);
     },
     configurable: true
   });
-  
-  console.log('쿠키 디버깅 설정 완료');
 }
 
 /**
@@ -72,12 +47,7 @@ export function monitorCookiePersistence(): void {
   
   // 페이지 로드 시 쿠키 상태 확인
   const checkCookies = () => {
-    console.log('페이지 로드 완료 - 쿠키 상태:', {
-      현재쿠키: cookiesInstance.getAll(),
-      인증토큰: getAuthToken(),
-      인증토큰쿠키: cookiesInstance.get(APP_CONFIG.tokenKey) !== undefined,
-      페이지URL: window.location.href
-    });
+    // 콘솔 로그 제거됨
   };
   
   // 페이지 언로드 시 쿠키 상태 기록
@@ -98,15 +68,9 @@ export function monitorCookiePersistence(): void {
         const lastState = JSON.parse(lastStateStr);
         const currentAuthToken = cookiesInstance.get(APP_CONFIG.tokenKey) !== undefined;
         
-        // 이전에 토큰이 있었는데 지금 없으면 경고
-        if (lastState.hasAuthToken && !currentAuthToken) {
-          console.warn('⚠️ 페이지 새로고침 후 인증 토큰 쿠키가 사라짐!', {
-            이전상태: lastState,
-            현재쿠키: cookiesInstance.getAll()
-          });
-        }
+        // 이전 로그 제거됨
       } catch (e) {
-        console.error('쿠키 상태 비교 중 오류:', e);
+        // 오류 로그 제거됨
       }
     }
   };
@@ -121,8 +85,6 @@ export function monitorCookiePersistence(): void {
   
   // 최초 실행 시 현재 상태 확인
   checkCookies();
-  
-  console.log('쿠키 지속성 모니터링 설정 완료');
 }
 
 /**
@@ -141,8 +103,6 @@ export function setupCookieRestoration(): void {
     
     // 로컬스토리지에 토큰이 있지만 쿠키에 없는 경우 복원
     if (token && !hasTokenCookie) {
-      console.log('쿠키 복원: 토큰이 쿠키에서 누락됨, 복원 중...');
-      
       // 쿠키 복원 (30일 만료, 루트 경로)
       cookiesInstance.set(APP_CONFIG.tokenKey, token, {
         path: '/',
@@ -150,8 +110,6 @@ export function setupCookieRestoration(): void {
         sameSite: 'lax',
         secure: window.location.protocol === 'https:'
       });
-      
-      console.log('쿠키 복원 완료:', cookiesInstance.getAll());
     }
   };
   
@@ -168,6 +126,4 @@ export function setupCookieRestoration(): void {
   
   // 최초 실행
   restoreFromLocalStorage();
-  
-  console.log('쿠키 자동 복원 설정 완료');
 }

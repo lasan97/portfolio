@@ -141,8 +141,8 @@ const routes = [
     meta: { ssr: true }  // 이 페이지는 SSR로 렌더링됨
   },
   {
-    path: '/dashboard',  // meta.ssr이 없거나 false면 CSR로 렌더링됨
-    component: Dashboard
+    path: '/introduction',  // meta.ssr이 없거나 false면 CSR로 렌더링됨
+    component: IntroductionPage
   }
 ];
 ```

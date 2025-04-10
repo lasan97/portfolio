@@ -31,7 +31,7 @@
 - 역할 기반 접근 제어 (ROLE_USER, ROLE_ADMIN)
 - 사용자 프로필 정보 관리
 
-### 대시보드 (Dashboard)
+### 자기소개 (Introduction)
 - 포트폴리오 컨텐츠 관리
 - 외부 링크(ExternalLink) 값 객체 포함
 - 생성/수정 기록 추적
