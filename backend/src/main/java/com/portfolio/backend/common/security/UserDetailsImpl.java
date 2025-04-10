@@ -1,6 +1,5 @@
 package com.portfolio.backend.common.security;
 
-import com.portfolio.backend.domain.user.entity.User;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -14,14 +13,14 @@ import java.util.Map;
 @Getter
 public class UserDetailsImpl implements UserDetails, OAuth2User {
 
-    private final User user;
+    private final UserImpl user;
     private Map<String, Object> attributes;
 
-    public UserDetailsImpl(User user) {
+    public UserDetailsImpl(UserImpl user) {
         this.user = user;
     }
 
-    public UserDetailsImpl(User user, Map<String, Object> attributes) {
+    public UserDetailsImpl(UserImpl user, Map<String, Object> attributes) {
         this.user = user;
         this.attributes = attributes;
     }
@@ -33,17 +32,16 @@ public class UserDetailsImpl implements UserDetails, OAuth2User {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()));
+        return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.role().name()));
     }
 
-    @Override
-    public String getPassword() {
-        return null; // OAuth2 인증이므로 비밀번호는 필요 없음
+    public Long getId() {
+        return user.id();
     }
 
     @Override
     public String getUsername() {
-        return user.getEmail();
+        return user.email();
     }
 
     @Override
@@ -68,6 +66,11 @@ public class UserDetailsImpl implements UserDetails, OAuth2User {
 
     @Override
     public String getName() {
-        return user.getProviderId();
+        return null;
+    }
+
+    @Override
+    public String getPassword() {
+        return null; // OAuth2 인증이므로 비밀번호는 필요 없음
     }
 }

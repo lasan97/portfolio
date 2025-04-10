@@ -1,11 +1,15 @@
 package com.portfolio.backend.service.auth;
 
+import com.portfolio.backend.common.exception.ResourceNotFoundException;
 import com.portfolio.backend.common.integration.oauth2.github.GithubIntegration;
 import com.portfolio.backend.common.integration.oauth2.github.dto.GithubResponse;
-import com.portfolio.backend.service.user.dto.UserDto;
+import com.portfolio.backend.common.security.UserDetailsImpl;
+import com.portfolio.backend.common.security.jwt.JwtTokenProvider;
 import com.portfolio.backend.domain.user.entity.Oauth2ProviderType;
+import com.portfolio.backend.domain.user.entity.RoleType;
 import com.portfolio.backend.domain.user.entity.User;
 import com.portfolio.backend.domain.user.repository.UserRepository;
+import com.portfolio.backend.service.auth.dto.OAuth2ServiceResponse.TokenResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,9 +22,10 @@ public class OAuth2Service {
 
     private final UserRepository userRepository;
     private final GithubIntegration githubIntegration;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Transactional
-    public UserDto processGithubLogin(String code) {
+    public TokenResponse processGithubLogin(String code) {
         // 1. 인증 코드로 액세스 토큰 요청
         String accessToken = githubIntegration.getAccessToken(code);
         
@@ -30,15 +35,11 @@ public class OAuth2Service {
 
         // 3. 사용자 정보로 회원가입/로그인 처리
         User user = saveOrUpdateUser(userInfo, email);
-        
-        // 4. UserDto 변환 및 반환
-        return UserDto.builder()
-                .id(user.getId())
-                .email(user.getEmail())
-                .nickname(user.getNickname())
-                .profileImageUrl(user.getProfileImageUrl())
-                .role(user.getRole())
-                .build();
+
+        // 4. JWT 토큰 생성
+        String token = jwtTokenProvider.createToken(user);
+
+        return new TokenResponse(token);
     }
     
     /**
@@ -50,7 +51,7 @@ public class OAuth2Service {
         if (nickname == null) {
             nickname = userInfo.login();
         }
-        String profileImageUrl = userInfo.avatar_url().toString();
+        String profileImageUrl = userInfo.avatarUrl().toString();
         
         Optional<User> userOptional = userRepository.findByProviderAndProviderId(Oauth2ProviderType.GITHUB, providerId);
         
@@ -65,9 +66,18 @@ public class OAuth2Service {
                     .email(email != null ? email : "github_" + providerId + "@example.com")
                     .nickname(nickname)
                     .profileImageUrl(profileImageUrl)
-                    .role(User.Role.USER)
+                    .role(RoleType.USER)
                     .build();
             return userRepository.save(newUser);
         }
+    }
+
+    public TokenResponse refresh(UserDetailsImpl userDetails) {
+
+        User user = userRepository.findById(userDetails.getId()).orElseThrow(() -> new ResourceNotFoundException("토큰 정보가 잘못 되었습니다."));
+
+        String token = jwtTokenProvider.createToken(user);
+
+        return new TokenResponse(token);
     }
 }

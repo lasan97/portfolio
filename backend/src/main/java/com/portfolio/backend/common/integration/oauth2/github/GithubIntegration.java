@@ -14,7 +14,6 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
-import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
@@ -51,17 +50,17 @@ public class GithubIntegration {
 		HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(params, headers);
 
 		// API 요청
-		ResponseEntity<Map> responseEntity = restTemplate.exchange(
+		ResponseEntity<GithubResponse.TokenDto> responseEntity = restTemplate.exchange(
 				accessTokenUrl,
 				HttpMethod.POST,
 				requestEntity,
-				Map.class
+				GithubResponse.TokenDto.class
 		);
 
 		// 응답에서 액세스 토큰 추출
-		Map<String, Object> responseBody = responseEntity.getBody();
-		if (responseBody != null && responseBody.containsKey("access_token")) {
-			return (String) responseBody.get("access_token");
+		GithubResponse.TokenDto responseBody = responseEntity.getBody();
+		if (responseBody != null && responseBody.accessToken() != null) {
+			return responseBody.accessToken();
 		}
 
 		throw new RuntimeException("GitHub 액세스 토큰을 가져오는데 실패했습니다.");

@@ -1,5 +1,7 @@
 package com.portfolio.backend.common.security.jwt;
 
+import com.portfolio.backend.common.security.UserImpl;
+import com.portfolio.backend.domain.user.entity.RoleType;
 import com.portfolio.backend.domain.user.entity.User;
 import com.portfolio.backend.common.security.UserDetailsImpl;
 import io.jsonwebtoken.*;
@@ -42,10 +44,10 @@ public class JwtTokenProvider {
     
     public String createToken(Long userId) {
         // 유저 ID만 있는 경우 기본 ROLE_USER로 생성
-        return createToken(userId, "user_" + userId + "@example.com", User.Role.USER);
+        return createToken(userId, "user_" + userId + "@example.com", RoleType.USER);
     }
     
-    private String createToken(Long userId, String email, User.Role role) {
+    private String createToken(Long userId, String email, RoleType role) {
         Instant now = Instant.now();
         Instant validity = now.plus(tokenValidityInMilliseconds, ChronoUnit.MILLIS);
 
@@ -70,14 +72,12 @@ public class JwtTokenProvider {
                 .parseSignedClaims(token)
                 .getPayload();
 
-        User.Role role = User.Role.valueOf(claims.get("role", String.class));
-        
-        User user = User.builder()
-                .id(claims.get("id", Long.class))
-                .email(claims.getSubject())
-                .role(role)
-                .build();
-        
+        Long id = claims.get("id", Long.class);
+        String email = claims.getSubject();
+        RoleType role = RoleType.valueOf(claims.get("role", String.class));
+
+        UserImpl user = new UserImpl(id, email, role);
+
         UserDetailsImpl principal = new UserDetailsImpl(user);
         
         return new UsernamePasswordAuthenticationToken(principal, token, principal.getAuthorities());

@@ -1,8 +1,8 @@
 package com.portfolio.backend.controller.user;
 
 import com.portfolio.backend.common.security.UserDetailsImpl;
-import com.portfolio.backend.service.user.dto.UserDto;
 import com.portfolio.backend.service.user.UserService;
+import com.portfolio.backend.service.user.dto.UserServiceResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,7 +17,7 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping("/me")
-    public UserDto getCurrentUser(@AuthenticationPrincipal UserDetailsImpl userDetails) {
-		return userService.getUserProfile(userDetails.getUser().getId());
+    public UserServiceResponse.Profile getCurrentUser(@AuthenticationPrincipal UserDetailsImpl userDetails) {
+		return userService.getUserProfile(userDetails.getUser().id());
     }
 }
