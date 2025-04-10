@@ -1,6 +1,7 @@
 /**
  * 유틸리티 헬퍼 함수 모음
  */
+import Cookies from 'universal-cookie';
 
 /**
  * 랜덤 ID 생성 함수
@@ -68,7 +69,6 @@ export function getCookie(name: string): string | null {
       return null;
     }
     
-    const Cookies = require('universal-cookie').default;
     const cookies = new Cookies();
     return cookies.get(name) || null;
   } catch (error) {
@@ -89,7 +89,6 @@ export function setCookie(name: string, value: string, days = 7): void {
       return;
     }
     
-    const Cookies = require('universal-cookie').default;
     const cookies = new Cookies();
     
     const options: any = {
@@ -119,7 +118,6 @@ export function deleteCookie(name: string): void {
       return;
     }
     
-    const Cookies = require('universal-cookie').default;
     const cookies = new Cookies();
     
     cookies.remove(name, { path: '/' });

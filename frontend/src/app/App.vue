@@ -14,6 +14,7 @@ import { useAuthStore } from '@features/auth';
 import { useUserStore } from '@entities/user';
 import { Header } from '@widgets/header';
 import { Footer } from '@widgets/footer';
+import Cookies from 'universal-cookie';
 
 export default defineComponent({
   name: 'App',
@@ -68,7 +69,6 @@ export default defineComponent({
       // 세 번째: 저장소 토큰 확인 후 인증 스토어 초기화
       authStore.initialize().then(() => {
         // universal-cookie 사용
-        const Cookies = require('universal-cookie').default;
         const cookies = new Cookies();
         console.log('인증 초기화 완료:', {
           로그인됨: authStore.isAuthenticated,
@@ -97,7 +97,6 @@ export default defineComponent({
         await authStore.initialize();
         
         // universal-cookie 사용
-        const Cookies = require('universal-cookie').default;
         const cookies = new Cookies();
         
         console.log('인증 상태 새로고침 완료:', {

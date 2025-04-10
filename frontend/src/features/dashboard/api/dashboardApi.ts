@@ -1,5 +1,5 @@
 import { api } from '@shared/api';
-import type { DashboardDto, DashboardUpdateRequest } from '@entities/dashboard';
+import type { DashboardDto, DashboardUpdateRequest, DashboardCreateRequest } from '@entities/dashboard';
 import type { AxiosApiResponse } from '@shared/types';
 
 const BASE_URL = '/api/dashboard';
@@ -14,13 +14,13 @@ export const getDashboard = (): Promise<AxiosApiResponse<DashboardDto>> => {
 /**
  * 대시보드 정보 업데이트 API
  */
-export const updateDashboard = (data: DashboardUpdateRequest): Promise<AxiosApiResponse<DashboardDto>> => {
+export const updateDashboard = (data: DashboardUpdateRequest): Promise<AxiosApiResponse<number>> => {
   return api.put(BASE_URL, data);
 };
 
 /**
- * 대시보드 초기화 API
+ * 대시보드 생성 API
  */
-export const initializeDashboard = (): Promise<AxiosApiResponse<DashboardDto>> => {
-  return api.post(`${BASE_URL}/initialize`);
+export const createDashboard = (data: DashboardCreateRequest): Promise<AxiosApiResponse<number>> => {
+  return api.post(BASE_URL, data);
 };

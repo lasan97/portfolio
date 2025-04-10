@@ -1,18 +1,21 @@
 /**
+ * 외부 링크 인터페이스
+ */
+export interface ExternalLink {
+  name: string;
+  url: string;
+  logoUrl?: string;
+}
+
+/**
  * 대시보드 데이터 전송 객체
  */
 export interface DashboardDto {
   id: number;
   title: string;
   content: string;
-  githubUrl?: string;
-  velogUrl?: string;
-  linkedinUrl?: string;
-  otherUrl?: string;
-  createdAt: string;
+  externalLinks: ExternalLink[];
   updatedAt: string;
-  createdBy?: string;
-  updatedBy?: string;
 }
 
 /**
@@ -21,8 +24,14 @@ export interface DashboardDto {
 export interface DashboardUpdateRequest {
   title: string;
   content: string;
-  githubUrl?: string;
-  velogUrl?: string;
-  linkedinUrl?: string;
-  otherUrl?: string;
+  externalLinks: ExternalLink[];
+}
+
+/**
+ * 대시보드 생성 요청 DTO
+ */
+export interface DashboardCreateRequest {
+  title: string;
+  content: string;
+  externalLinks: ExternalLink[];
 }

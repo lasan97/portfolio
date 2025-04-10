@@ -56,71 +56,69 @@
         <p v-if="errors.content" class="mt-1 text-sm text-red-600">{{ errors.content }}</p>
       </div>
       
-      <!-- 외부 링크 입력 필드 -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label for="githubUrl" class="block text-sm font-medium text-gray-700 mb-1">GitHub URL</label>
-          <div class="flex">
-            <span class="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500">
-              <GithubIcon class="w-5 h-5" />
-            </span>
-            <input
-              id="githubUrl"
-              v-model="formData.githubUrl"
-              type="url"
-              placeholder="https://github.com/username"
-              class="flex-1 min-w-0 block w-full px-3 py-2 rounded-none rounded-r-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+      <!-- 외부 링크 섹션 -->
+      <div>
+        <div class="flex justify-between items-center mb-2">
+          <label class="block text-sm font-medium text-gray-700">외부 링크</label>
+          <button 
+            type="button"
+            @click="addLink"
+            class="text-blue-600 hover:text-blue-800 text-sm font-medium"
+          >
+            + 링크 추가
+          </button>
+        </div>
+        
+        <div v-for="(link, index) in formData.externalLinks" :key="index" class="mb-4 p-4 border border-gray-200 rounded-md">
+          <div class="flex justify-between mb-2">
+            <h4 class="text-sm font-medium">링크 #{{ index + 1 }}</h4>
+            <button 
+              type="button"
+              @click="() => removeLink(index)"
+              class="text-red-600 hover:text-red-800 text-sm"
+            >
+              삭제
+            </button>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label :for="`link-name-${index}`" class="block text-sm font-medium text-gray-700 mb-1">이름</label>
+              <input
+                :id="`link-name-${index}`"
+                v-model="link.name"
+                type="text"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              />
+            </div>
+            
+            <div>
+              <label :for="`link-url-${index}`" class="block text-sm font-medium text-gray-700 mb-1">URL</label>
+              <input
+                :id="`link-url-${index}`"
+                v-model="link.url"
+                type="url"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              />
+            </div>
+            
+            <div class="md:col-span-2">
+              <label :for="`link-logo-${index}`" class="block text-sm font-medium text-gray-700 mb-1">로고 URL (선택사항)</label>
+              <input
+                :id="`link-logo-${index}`"
+                v-model="link.logoUrl"
+                type="url"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
           </div>
         </div>
         
-        <div>
-          <label for="velogUrl" class="block text-sm font-medium text-gray-700 mb-1">Velog URL</label>
-          <div class="flex">
-            <span class="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500">
-              <VelogIcon class="w-5 h-5" />
-            </span>
-            <input
-              id="velogUrl"
-              v-model="formData.velogUrl"
-              type="url"
-              placeholder="https://velog.io/@username"
-              class="flex-1 min-w-0 block w-full px-3 py-2 rounded-none rounded-r-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-        </div>
-        
-        <div>
-          <label for="linkedinUrl" class="block text-sm font-medium text-gray-700 mb-1">LinkedIn URL</label>
-          <div class="flex">
-            <span class="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500">
-              <LinkedinIcon class="w-5 h-5" />
-            </span>
-            <input
-              id="linkedinUrl"
-              v-model="formData.linkedinUrl"
-              type="url"
-              placeholder="https://linkedin.com/in/username"
-              class="flex-1 min-w-0 block w-full px-3 py-2 rounded-none rounded-r-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-        </div>
-        
-        <div>
-          <label for="otherUrl" class="block text-sm font-medium text-gray-700 mb-1">기타 웹사이트</label>
-          <div class="flex">
-            <span class="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500">
-              <LinkIcon class="w-5 h-5" />
-            </span>
-            <input
-              id="otherUrl"
-              v-model="formData.otherUrl"
-              type="url"
-              placeholder="https://example.com"
-              class="flex-1 min-w-0 block w-full px-3 py-2 rounded-none rounded-r-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-        </div>
+        <p v-if="formData.externalLinks.length === 0" class="text-sm text-gray-500 italic mt-2">
+          아직 추가된 링크가 없습니다. '링크 추가' 버튼을 눌러 링크를 추가해주세요.
+        </p>
       </div>
       
       <!-- 버튼 그룹 -->
@@ -145,11 +143,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue';
+import { ref, reactive, onMounted, computed } from 'vue';
 import MarkdownRenderer from '@shared/ui/MarkdownRenderer.vue';
-import GithubIcon from '@shared/ui/icons/GithubIcon.vue';
-import VelogIcon from '@shared/ui/icons/VelogIcon.vue';
-import LinkedinIcon from '@shared/ui/icons/LinkedinIcon.vue';
 import LinkIcon from '@shared/ui/icons/LinkIcon.vue';
 import BoldIcon from '@shared/ui/icons/BoldIcon.vue';
 import ItalicIcon from '@shared/ui/icons/ItalicIcon.vue';
@@ -158,25 +153,23 @@ import ListIcon from '@shared/ui/icons/ListIcon.vue';
 import CodeIcon from '@shared/ui/icons/CodeIcon.vue';
 import LinkEditorIcon from '@shared/ui/icons/LinkEditorIcon.vue';
 import ImageIcon from '@shared/ui/icons/ImageIcon.vue';
-import type { DashboardDto, DashboardUpdateRequest } from '@entities/dashboard';
+import type { DashboardDto, DashboardUpdateRequest, DashboardCreateRequest, ExternalLink } from '@entities/dashboard';
 
 const props = defineProps<{
   dashboard: DashboardDto | null;
+  isCreate?: boolean;
 }>();
 
 const emit = defineEmits<{
-  (e: 'save', data: DashboardUpdateRequest): void;
+  (e: 'save', data: DashboardUpdateRequest | DashboardCreateRequest): void;
   (e: 'cancel'): void;
 }>();
 
 // 폼 데이터
-const formData = reactive<DashboardUpdateRequest>({
+const formData = reactive({
   title: '',
   content: '',
-  githubUrl: '',
-  velogUrl: '',
-  linkedinUrl: '',
-  otherUrl: ''
+  externalLinks: [] as ExternalLink[]
 });
 
 // 에러 상태
@@ -187,6 +180,20 @@ const errors = reactive({
 
 // 로딩 상태
 const loading = ref(false);
+
+// 외부 링크 추가
+const addLink = () => {
+  formData.externalLinks.push({
+    name: '',
+    url: '',
+    logoUrl: ''
+  });
+};
+
+// 외부 링크 제거
+const removeLink = (index: number) => {
+  formData.externalLinks.splice(index, 1);
+};
 
 // 에디터 도구 설정
 const editorTools = [
@@ -332,7 +339,18 @@ const handleSubmit = () => {
   errors.title = formData.title.trim() ? '' : '제목을 입력해주세요.';
   errors.content = formData.content.trim() ? '' : '내용을 입력해주세요.';
   
-  if (errors.title || errors.content) {
+  // 외부 링크 유효성 검사
+  let hasLinkError = false;
+  
+  if (formData.externalLinks) {
+    formData.externalLinks.forEach((link) => {
+      if (!link.name?.trim() || !link.url?.trim()) {
+        hasLinkError = true;
+      }
+    });
+  }
+  
+  if (errors.title || errors.content || hasLinkError) {
     return;
   }
   
@@ -345,10 +363,15 @@ onMounted(() => {
   if (props.dashboard) {
     formData.title = props.dashboard.title;
     formData.content = props.dashboard.content;
-    formData.githubUrl = props.dashboard.githubUrl || '';
-    formData.velogUrl = props.dashboard.velogUrl || '';
-    formData.linkedinUrl = props.dashboard.linkedinUrl || '';
-    formData.otherUrl = props.dashboard.otherUrl || '';
+    
+    // externalLinks 배열 초기화
+    formData.externalLinks = props.dashboard.externalLinks ? 
+      [...props.dashboard.externalLinks] : [];
+  } else {
+    // 새로운 대시보드 생성 시 기본값 설정
+    formData.title = '';
+    formData.content = '';
+    formData.externalLinks = [];
   }
 });
 </script>
