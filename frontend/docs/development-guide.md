@@ -21,6 +21,7 @@ src/
 │   ├── store/      # Pinia 스토어 설정
 │   ├── styles/     # 전역 스타일 (Tailwind CSS)
 │   └── App.vue     # 루트 컴포넌트
+├── processes/      # 비즈니스 프로세스와 워크플로우
 ├── pages/          # 페이지 컴포넌트
 │   ├── home/       # 홈 페이지
 │   ├── notFound/   # 404 페이지
@@ -66,6 +67,7 @@ src/
 새 기능을 추가할 때 먼저 해당 기능이 속하는 계층(`features`, `entities`, `widgets` 등)을 결정합니다.
 
 - **pages**: 라우트와 매핑되는 페이지 컴포넌트
+- **processes**: 여러 기능이나 엔티티를 아우르는 비즈니스 프로세스
 - **widgets**: 페이지 구성에 사용되는 독립적인 UI 블록
 - **features**: 사용자 상호작용이 포함된 기능 단위
 - **entities**: 비즈니스 로직과 데이터 모델
