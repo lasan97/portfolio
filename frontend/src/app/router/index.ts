@@ -62,8 +62,8 @@ const router = createRouter({
   routes
 })
 
-// 인증 관련 유틸리티 import
-import { isAuthenticated } from '@shared/lib/auth';
+// 인증 관련 유틸리티 import (통합된 auth-utils 사용)
+import { isAuthenticated } from '@shared/lib';
 import { storeToRefs } from 'pinia';
 import { useAuthStore } from '@features/auth';
 

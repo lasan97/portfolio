@@ -318,7 +318,6 @@ import { Button } from '../../shared/ui';
 
 2. **로그인 상태가 새로고침 시 초기화**:
    - localStorage 대신 쿠키 기반 인증 사용
-   - `auth.ts` 유틸리티에서 쿠키와 localStorage 모두 확인
 
 3. **하이드레이션 불일치 오류**:
    - 서버와 클라이언트 렌더링 결과 차이로 발생

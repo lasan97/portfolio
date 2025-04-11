@@ -8,15 +8,7 @@
     <div v-if="initialLoading || loading" class="flex justify-center items-center py-10">
       <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-gray-900"></div>
     </div>
-    
-    <!-- 오류 표시 -->
-    <div v-else-if="error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-      <p>{{ error }}</p>
-      <button @click="fetchIntroduction" class="mt-2 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
-        다시 시도
-      </button>
-    </div>
-    
+
     <!-- 에디터 모드 -->
     <template v-else-if="isEditing || isCreating">
       <IntroductionEditor 
@@ -38,16 +30,28 @@
     
     <!-- 자기소개가 없는 경우 (초기 로딩이 완료된 후에만 표시) -->
     <template v-else-if="!initialLoading">
-      <div class="bg-white shadow-md rounded-lg p-6 text-center">
-        <div class="text-gray-700 text-xl font-medium mb-4">자기소개 정보가 없습니다</div>
-        <p class="text-gray-600 mb-6">현재 등록된 자기소개 정보가 없습니다. 아래 버튼을 눌러 새로운 자기소개를 등록해주세요.</p>
+      <div class="bg-white shadow-md rounded-lg p-8 text-center">
+        <div class="mb-6">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-blue-500 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+          </svg>
+          <div class="text-gray-700 text-2xl font-medium mb-2">자기소개가 준비 중입니다</div>
+          <p class="text-gray-600 mb-6">현재 등록된 자기소개 정보가 없습니다. 조금만 기다려주세요!</p>
+        </div>
         
         <button 
           v-if="isAdmin"
           @click="startCreating" 
-          class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded transition"
+          class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-full transition shadow-md"
         >
           자기소개 등록하기
+        </button>
+        <button 
+          v-else
+          @click="goToHome" 
+          class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-6 rounded-full transition shadow-md"
+        >
+          홈으로 돌아가기
         </button>
       </div>
     </template>
@@ -56,6 +60,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
+import { useRouter } from 'vue-router';
 import { useAuthStore } from '@features/auth';
 import { useUserStore } from '@entities/user/model/userStore';
 import { useIntroduction } from '@features/introduction';
@@ -64,6 +69,7 @@ import { type IntroductionDto, type IntroductionUpdateRequest, type Introduction
 
 const authStore = useAuthStore();
 const userStore = useUserStore();
+const router = useRouter();
 const { fetchIntroduction, updateIntroduction, createIntroduction, loading, error } = useIntroduction();
 
 const introduction = ref<IntroductionDto | null>(null);
@@ -116,6 +122,11 @@ const startCreating = () => {
 const cancelEditing = () => {
   isEditing.value = false;
   isCreating.value = false;
+};
+
+// 홈으로 돌아가기
+const goToHome = () => {
+  router.push('/');
 };
 
 // 자기소개 저장 (수정 또는 생성)

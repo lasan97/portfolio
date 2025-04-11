@@ -20,6 +20,14 @@ export const useIntroductionStore = defineStore('introduction', () => {
       introduction.value = response.data;
       return response.data;
     } catch (err: any) {
+      // 404 에러인 경우 특별한 메시지 처리
+      if (err.response?.status === 404) {
+        // 에러 메시지는 남기지만, 실제 오류로 처리하지 않음
+        error.value = '자기소개 정보가 아직 등록되지 않았습니다.';
+        introduction.value = null;
+        return null;
+      }
+      
       error.value = err.response?.data?.message || '자기소개 정보를 가져오는 중 오류가 발생했습니다.';
       return null;
     } finally {

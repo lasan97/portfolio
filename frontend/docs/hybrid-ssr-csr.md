@@ -142,22 +142,6 @@ if (window.__INITIAL_STATE__) {
 
 4. **인증 상태 처리**: 쿠키 기반 인증을 사용하여 SSR 환경에서도 인증 상태를 유지합니다.
 
-```typescript
-// auth.ts
-export function getAuthToken(cookieString?: string): string | null {
-  // 먼저 쿠키에서 확인
-  const cookieToken = getCookie('auth_token', cookieString);
-  if (cookieToken) return cookieToken;
-  
-  // 쿠키에 없으면 localStorage 확인 (클라이언트에서만)
-  if (typeof window !== 'undefined') {
-    return localStorage.getItem('auth_token');
-  }
-  
-  return null;
-}
-```
-
 ## 성능 최적화 팁
 
 1. **선택적 SSR**: 모든 페이지가 SSR을 필요로 하지 않습니다. SEO가 중요한 페이지에만 적용하세요.
