@@ -12,7 +12,7 @@
     </div>
     
     <!-- 마크다운 렌더링 -->
-    <div class="prose prose-lg max-w-none mb-8">
+    <div class="mb-8">
       <MarkdownRenderer :content="introduction?.content || ''" />
     </div>
     

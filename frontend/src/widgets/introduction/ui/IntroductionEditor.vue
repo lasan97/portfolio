@@ -47,7 +47,7 @@
             
             <!-- 미리보기 영역 -->
             <div class="w-full md:w-1/2 p-2 border-t md:border-t-0 md:border-l border-gray-300 bg-gray-50">
-              <div class="h-96 overflow-auto p-3 prose prose-sm max-w-none">
+              <div class="h-96 overflow-auto p-3">
                 <MarkdownRenderer :content="formData.content" />
               </div>
             </div>
