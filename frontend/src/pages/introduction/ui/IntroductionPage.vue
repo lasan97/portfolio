@@ -1,8 +1,5 @@
 <template>
   <div class="introduction-page container mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold mb-6">
-      {{ getPageTitle }}
-    </h1>
     
     <!-- 로딩 중 표시 -->
     <div v-if="initialLoading || loading" class="flex justify-center items-center py-10">

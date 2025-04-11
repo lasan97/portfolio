@@ -7,8 +7,10 @@
         <nav class="flex items-center space-x-4">
           <router-link to="/" class="text-gray-700 hover:text-blue-600">홈</router-link>
           <router-link to="/introduction" class="text-gray-700 hover:text-blue-600">자기소개</router-link>
-          <router-link to="/ssr" class="text-gray-700 hover:text-blue-600">SSR 예제</router-link>
-          
+          <template v-if="isAdmin">
+            <router-link to="/ssr" class="text-gray-700 hover:text-blue-600">SSR 예제</router-link>
+          </template>
+
           <template v-if="isAuthenticated">
             <router-link to="/profile" class="text-gray-700 hover:text-blue-600">프로필</router-link>
             <button 
@@ -43,6 +45,9 @@ export default defineComponent({
     
     // 인증 상태 리액티브하게 계산
     const isAuthenticated = computed(() => authStore.isAuthenticated);
+    const isAdmin = computed(() => {
+      return userStore.user?.role?.includes('ADMIN') || false;
+    });
     // 사용자 이름 표시
     const userDisplayName = computed(() => userStore.userDisplayName);
     
@@ -76,6 +81,7 @@ export default defineComponent({
     
     return {
       isAuthenticated,
+      isAdmin,
       userDisplayName,
       handleLogout
     };

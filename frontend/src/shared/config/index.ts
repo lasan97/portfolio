@@ -10,7 +10,7 @@ export const DEFAULT_PAGE_SIZE = 10;
  * 앱 전역 설정
  */
 export const APP_CONFIG = {
-  appName: '포트폴리오 FSD',
+  appName: 'H-Martin',
   version: '1.0.0',
   apiTimeout: 10000,
   tokenKey: 'auth_token',
