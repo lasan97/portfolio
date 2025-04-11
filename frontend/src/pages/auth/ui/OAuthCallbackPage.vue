@@ -56,7 +56,7 @@ export default defineComponent({
         // 두 스토어 모두 상태 리셋
         authStore.reset();
         userStore.reset();
-        
+        await authStore.fetchCurrentUser();
         // 로그인 성공 시 홈으로 이동
         router.push('/');
       } catch (err: any) {
