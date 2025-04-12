@@ -185,6 +185,12 @@ docker run -p 8081:8081 -e JWT_SECRET=your_secret -e GITHUB_CLIENT_ID=your_id -e
 - `GITHUB_CLIENT_ID`: GitHub OAuth 앱 클라이언트 ID
 - `GITHUB_CLIENT_SECRET`: GitHub OAuth 앱 클라이언트 시크릿
 
+### AWS S3 관련 환경 변수
+- `AWS_ACCESS_KEY`: AWS IAM 계정의 액세스 키
+- `AWS_SECRET_KEY`: AWS IAM 계정의 시크릿 키
+- `AWS_REGION`: AWS 리전 (기본값: ap-northeast-2)
+- `AWS_S3_BUCKET_NAME`: 사용할 S3 버킷 이름 (기본값: portfolio-files)
+
 ## API 문서화
 
 새로운 API 추가 시 이 문서에 API 명세를 추가하는 것을 권장합니다.

@@ -1,6 +1,7 @@
 package com.portfolio.backend.common.exception.handler;
 
 import com.portfolio.backend.common.exception.DomainException;
+import com.portfolio.backend.common.exception.FileStorageException;
 import com.portfolio.backend.common.exception.ResourceNotFoundException;
 import com.portfolio.backend.common.exception.UnprocessableEntityException;
 import lombok.extern.slf4j.Slf4j;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import java.time.LocalDateTime;
 
@@ -73,12 +75,18 @@ public class GlobalExceptionHandler {
 						request.getDescription(false)));
 	}
 
-	@ExceptionHandler(Exception.class)
-	public ResponseEntity<ErrorResponse> handleGlobalException(
-			Exception ex, WebRequest request) {
+	@ExceptionHandler(MaxUploadSizeExceededException.class)
+	public ResponseEntity<ErrorResponse> handleMaxSizeException(MaxUploadSizeExceededException ex, WebRequest request) {
+		return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
+				.body(new ErrorResponse(
+						LocalDateTime.now(),
+						HttpStatus.PAYLOAD_TOO_LARGE.value(),
+						ex.getMessage(),
+						request.getDescription(false)));
+	}
 
-		log.error("예외 발생 - 유형: {}, 메시지: {}, 상세 정보: ", ex.getClass().getSimpleName(), ex.getMessage(), ex);
-
+	@ExceptionHandler(FileStorageException.class)
+	public ResponseEntity<ErrorResponse> handleFileStorageException(FileStorageException ex, WebRequest request) {
 		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
 				.body(new ErrorResponse(
 						LocalDateTime.now(),
@@ -86,4 +94,18 @@ public class GlobalExceptionHandler {
 						ex.getMessage(),
 						request.getDescription(false)));
 	}
+
+//	@ExceptionHandler(Exception.class)
+//	public ResponseEntity<ErrorResponse> handleGlobalException(
+//			Exception ex, WebRequest request) {
+//
+//		log.error("예외 발생 - 유형: {}, 메시지: {}, 상세 정보: ", ex.getClass().getSimpleName(), ex.getMessage(), ex);
+//
+//		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+//				.body(new ErrorResponse(
+//						LocalDateTime.now(),
+//						HttpStatus.INTERNAL_SERVER_ERROR.value(),
+//						ex.getMessage(),
+//						request.getDescription(false)));
+//	}
 }
