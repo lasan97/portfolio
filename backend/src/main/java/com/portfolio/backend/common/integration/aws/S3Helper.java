@@ -12,6 +12,8 @@ import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 
 @Slf4j
@@ -27,13 +29,11 @@ public class S3Helper {
     @Value("${aws.s3.region}")
     private String region;
 
-    public String putObject(MultipartFile file, String directory, String filename) throws IOException {
-        String fileKey = generateKeyWithDirectory(directory, filename != null ? filename : file.getOriginalFilename());
-        return putObject(file, fileKey);
-    }
+    public String putObject(MultipartFile file, String filename) throws IOException {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd");
+        String currentDateDirectory = LocalDate.now().format(formatter);
 
-    public String putObject(MultipartFile file, String key) throws IOException {
-        String fileKey = key != null ? key : generateKey(file.getOriginalFilename());
+        String fileKey = generateKeyWithDirectory(currentDateDirectory, filename != null ? filename : file.getOriginalFilename());
 
         PutObjectRequest request = PutObjectRequest.builder()
                 .bucket(bucketName)

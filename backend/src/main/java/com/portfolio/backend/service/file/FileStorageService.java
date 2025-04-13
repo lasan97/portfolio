@@ -17,15 +17,15 @@ public class FileStorageService {
 
     private final S3Helper s3Helper;
 
-    public String uploadFile(MultipartFile file, String directory) throws IOException {
-        return s3Helper.putObject(file, directory, null);
+    public String uploadFile(MultipartFile file) throws IOException {
+        return s3Helper.putObject(file, null);
     }
 
-    public List<String> uploadFiles(List<MultipartFile> files, String directory) throws IOException {
+    public List<String> uploadFiles(List<MultipartFile> files) throws IOException {
         List<String> fileUrls = new ArrayList<>();
         
         for (MultipartFile file : files) {
-            fileUrls.add(uploadFile(file, directory));
+            fileUrls.add(uploadFile(file));
         }
         
         return fileUrls;

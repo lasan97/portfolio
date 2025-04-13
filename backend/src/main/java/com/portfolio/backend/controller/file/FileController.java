@@ -2,7 +2,6 @@ package com.portfolio.backend.controller.file;
 
 import com.portfolio.backend.controller.file.dto.FileUploadResponse;
 import com.portfolio.backend.service.file.FileStorageService;
-import jakarta.annotation.security.PermitAll;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -26,11 +25,10 @@ public class FileController {
     @PostMapping("/upload")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<FileUploadResponse> uploadFile(
-            @RequestParam("file") MultipartFile file,
-            @RequestParam(value = "directory", required = false) String directory
+            @RequestParam("file") MultipartFile file
     ) {
         try {
-            String fileUrl = fileStorageService.uploadFile(file, directory);
+            String fileUrl = fileStorageService.uploadFile(file);
             
             FileUploadResponse response = FileUploadResponse.builder()
                     .fileName(file.getOriginalFilename())
@@ -49,11 +47,10 @@ public class FileController {
     @PostMapping("/upload-multiple")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<FileUploadResponse>> uploadMultipleFiles(
-            @RequestParam("files") List<MultipartFile> files,
-            @RequestParam(value = "directory", required = false) String directory
+            @RequestParam("files") List<MultipartFile> files
     ) {
         try {
-            List<String> fileUrls = fileStorageService.uploadFiles(files, directory);
+            List<String> fileUrls = fileStorageService.uploadFiles(files);
             
             List<FileUploadResponse> responses = files.stream()
                     .map(file -> {
