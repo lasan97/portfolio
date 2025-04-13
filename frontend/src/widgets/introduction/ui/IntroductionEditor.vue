@@ -104,15 +104,51 @@
               />
             </div>
             
-            <div class="md:col-span-2">
-              <label :for="`link-logo-${index}`" class="block text-sm font-medium text-gray-700 mb-1">로고 URL (선택사항)</label>
-              <input
-                :id="`link-logo-${index}`"
-                v-model="link.logoUrl"
-                type="url"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+            <div>
+              <label :for="`link-logo-${index}`" class="block text-sm font-medium text-gray-700 mb-1">로고 이미지</label>
+              <div class="flex items-center space-x-2">
+                <input
+                  :id="`link-file-${index}`"
+                  type="file"
+                  :accept="allowedFileTypes"
+                  @change="(e) => handleFileChange(e, index)"
+                  class="hidden"
+                />
+                <div class="flex-1">
+                  <div 
+                    @click="() => triggerFileUpload(index)"
+                    class="w-full flex items-center px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                  >
+                    <input
+                      :id="`link-logo-${index}`"
+                      v-model="link.logoUrl"
+                      type="url"
+                      class="flex-1 bg-transparent border-0 outline-none cursor-pointer"
+                      placeholder="로고 이미지를 업로드하세요"
+                      readonly
+                    />
+                    <button
+                      type="button"
+                      class="ml-2 text-sm text-blue-500 hover:text-blue-700"
+                    >
+                      파일 선택
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div class="mt-2">
+                <p v-if="uploadStatus[index]?.loading" class="text-sm text-blue-600">업로드 중...</p>
+                <p v-if="uploadStatus[index]?.error" class="text-sm text-red-600">{{ uploadStatus[index].error }}</p>
+                <p v-if="uploadStatus[index]?.success" class="text-sm text-green-600">
+                  {{ uploadStatus[index].fileName }} 업로드 완료
+                </p>
+                <div v-if="link.logoUrl" class="mt-2">
+                  <img :src="link.logoUrl" alt="로고 미리보기" class="h-10 object-contain" />
+                </div>
+              </div>
             </div>
+            
+
           </div>
         </div>
         
@@ -143,10 +179,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed } from 'vue';
+import { ref, reactive, onMounted } from 'vue';
 import { MarkdownRenderer } from '@shared/ui/renderer';
 import { BoldIcon, ItalicIcon, HeadingIcon, ListIcon, CodeIcon, LinkEditorIcon, ImageIcon } from '@shared/ui/icons';
 import type { IntroductionDto, IntroductionUpdateRequest, IntroductionCreateRequest, ExternalLink } from '@entities/introduction';
+import { uploadFile } from '@features/file';
 
 const props = defineProps<{
   introduction: IntroductionDto | null;
@@ -165,27 +202,137 @@ const formData = reactive({
   externalLinks: [] as ExternalLink[]
 });
 
+// 파일 업로드 트리거
+const triggerFileUpload = (index: number) => {
+  const input = document.getElementById(`link-file-${index}`) as HTMLInputElement;
+  if (input) {
+    input.click();
+  }
+};
+
+// 파일 변경 처리
+const handleFileChange = async (event: Event, index: number) => {
+  const target = event.target as HTMLInputElement;
+  const file = target.files?.[0];
+  
+  if (!file) return;
+  
+  // 이미지 파일인지 확인
+  if (!file.type.startsWith('image/')) {
+    uploadStatus[index] = {
+      loading: false,
+      error: '이미지 파일만 업로드 가능합니다.',
+      success: false,
+      fileName: file.name
+    };
+    target.value = '';
+    return;
+  }
+  
+  // 업로드 상태 초기화
+  uploadStatus[index] = {
+    loading: true,
+    error: null,
+    success: false,
+    fileName: file.name
+  };
+  
+  try {
+    // 파일 업로드 API 호출
+    const response = await uploadFile(file);
+    
+    // 로고 URL 업데이트
+    formData.externalLinks[index].logoUrl = response.fileUrl;
+    
+    // 업로드 성공 상태 설정
+    uploadStatus[index] = {
+      loading: false,
+      error: null,
+      success: true,
+      fileName: response.fileName
+    };
+  } catch (error) {
+    console.error('파일 업로드 오류:', error);
+    
+    // 업로드 실패 상태 설정
+    uploadStatus[index] = {
+      loading: false,
+      error: '파일 업로드에 실패했습니다. 다시 시도해주세요.',
+      success: false,
+      fileName: file.name
+    };
+  }
+  
+  // 입력 필드 초기화 (같은 파일 다시 선택 가능하도록)
+  target.value = '';
+};
+
 // 에러 상태
 const errors = reactive({
   title: '',
   content: ''
 });
 
+// 파일 입력 허용 타입
+const allowedFileTypes = 'image/jpeg,image/png,image/gif,image/svg+xml,image/webp';
+
 // 로딩 상태
 const loading = ref(false);
 
+// 파일 입력 참조
+const fileInputs = ref<HTMLInputElement[]>([]);
+
+// 업로드 상태 관리 
+interface UploadStatusItem {
+  loading: boolean;
+  error: string | null;
+  success: boolean;
+  fileName: string | null;
+}
+
+const uploadStatus = reactive<Record<number, UploadStatusItem>>({});
+
 // 외부 링크 추가
 const addLink = () => {
+  const newIndex = formData.externalLinks.length;
   formData.externalLinks.push({
     name: '',
     url: '',
     logoUrl: ''
   });
+  
+  // 새 링크에 대한 업로드 상태 초기화
+  uploadStatus[newIndex] = {
+    loading: false,
+    error: null,
+    success: false,
+    fileName: null
+  };
 };
 
 // 외부 링크 제거
 const removeLink = (index: number) => {
   formData.externalLinks.splice(index, 1);
+  
+  // 업로드 상태도 정리
+  const newUploadStatus: Record<number, UploadStatusItem> = {};
+  Object.entries(uploadStatus).forEach(([key, value]) => {
+    const keyNum = parseInt(key);
+    if (keyNum < index) {
+      newUploadStatus[keyNum] = value;
+    } else if (keyNum > index) {
+      newUploadStatus[keyNum - 1] = value;
+    }
+  });
+  
+  // 상태 업데이트
+  Object.keys(uploadStatus).forEach(key => {
+    delete uploadStatus[parseInt(key)];
+  });
+  
+  Object.entries(newUploadStatus).forEach(([key, value]) => {
+    uploadStatus[parseInt(key)] = value;
+  });
 };
 
 // 에디터 도구 설정
@@ -360,6 +507,16 @@ onMounted(() => {
     // externalLinks 배열 초기화
     formData.externalLinks = props.introduction.externalLinks ? 
       [...props.introduction.externalLinks] : [];
+      
+    // 기존 링크에 대한 업로드 상태 초기화
+    formData.externalLinks.forEach((link, index) => {
+      uploadStatus[index] = {
+        loading: false,
+        error: null,
+        success: Boolean(link.logoUrl), // 로고 URL이 있으면 성공 상태로 표시
+        fileName: link.logoUrl ? link.logoUrl.split('/').pop() || '기존 로고' : null
+      };
+    });
   } else {
     // 새로운 자기소개 생성 시 기본값 설정
     formData.title = '';
