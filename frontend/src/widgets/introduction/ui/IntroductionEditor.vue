@@ -144,15 +144,8 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from 'vue';
-import MarkdownRenderer from '@shared/ui/MarkdownRenderer.vue';
-import LinkIcon from '@shared/ui/icons/LinkIcon.vue';
-import BoldIcon from '@shared/ui/icons/BoldIcon.vue';
-import ItalicIcon from '@shared/ui/icons/ItalicIcon.vue';
-import HeadingIcon from '@shared/ui/icons/HeadingIcon.vue';
-import ListIcon from '@shared/ui/icons/ListIcon.vue';
-import CodeIcon from '@shared/ui/icons/CodeIcon.vue';
-import LinkEditorIcon from '@shared/ui/icons/LinkEditorIcon.vue';
-import ImageIcon from '@shared/ui/icons/ImageIcon.vue';
+import { MarkdownRenderer } from '@shared/ui/renderer';
+import { BoldIcon, ItalicIcon, HeadingIcon, ListIcon, CodeIcon, LinkEditorIcon, ImageIcon } from '@shared/ui/icons';
 import type { IntroductionDto, IntroductionUpdateRequest, IntroductionCreateRequest, ExternalLink } from '@entities/introduction';
 
 const props = defineProps<{
