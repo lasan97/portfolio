@@ -4,7 +4,12 @@ import { LoginPage, OAuthCallbackPage } from '@pages/auth'
 import { ProfilePage } from '@pages/profile'
 import { SsrPage } from '@pages/ssr'
 import { IntroductionPage } from '@pages/introduction'
+import { ProductsPage, ProductDetailPage } from '@pages/products'
 import { ROUTES } from '@shared/config'
+
+// 인증 관련 유틸리티 import (통합된 auth-utils 사용)
+import {storeToRefs} from 'pinia';
+import {useAuthStore} from '@features/auth';
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -41,6 +46,16 @@ const routes: Array<RouteRecordRaw> = [
     meta: { ssr: true } // SSR로 처리할 페이지
   },
   {
+    path: ROUTES.PRODUCTS,
+    name: 'products',
+    component: ProductsPage
+  },
+  {
+    path: ROUTES.PRODUCT_DETAIL,
+    name: 'product-detail',
+    component: ProductDetailPage
+  },
+  {
     path: ROUTES.NOT_FOUND,
     name: 'notFound',
     component: () => import('@pages/notFound/ui/NotFoundPage.vue')
@@ -61,11 +76,6 @@ const router = createRouter({
   history,
   routes
 })
-
-// 인증 관련 유틸리티 import (통합된 auth-utils 사용)
-import { isAuthenticated } from '@shared/lib';
-import { storeToRefs } from 'pinia';
-import { useAuthStore } from '@features/auth';
 
 // 인증 미들웨어 (서버와 클라이언트 모두 동작)
 router.beforeEach(async (to, from, next) => {

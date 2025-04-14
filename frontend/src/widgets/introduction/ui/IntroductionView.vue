@@ -44,8 +44,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { MarkdownRenderer } from '@shared/ui/renderer';
-import { LinkIcon } from '@shared/ui/icons';
+import { LinkIcon, MarkdownRenderer } from '@shared/ui';
 import type { IntroductionDto } from '@entities/introduction';
 
 const props = defineProps<{

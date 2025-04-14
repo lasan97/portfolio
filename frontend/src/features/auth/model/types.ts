@@ -1,5 +1,3 @@
-import { User } from '@entities/user';
-
 export interface AuthState {
   token: string | null;
   loading: boolean;
@@ -8,5 +6,4 @@ export interface AuthState {
 
 export interface TokenResponse {
   token: string;
-  user: User;
 }

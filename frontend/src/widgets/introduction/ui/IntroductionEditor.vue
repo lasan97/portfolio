@@ -180,8 +180,8 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue';
-import { MarkdownRenderer } from '@shared/ui/renderer';
-import { BoldIcon, ItalicIcon, HeadingIcon, ListIcon, CodeIcon, LinkEditorIcon, ImageIcon } from '@shared/ui/icons';
+import { MarkdownRenderer } from '@shared/ui';
+import { BoldIcon, ItalicIcon, HeadingIcon, ListIcon, CodeIcon, LinkEditorIcon, ImageIcon } from '@shared/ui';
 import type { IntroductionDto, IntroductionUpdateRequest, IntroductionCreateRequest, ExternalLink } from '@entities/introduction';
 import { uploadFile } from '@features/file';
 

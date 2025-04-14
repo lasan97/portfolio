@@ -2,8 +2,7 @@ import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { useUserStore } from '@entities/user/model/userStore';
 import { processOAuthCallback } from '../api';
-import type { TokenResponse } from './types';
-import { setAuthToken, getAuthToken, logout as logoutAuth, isAuthenticated as checkAuth, recoverAuthState, syncAuthState } from '@shared/lib';
+import { setAuthToken, getAuthToken, logout as logoutAuth, recoverAuthState, syncAuthState } from '@shared/lib';
 import { useRouter } from 'vue-router';
 
 export const useAuthStore = defineStore('auth', () => {
@@ -70,10 +69,7 @@ export const useAuthStore = defineStore('auth', () => {
       
       // 토큰 저장
       setToken(response.token);
-      
-      // 사용자 정보 저장
-      userStore.setUser(response.user);
-      
+
       return response;
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || 'OAuth 로그인 처리 중 오류가 발생했습니다.';

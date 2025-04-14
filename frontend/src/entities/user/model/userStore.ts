@@ -12,9 +12,15 @@ export const useUserStore = defineStore('user', () => {
   // 게터(getters)
   const isAuthenticated = computed(() => !!user.value);
   const userDisplayName = computed(() => user.value?.nickname || user.value?.email || '사용자');
+  const userCredit = computed(() => user.value?.credit || 0);
   
   // 액션(actions)
   function setUser(userData: User) {
+    // 기존 유저 데이터가 있고, credit 필드가 없으면 기본값 0 추가
+    if (!userData.credit) {
+      userData.credit = 0;
+    }
+    
     user.value = userData;
     // 쿠키에 저장
     setUserInfo(userData);
@@ -47,6 +53,20 @@ export const useUserStore = defineStore('user', () => {
     }
   }
   
+  // 크레딧 충전 함수
+  function chargeCredit(amount: number) {
+    if (!user.value) return false;
+    
+    // 백엔드로 크레딧 충전 요청을 보내는 대신, 현재는 프론트엔드에서만 처리
+    const updatedUser = {
+      ...user.value,
+      credit: (user.value.credit || 0) + amount
+    };
+    
+    setUser(updatedUser);
+    return true;
+  }
+  
   // 쿠키에서 사용자 정보를 업데이트
   function refreshUserFromStorage() {
     const storedUser = getUserInfo();
@@ -73,6 +93,7 @@ export const useUserStore = defineStore('user', () => {
     // 게터
     isAuthenticated,
     userDisplayName,
+    userCredit,
     
     // 액션
     setUser,
@@ -80,6 +101,7 @@ export const useUserStore = defineStore('user', () => {
     setError,
     clearUser,
     fetchUser,
+    chargeCredit,
     refreshUserFromStorage,
     reset  // reset 함수 추가
   };

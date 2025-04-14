@@ -1,6 +1,3 @@
-// 환경 변수 및 앱 설정
-export * from './env';
-
 /**
  * 페이지네이션 기본 설정
  */
@@ -27,7 +24,9 @@ export const ROUTES = {
   NOT_FOUND: '/404',
   OAUTH_CALLBACK: '/oauth2/callback',
   SSR: '/ssr',
-  INTRODUCTION: '/introduction'
+  INTRODUCTION: '/introduction',
+  PRODUCTS: '/products',
+  PRODUCT_DETAIL: '/products/:id'
 };
 
 /**
