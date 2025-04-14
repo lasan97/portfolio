@@ -2,7 +2,10 @@
   <header class="bg-white shadow">
     <div class="container mx-auto px-4 py-4">
       <div class="flex justify-between items-center">
-        <router-link to="/" class="text-xl font-bold text-blue-600">포트폴리오</router-link>
+        <router-link to="/" class="flex items-center">
+          <img src="/image/logo.png" alt="h-martin 로고" class="h-8 w-auto mr-2" />
+          <span class="text-xl font-bold text-blue-600">h-martin 포트폴리오</span>
+        </router-link>
         
         <nav class="flex items-center space-x-4">
           <router-link to="/" class="text-gray-700 hover:text-blue-600">홈</router-link>

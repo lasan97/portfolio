@@ -224,7 +224,7 @@ export default defineComponent({
 ### CSS 스타일링
 - TailwindCSS 사용
 - 컴포넌트 스코프 스타일 사용 (`<style scoped>`)
-- 전역 스타일은 `app/styles` 또는 `shared/assets/styles`에 정의
+- 전역 스타일은 `app/styles` 에 정의
 
 ## 컴포넌트 개발 가이드
 

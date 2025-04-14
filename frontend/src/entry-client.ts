@@ -1,6 +1,6 @@
 import { createApp } from 'vue';
 import { App, router, pinia } from './app';
-import '@shared/assets/styles/main.css';
+import './app/styles/main.css';
 import { recoverAuthState, backupAuthState, syncAuthState } from '@shared/lib';
 
 // 서버에서 전달된 초기 상태가 있는지 확인
