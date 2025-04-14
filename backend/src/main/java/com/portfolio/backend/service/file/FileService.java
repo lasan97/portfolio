@@ -1,6 +1,6 @@
 package com.portfolio.backend.service.file;
 
-import com.portfolio.backend.common.integration.aws.S3Helper;
+import com.portfolio.backend.common.integration.storage.S3StorageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -13,12 +13,12 @@ import java.util.List;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class FileStorageService {
+public class FileService {
 
-    private final S3Helper s3Helper;
+    private final S3StorageService s3StorageService;
 
     public String uploadFile(MultipartFile file) throws IOException {
-        return s3Helper.putObject(file, null);
+        return s3StorageService.putObject(file, null);
     }
 
     public List<String> uploadFiles(List<MultipartFile> files) throws IOException {
@@ -32,7 +32,7 @@ public class FileStorageService {
     }
 
     public boolean deleteFile(String fileUrl) {
-        return s3Helper.deleteObject(fileUrl);
+        return s3StorageService.deleteObject(fileUrl);
     }
 }
 

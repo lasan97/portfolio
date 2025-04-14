@@ -1,4 +1,4 @@
-package com.portfolio.backend.common.integration.aws;
+package com.portfolio.backend.common.integration.storage;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;

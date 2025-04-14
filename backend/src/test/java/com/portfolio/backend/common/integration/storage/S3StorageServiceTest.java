@@ -1,4 +1,4 @@
-package com.portfolio.backend.common.integration.aws;
+package com.portfolio.backend.common.integration.storage;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,18 +20,18 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class S3HelperTest {
+class S3StorageServiceTest {
 
     @Mock
     private S3Client s3Client;
 
     @InjectMocks
-    private S3Helper s3Helper;
+    private S3StorageService s3StorageService;
 
     @BeforeEach
     void setUp() {
-        ReflectionTestUtils.setField(s3Helper, "bucketName", "test-bucket");
-        ReflectionTestUtils.setField(s3Helper, "region", "ap-northeast-2");
+        ReflectionTestUtils.setField(s3StorageService, "bucketName", "test-bucket");
+        ReflectionTestUtils.setField(s3StorageService, "region", "ap-northeast-2");
     }
 
     @Test
@@ -46,7 +46,7 @@ class S3HelperTest {
         String key = "custom-key.jpg";
 
         // When
-        String result = s3Helper.putObject(file, key);
+        String result = s3StorageService.putObject(file, key);
 
         // Then
         verify(s3Client, times(1)).putObject(any(PutObjectRequest.class), any(RequestBody.class));
@@ -66,7 +66,7 @@ class S3HelperTest {
         String filename = "custom-name.jpg";
 
         // When
-        String result = s3Helper.putObject(file, directory, filename);
+        String result = s3StorageService.putObject(file, filename);
 
         // Then
         verify(s3Client, times(1)).putObject(any(PutObjectRequest.class), any(RequestBody.class));
@@ -80,7 +80,7 @@ class S3HelperTest {
         String fileUrl = "https://test-bucket.s3.ap-northeast-2.amazonaws.com/images/test.jpg";
 
         // When
-        boolean result = s3Helper.deleteObject(fileUrl);
+        boolean result = s3StorageService.deleteObject(fileUrl);
 
         // Then
         verify(s3Client, times(1)).deleteObject(any(DeleteObjectRequest.class));
@@ -94,7 +94,7 @@ class S3HelperTest {
         doThrow(new RuntimeException("S3 Error")).when(s3Client).deleteObject(any(DeleteObjectRequest.class));
 
         // When
-        boolean result = s3Helper.deleteObject(fileUrl);
+        boolean result = s3StorageService.deleteObject(fileUrl);
 
         // Then
         verify(s3Client, times(1)).deleteObject(any(DeleteObjectRequest.class));

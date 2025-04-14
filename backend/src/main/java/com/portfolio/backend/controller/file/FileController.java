@@ -1,7 +1,7 @@
 package com.portfolio.backend.controller.file;
 
 import com.portfolio.backend.controller.file.dto.FileUploadResponse;
-import com.portfolio.backend.service.file.FileStorageService;
+import com.portfolio.backend.service.file.FileService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class FileController {
 
-    private final FileStorageService fileStorageService;
+    private final FileService fileService;
 
     @PostMapping("/upload")
     @PreAuthorize("hasRole('ADMIN')")
@@ -28,7 +28,7 @@ public class FileController {
             @RequestParam("file") MultipartFile file
     ) {
         try {
-            String fileUrl = fileStorageService.uploadFile(file);
+            String fileUrl = fileService.uploadFile(file);
             
             FileUploadResponse response = FileUploadResponse.builder()
                     .fileName(file.getOriginalFilename())
@@ -50,7 +50,7 @@ public class FileController {
             @RequestParam("files") List<MultipartFile> files
     ) {
         try {
-            List<String> fileUrls = fileStorageService.uploadFiles(files);
+            List<String> fileUrls = fileService.uploadFiles(files);
             
             List<FileUploadResponse> responses = files.stream()
                     .map(file -> {
@@ -74,7 +74,7 @@ public class FileController {
     @DeleteMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteFile(@RequestParam("fileUrl") String fileUrl) {
-        boolean deleted = fileStorageService.deleteFile(fileUrl);
+        boolean deleted = fileService.deleteFile(fileUrl);
         
         if (deleted) {
             return ResponseEntity.noContent().build();

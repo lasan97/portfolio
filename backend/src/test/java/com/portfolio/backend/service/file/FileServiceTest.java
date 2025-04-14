@@ -1,6 +1,6 @@
 package com.portfolio.backend.service.file;
 
-import com.portfolio.backend.common.integration.aws.S3Helper;
+import com.portfolio.backend.common.integration.storage.S3StorageService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -19,16 +19,16 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class S3FileStorageServiceTest {
+class FileServiceTest {
 
     @Mock
-    private S3Helper s3Helper;
+    private S3StorageService s3StorageService;
 
     @InjectMocks
-    private FileStorageService fileStorageService;
+    private FileService fileService;
 
     @Test
-    void uploadFile_shouldCallS3HelperAndReturnFileUrl() throws IOException {
+    void uploadFile_shouldCallS3StorageServiceAndReturnFileUrl() throws IOException {
         // Given
         MockMultipartFile file = new MockMultipartFile(
                 "file", 
@@ -39,18 +39,18 @@ class S3FileStorageServiceTest {
         String directory = "images";
         String expectedUrl = "https://test-bucket.s3.ap-northeast-2.amazonaws.com/images/test-uuid.jpg";
         
-        when(s3Helper.putObject(eq(file), eq(directory), eq(null))).thenReturn(expectedUrl);
+        when(s3StorageService.putObject(eq(file), eq(null))).thenReturn(expectedUrl);
 
         // When
-        String result = fileStorageService.uploadFile(file, directory);
+        String result = fileService.uploadFile(file);
 
         // Then
-        verify(s3Helper, times(1)).putObject(eq(file), eq(directory), eq(null));
+        verify(s3StorageService, times(1)).putObject(eq(file), eq(null));
         assertEquals(expectedUrl, result);
     }
 
     @Test
-    void uploadFiles_shouldCallS3HelperForEachFile() throws IOException {
+    void uploadFiles_shouldCallS3StorageServiceForEachFile() throws IOException {
         // Given
         MockMultipartFile file1 = new MockMultipartFile(
                 "file1", 
@@ -69,31 +69,31 @@ class S3FileStorageServiceTest {
         List<MultipartFile> files = Arrays.asList(file1, file2);
         String directory = "images";
         
-        when(s3Helper.putObject(eq(file1), eq(directory), eq(null))).thenReturn("url1");
-        when(s3Helper.putObject(eq(file2), eq(directory), eq(null))).thenReturn("url2");
+        when(s3StorageService.putObject(eq(file1), eq(null))).thenReturn("url1");
+        when(s3StorageService.putObject(eq(file2), eq(null))).thenReturn("url2");
 
         // When
-        List<String> results = fileStorageService.uploadFiles(files, directory);
+        List<String> results = fileService.uploadFiles(files);
 
         // Then
-        verify(s3Helper, times(1)).putObject(eq(file1), eq(directory), eq(null));
-        verify(s3Helper, times(1)).putObject(eq(file2), eq(directory), eq(null));
+        verify(s3StorageService, times(1)).putObject(eq(file1), eq(null));
+        verify(s3StorageService, times(1)).putObject(eq(file2), eq(null));
         assertEquals(2, results.size());
         assertEquals("url1", results.get(0));
         assertEquals("url2", results.get(1));
     }
 
     @Test
-    void deleteFile_shouldDelegateToS3Helper() {
+    void deleteFile_shouldDelegateToS3StorageService() {
         // Given
         String fileUrl = "https://test-bucket.s3.ap-northeast-2.amazonaws.com/images/test.jpg";
-        when(s3Helper.deleteObject(fileUrl)).thenReturn(true);
+        when(s3StorageService.deleteObject(fileUrl)).thenReturn(true);
 
         // When
-        boolean result = fileStorageService.deleteFile(fileUrl);
+        boolean result = fileService.deleteFile(fileUrl);
 
         // Then
-        verify(s3Helper, times(1)).deleteObject(fileUrl);
+        verify(s3StorageService, times(1)).deleteObject(fileUrl);
         assertTrue(result);
     }
 }
