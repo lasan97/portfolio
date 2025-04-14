@@ -1,326 +1,532 @@
-# FSD 개발 가이드
+# 프론트엔드 개발 가이드
 
-이 문서는 Feature-Sliced Design (FSD) 아키텍처를 사용하여 Vue 3 프론트엔드 애플리케이션을 개발하기 위한 가이드를 제공합니다.
+이 문서는 Portfolio 프로젝트의 프론트엔드 개발 프로세스, 코딩 스타일, 아키텍처 결정에 대한 상세 정보를 제공합니다.
 
 ## 목차
-1. [FSD 아키텍처 개요](#fsd-아키텍처-개요)
-2. [주요 개발 원칙](#주요-개발-원칙)
-3. [새 기능 추가 가이드](#새-기능-추가-가이드)
-4. [코드 예시](#코드-예시)
-5. [Best Practices](#best-practices)
+1. [개발 환경 설정](#개발-환경-설정)
+2. [아키텍처 가이드라인](#아키텍처-가이드라인)
+3. [코딩 스타일 및 규칙](#코딩-스타일-및-규칙)
+4. [컴포넌트 개발 가이드](#컴포넌트-개발-가이드)
+5. [상태 관리](#상태-관리)
+6. [라우팅](#라우팅)
+7. [API 통신](#api-통신)
+8. [테스트](#테스트)
+9. [빌드 및 배포](#빌드-및-배포)
+10. [관련 문서](#관련-문서)
 
-## FSD 아키텍처 개요
+## 개발 환경 설정
 
-FSD(Feature-Sliced Design)는 프론트엔드 애플리케이션을 기능(feature) 단위로 분할하고, 각 기능을 여러 계층(layer)으로 구성하는 방법론입니다. 이 접근 방식은 코드 구조의 일관성, 가독성 및 확장성을 향상시킵니다.
+### 필수 도구
+- Node.js 16 이상
+- npm 또는 yarn
+- Git
 
-### 주요 디렉토리 구조
+### 개발 환경 설정 단계
+1. 저장소 클론
+```bash
+git clone <repository-url>
+cd portfolio/frontend
+```
+
+2. 의존성 설치
+```bash
+npm install
+```
+
+3. 개발 서버 실행
+```bash
+# 일반 개발 모드 (CSR)
+npm run dev
+
+# SSR 개발 모드
+npm run dev:ssr
+```
+
+4. 환경 변수 설정
+- `.env.local` 파일 생성 (개발용)
+- `.env.production` 파일은 프로덕션 배포용
+
+기본 환경 변수 구성:
+```
+VITE_API_URL=http://localhost:8081  # 백엔드 API URL
+VITE_BASE_URL=http://localhost:8080 # 프론트엔드 URL
+VITE_BASE_PORT=8080                 # 프론트엔드 포트
+VITE_GITHUB_CLIENT_ID=your_client_id  # GitHub OAuth 클라이언트 ID
+VITE_SSR_DEBUG=false                # SSR 디버깅 모드
+```
+
+## 아키텍처 가이드라인
+
+이 프로젝트는 Feature-Sliced Design(FSD) 아키텍처를 따릅니다. FSD는 코드를 기능 중심으로 조직화하여 확장성과 유지보수성을 높이는 아키텍처 방법론입니다.
+
+### FSD 아키텍처 다이어그램
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                           app                               │
+│               (진입점, 설정, 전역 프로바이더)                 │
+└─────────────────────────────────────────────────────────────┘
+                              ▲
+                              │
+┌─────────────────────────────────────────────────────────────┐
+│                         processes                           │
+│                 (비즈니스 프로세스, 흐름)                     │
+└─────────────────────────────────────────────────────────────┘
+                              ▲
+                              │
+┌─────────────────────────────────────────────────────────────┐
+│                          pages                              │
+│                 (라우트에 매핑된 페이지)                      │
+└─────────────────────────────────────────────────────────────┘
+                              ▲
+                              │
+┌─────────────────────────────────────────────────────────────┐
+│                         widgets                             │
+│            (독립적인 복합 블록, 페이지의 구성요소)             │
+└─────────────────────────────────────────────────────────────┘
+                              ▲
+                              │
+┌─────────────────────────────────────────────────────────────┐
+│                         features                            │
+│               (사용자 상호작용 기능 집합)                     │
+└─────────────────────────────────────────────────────────────┘
+                              ▲
+                              │
+┌─────────────────────────────────────────────────────────────┐
+│                         entities                            │
+│                (비즈니스 엔티티 모델)                        │
+└─────────────────────────────────────────────────────────────┘
+                              ▲
+                              │
+┌─────────────────────────────────────────────────────────────┐
+│                          shared                             │
+│          (공통 유틸리티, UI, 타입, 라이브러리)                │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 프로젝트 구조 예시
+
 ```
 src/
-├── app/            # 애플리케이션 초기화, 전역 스타일, 프로바이더
-│   ├── router/     # Vue Router 설정
-│   ├── store/      # Pinia 스토어 설정
-│   ├── styles/     # 전역 스타일 (Tailwind CSS)
+├── app/            # 앱 진입점, 설정
+│   ├── router/     # 라우터 설정
+│   ├── store/      # 스토어 설정
+│   ├── styles/     # 전역 스타일
 │   └── App.vue     # 루트 컴포넌트
-├── processes/      # 비즈니스 프로세스와 워크플로우
+├── processes/      # 비즈니스 프로세스
 ├── pages/          # 페이지 컴포넌트
 │   ├── home/       # 홈 페이지
-│   ├── notFound/   # 404 페이지
-│   └── ...
-├── widgets/        # 복합 UI 블록 (헤더, 푸터, 사이드바 등)
-├── features/       # 사용자 상호작용 기능
-│   └── auth/       # 인증 관련 기능
-│       ├── login/        # 로그인 기능
-│       │   ├── api/      # 로그인 API 요청
-│       │   ├── model/    # 로그인 로직
-│       │   ├── ui/       # 로그인 컴포넌트
-│       │   └── index.ts  # 공개 API
-│       └── register/     # 회원가입 기능
-├── entities/       # 비즈니스 엔티티 (사용자, 제품 등)
-└── shared/         # 공유 유틸리티, 라이브러리, UI 키트
-    ├── api/        # API 클라이언트, 요청 유틸리티
-    ├── config/     # 환경 변수, 앱 상수
-    ├── lib/        # 유틸리티 함수
-    ├── styles/     # 스타일 관련 설정
-    └── ui/         # 재사용 가능한 UI 컴포넌트
+│   ├── auth/       # 인증 관련 페이지
+│   └── profile/    # 프로필 페이지
+├── widgets/        # 복합 UI 블록
+│   ├── header/     # 헤더 위젯
+│   └── footer/     # 푸터 위젯
+├── features/       # 사용자 기능
+│   ├── auth/       # 인증 관련 기능
+│   └── profile/    # 프로필 관련 기능
+├── entities/       # 비즈니스 엔티티
+│   ├── user/       # 사용자 엔티티
+│   └── product/    # 제품 엔티티
+└── shared/         # 공유 코드
+    ├── ui/         # UI 컴포넌트
+    ├── api/        # API 클라이언트
+    ├── lib/        # 유틸리티
+    └── config/     # 상수 및 설정
 ```
 
-## 주요 개발 원칙
+### 계층 구조
+- **app**: 애플리케이션 진입점 및 글로벌 설정
+- **pages**: 라우트와 연결된 전체 페이지 컴포넌트
+- **widgets**: 페이지 구성에 사용되는 복합 UI 블록
+- **features**: 사용자 상호작용 기능
+- **entities**: 비즈니스 엔티티 모델 및 관련 로직
+- **shared**: 공통 유틸리티 및 UI 컴포넌트
 
-### 1. 계층화 (Layering)
-- 상위 레이어: `app` > `processes` > `pages` > `widgets` > `features` > `entities` > `shared`
-- 각 계층은 자신보다 하위 계층에만 의존 가능 (단방향 의존성)
-- 예: `features`는 `entities`와 `shared`를 임포트할 수 있지만, `pages`나 `widgets`를 임포트할 수 없음
+### 종속성 규칙
+- 하위 계층은 상위 계층을 임포트할 수 없음
+- 예: `entities`는 `features`를 임포트할 수 없음
+- 수평적 임포트도 제한됨
+- 예: `features/auth`는 `features/profile`을 직접 임포트할 수 없음
 
-### 2. 슬라이스 독립성 (Slice Independence)
-- 각 슬라이스(기능)는 독립적이며 다른 슬라이스에 의존하지 않음
-- 예: `features/auth/login`은 `features/auth/register`에 의존하지 않음
-- 슬라이스 간 공유가 필요한 로직은 상위 슬라이스나 적절한 레이어로 이동
+### 슬라이스 구조
+각 슬라이스(예: `features/auth`)는 다음과 같은 내부 세그먼트 구조를 가질 수 있습니다:
 
-### 3. 공개 API (Public API)
+- **ui**: 표현 컴포넌트
+- **model**: 상태 및 비즈니스 로직
+- **api**: API 요청 처리
+- **lib**: 유틸리티 함수
+- **config**: 설정
+
+### 공개 API (Public API)
 - 각 모듈은 `index.ts` 파일을 통해서만 외부에 노출
 - 직접적인 내부 파일 임포트 금지 (예: `@features/auth/login/ui/LoginForm.vue`)
-- 올바른 예: `import { LoginForm } from '@features/auth/login'`
+- 올바른 예: `import { LoginForm } from '@features/auth'`
 
-## 새 기능 추가 가이드
+## 코딩 스타일 및 규칙
 
-### 1. 기능 계층 결정
-새 기능을 추가할 때 먼저 해당 기능이 속하는 계층(`features`, `entities`, `widgets` 등)을 결정합니다.
-
-- **pages**: 라우트와 매핑되는 페이지 컴포넌트
-- **processes**: 여러 기능이나 엔티티를 아우르는 비즈니스 프로세스
-- **widgets**: 페이지 구성에 사용되는 독립적인 UI 블록
-- **features**: 사용자 상호작용이 포함된 기능 단위
-- **entities**: 비즈니스 로직과 데이터 모델
-- **shared**: 재사용 가능한 유틸리티 및 UI 컴포넌트
-
-### 2. 디렉토리 구조 생성
-선택한 계층 내에 다음과 같은 구조로 디렉토리를 생성합니다:
-
-```
-features/auth/login/
-├── api/                 # API 요청 관련 코드
-│   ├── loginUser.ts     # 로그인 API 함수
-│   └── index.ts         # API 내보내기
-├── model/               # 상태 관리 코드
-│   ├── loginStore.ts    # Pinia 스토어
-│   └── index.ts         # 모델 내보내기
-├── ui/                  # UI 컴포넌트
-│   └── LoginForm.vue    # 로그인 폼 컴포넌트
-├── lib/                 # (선택적) 유틸리티 함수
-├── config/              # (선택적) 설정 파일
-└── index.ts             # 공개 API
-```
-
-### 3. 모듈 공개 API 정의
-모듈의 `index.ts` 파일에서 외부에 노출할 요소를 내보냅니다:
+### TypeScript
+- 모든 새로운 코드는 TypeScript로 작성
+- 명시적 타입 선언 사용
+- `any` 타입 사용 지양
 
 ```typescript
-// features/auth/login/index.ts
-export { default as LoginForm } from './ui/LoginForm.vue';
-export { useLoginStore } from './model/loginStore';
-export * from './api';
-```
-
-## 코드 예시
-
-### Composition API 사용 예시
-
-```typescript
-<script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
-import { useAuthStore } from '@features/auth';
-
-// 스토어 사용
-const authStore = useAuthStore();
-
-// 반응형 상태 정의
-const email = ref('');
-const password = ref('');
-const errorMessage = ref('');
-
-// 계산된 속성
-const isFormValid = computed(() => 
-  email.value.includes('@') && password.value.length >= 6
-);
-
-// 메서드
-async function handleSubmit() {
-  if (!isFormValid.value) {
-    errorMessage.value = '유효하지 않은 입력입니다.';
-    return;
-  }
-  
-  try {
-    await authStore.login({
-      email: email.value,
-      password: password.value
-    });
-  } catch (error: any) {
-    errorMessage.value = error.message;
-  }
+// Good
+function getUserName(user: User): string {
+  return user.name;
 }
 
-// 생명주기 훅
-onMounted(() => {
-  // 컴포넌트 마운트 시 실행할 로직
+// Bad
+function getUserName(user: any) {
+  return user.name;
+}
+```
+
+### Vue 컴포넌트
+- Composition API 사용
+- `<script setup>` 문법 권장 (단순 컴포넌트)
+- 복잡한 컴포넌트는 `defineComponent`와 `setup()` 함수 사용
+
+```vue
+<!-- 단순 컴포넌트 -->
+<script setup lang="ts">
+import { ref } from 'vue';
+
+const count = ref(0);
+</script>
+
+<!-- 복잡한 컴포넌트 -->
+<script lang="ts">
+import { defineComponent, ref, watch } from 'vue';
+
+export default defineComponent({
+  name: 'ComplexComponent',
+  props: {
+    initialValue: {
+      type: Number,
+      default: 0
+    }
+  },
+  setup(props) {
+    const count = ref(props.initialValue);
+    // 복잡한 로직...
+    return { count };
+  }
 });
 </script>
 ```
 
-### Pinia 스토어 구현 예시
+### 파일 명명 규칙
+- 컴포넌트: PascalCase (예: `UserProfile.vue`)
+- 소스 파일: camelCase (예: `userStore.ts`)
+- 인덱스 파일: 각 폴더에 `index.ts` 파일로 공개 API 정의
+- 타입 정의: `types.ts` 또는 관련 파일에 인접하게 배치
+
+### CSS 스타일링
+- TailwindCSS 사용
+- 컴포넌트 스코프 스타일 사용 (`<style scoped>`)
+- 전역 스타일은 `app/styles` 또는 `shared/assets/styles`에 정의
+
+## 컴포넌트 개발 가이드
+
+### 컴포넌트 설계 원칙
+1. **단일 책임 원칙**: 각 컴포넌트는 하나의 책임만 가져야 함
+2. **UI와 로직 분리**: 표현(UI)과 로직을 분리
+3. **재사용성**: 공통 UI 요소는 `shared/ui`에 배치
+4. **접근성**: 모든 컴포넌트는 웹 접근성 표준을 준수해야 함
+
+### 컴포넌트 구성
+```vue
+<template>
+  <!-- 템플릿 마크업 -->
+</template>
+
+<script lang="ts">
+import { defineComponent } from 'vue';
+
+export default defineComponent({
+  name: 'ComponentName', // 이름 필수
+  props: {
+    // 명확한 타입과 기본값 정의
+    title: {
+      type: String,
+      required: true
+    },
+    count: {
+      type: Number,
+      default: 0
+    }
+  },
+  setup(props) {
+    // 컴포넌트 로직
+    return {
+      // 템플릿에 노출할 데이터/메소드
+    };
+  }
+});
+</script>
+
+<style scoped>
+/* 컴포넌트 스코프 스타일 */
+</style>
+```
+
+### Props 및 Emits
+- Props에 항상 타입과 필수 여부 또는 기본값 지정
+- Emits도 명시적으로 정의
+- TypeScript를 사용한 타입 안전성 확보
+
+```typescript
+// Props 타입 정의
+interface ButtonProps {
+  variant: 'primary' | 'secondary' | 'danger';
+  size?: 'small' | 'medium' | 'large';
+  disabled?: boolean;
+}
+
+// Emits 정의
+const emit = defineEmits<{
+  (e: 'click', payload: { id: number }): void;
+  (e: 'focus'): void;
+}>();
+```
+
+## 상태 관리
+
+### Pinia 스토어 사용
+- 모든 상태 관리는 Pinia를 사용
+- 도메인/기능별로 스토어 분리
+- 스토어는 `model` 폴더에 배치
 
 ```typescript
 // features/auth/model/authStore.ts
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import { loginUser } from '../api';
-import type { LoginCredentials, User } from '@shared/types';
+import { loginApi } from '../api';
+import type { User, LoginCredentials } from '../types';
 
 export const useAuthStore = defineStore('auth', () => {
-  // 상태 (state)
+  // 상태
   const user = ref<User | null>(null);
-  const token = ref<string | null>(localStorage.getItem('token'));
-  const loading = ref(false);
-  const error = ref<string | null>(null);
+  const token = ref<string | null>(null);
   
-  // 게터 (getters)
+  // 게터
   const isAuthenticated = computed(() => !!token.value);
-  const userName = computed(() => user.value?.nickname || 'Guest');
   
-  // 액션 (actions)
-  function setToken(newToken: string) {
-    token.value = newToken;
-    localStorage.setItem('token', newToken);
-  }
-  
+  // 액션
   async function login(credentials: LoginCredentials) {
-    loading.value = true;
-    error.value = null;
-    
-    try {
-      const response = await loginUser(credentials);
-      user.value = response.data.user;
-      setToken(response.data.token);
-      return response;
-    } catch (err: any) {
-      error.value = err.message || '로그인 중 오류가 발생했습니다.';
-      throw err;
-    } finally {
-      loading.value = false;
-    }
+    const response = await loginApi.login(credentials);
+    token.value = response.token;
+    user.value = response.user;
   }
   
   function logout() {
     token.value = null;
     user.value = null;
-    localStorage.removeItem('token');
   }
   
   return {
-    // 상태
     user,
     token,
-    loading,
-    error,
-    
-    // 게터
     isAuthenticated,
-    userName,
-    
-    // 액션
-    setToken,
     login,
     logout
   };
 });
 ```
 
-### API 요청 모듈 예시
+### 로컬 vs 글로벌 상태
+- 글로벌 상태는 Pinia 스토어에 저장
+- 컴포넌트 로컬 상태는 `ref` 또는 `reactive` 사용
+- 컴포넌트 간 상태 공유는 props/emits 또는 provide/inject 사용
+
+## 라우팅
+
+### 라우트 구성
+- 모든 라우트는 `app/router/index.ts`에 정의
+- 경로 상수는 `shared/config`에 정의
+- 라우트 메타데이터 활용 (인증, SSR 등)
 
 ```typescript
-// features/auth/api/loginUser.ts
-import { api } from '@shared/api';
-import type { LoginCredentials, ApiResponse, AuthToken } from '@shared/types';
+// shared/config/routes.ts
+export const ROUTES = {
+  HOME: '/',
+  LOGIN: '/login',
+  PROFILE: '/profile',
+  // 기타 경로...
+};
 
-export async function loginUser(credentials: LoginCredentials): Promise<ApiResponse<AuthToken>> {
-  return api.post('/auth/login', credentials);
-}
+// app/router/index.ts
+const routes: Array<RouteRecordRaw> = [
+  {
+    path: ROUTES.HOME,
+    name: 'home',
+    component: HomePage
+  },
+  {
+    path: ROUTES.PROFILE,
+    name: 'profile',
+    component: ProfilePage,
+    meta: { requiresAuth: true }
+  },
+  // 기타 라우트...
+];
 ```
+
+### 라우트 가드
+- 인증 및 권한 검사에 라우트 가드 사용
+- 비동기 데이터 로딩에 `beforeRouteEnter` 또는 `beforeRouteUpdate` 사용
 
 ```typescript
-// features/auth/api/index.ts
-export * from './loginUser';
+// 인증 가드 예시
+router.beforeEach(async (to, from, next) => {
+  const authStore = useAuthStore();
+  
+  if (to.meta.requiresAuth && !authStore.isAuthenticated) {
+    next({ name: 'login' });
+  } else {
+    next();
+  }
+});
 ```
 
-## Best Practices
+## API 통신
 
-### 1. 올바른 계층 및 모듈 경계 유지
-- 계층 간 의존성은 항상 하향식으로 유지 (상위 레이어 → 하위 레이어)
-- 슬라이스 간 의존성을 최소화하고, 필요한 경우 공유 인터페이스를 사용
+### API 인스턴스 구성
+- Axios를 사용한 중앙 API 인스턴스 설정
+- 인터셉터를 사용한 요청/응답 처리
+- 오류 처리 표준화
 
-### 2. 효과적인 상태 관리
-- Pinia 스토어를 도메인 또는 기능 단위로 분리
-- 전역 상태와 로컬 상태의 경계를 명확히 구분
-- Composition API와 Pinia를 함께 활용하여 효율적인 상태 관리 구현
-
-### 3. 타입 안전성 확보
-- TypeScript 타입을 모든 인터페이스, API 요청/응답, 스토어 상태에 적용
-- 타입 정의는 해당 모듈 내부에 위치하거나 `shared/types`에 공유
-
-### 4. 공개 API 관리
-- 각 모듈은 명시적으로 필요한 요소만 내보내기
-- 모듈의 내부 구현 세부 사항은 숨기기
-- 공개 API는 안정적으로 유지하고, 변경 시 마이그레이션 경로 제공
-
-### 5. 컴포넌트 설계
-- 컴포넌트는 단일 책임 원칙을 따르고 응집도 높게 유지
-- 프레젠테이션 컴포넌트와 컨테이너 컴포넌트를 분리
-- 컴포넌트는 필요한 만큼만 상태와 로직을 포함
-
-### 6. 환경 변수 사용
 ```typescript
-// 올바른 사용 (Vite)
-const apiUrl = import.meta.env.VITE_API_URL;
+// shared/api/instance.ts
+import axios from 'axios';
+import { getAuthToken } from '@shared/lib';
+
+export const apiInstance = axios.create({
+  baseURL: import.meta.env.VITE_API_URL,
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
+  },
+  withCredentials: true // 쿠키 전송을 위해 필요
+});
+
+// 요청 인터셉터
+apiInstance.interceptors.request.use(
+  (config) => {
+    // 요청 전 처리 (토큰 추가)
+    const token = getAuthToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// 응답 인터셉터
+apiInstance.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  (error) => {
+    // 401 Unauthorized 에러 처리
+    if (error.response && error.response.status === 401) {
+      if (typeof window !== 'undefined') {
+        // 현재 URL을 저장하여 로그인 후 리다이렉트
+        const currentPath = window.location.pathname;
+        sessionStorage.setItem('redirectAfterLogin', currentPath);
+        
+        import('@shared/lib').then(({ logout }) => {
+          logout();
+          window.location.href = '/login';
+        });
+      }
+    }
+    
+    return Promise.reject(error);
+  }
+);
+
+export default apiInstance;
 ```
 
-### 7. 경로 별칭 사용
+### API 함수
+- API 호출은 기능별 `api` 폴더에 정의
+- 각 API 함수는 일관된 형식으로 작성
+- 타입 안전성 보장
+
 ```typescript
-// 권장: 항상 경로 별칭 사용
-import { Button } from '@shared/ui';
+// features/auth/api/loginApi.ts
+import { apiInstance } from '@shared/api';
+import type { LoginCredentials, AuthResponse } from '../types';
 
-// 권장하지 않음: 상대 경로 사용
-import { Button } from '../../shared/ui';
+export const loginApi = {
+  async login(credentials: LoginCredentials): Promise<AuthResponse> {
+    const response = await apiInstance.post<AuthResponse>('/auth/login', credentials);
+    return response.data;
+  },
+  
+  async logout(): Promise<void> {
+    await apiInstance.post('/auth/logout');
+  }
+};
 ```
 
-### 8. 문제 해결 가이드
+## 테스트
 
-#### Pinia 관련 오류
-1. **defineStore 오류**:
-   - Pinia 패키지가 올바르게 설치되었는지 확인
-   - `createPinia`와 `app.use(pinia)` 호출이 있는지 확인
+현재 프로젝트에는 자동화된 테스트 설정이 구현되어 있지 않지만, 향후 다음과 같은 테스트 방식을 추가할 수 있습니다:
 
-2. **구독 오류**:
-   - `watchEffect` 또는 `watch`를 사용하여 스토어 상태 변화 감지
-   - `storeToRefs`를 사용하여 반응형 참조 분해
+### 단위 테스트
+- Vitest를 사용한 유닛 테스트
+- 컴포넌트, 스토어, 유틸리티 함수에 대한 테스트 작성
+- 테스트 파일은 테스트 대상 파일과 같은 디렉토리에 `*.test.ts` 형식으로 배치
 
-3. **State 업데이트 안됨**:
-   - ref/reactive를 사용하여 상태를 올바르게 초기화했는지 확인
-   - 변이는 직접 수행하고 있는지 확인 (Vuex 모듈과 달리 커밋이 필요 없음)
-   
-4. **Reset 메서드 관련 오류**:
-   - Setup 구문으로 작성된 Pinia 스토어는 자동 `$reset()` 지원 안함
-   - 커스텀 reset 메서드 정의 필요:
-   ```typescript
-   // 상태 리셋 함수 구현
-   function reset() {
-     token.value = getAuthToken();
-     loading.value = false;
-     error.value = null;
-     authenticated.value = !!token.value;
-   }
-   
-   return {
-     // ...
-     reset  // reset 함수 추가
-   };
-   ```
+### 수동 테스트 체크리스트
+- 기능이 요구사항대로 작동하는지 확인
+- 다양한 브라우저에서 테스트 (최소 Chrome, Firefox)
+- 모바일 화면에서 반응형으로 작동하는지 확인
+- 오류 상황 처리 테스트
+- 접근성 검사
 
-#### SSR 관련 오류
+## 빌드 및 배포
 
-1. **"window is not defined" 오류**:
-   - 서버에서 브라우저 API 접근 시 발생
-   - 모든 브라우저 API 사용 코드는 조건부 체크 필요:
-   ```typescript
-   if (typeof window !== 'undefined') {
-     // 브라우저 API 사용 코드
-   }
-   ```
+### 개발 빌드
+```bash
+# 개발 빌드
+npm run build:dev
 
-2. **로그인 상태가 새로고침 시 초기화**:
-   - localStorage 대신 쿠키 기반 인증 사용
+# 개발 빌드 (SSR)
+npm run build:ssr
+```
 
-3. **하이드레이션 불일치 오류**:
-   - 서버와 클라이언트 렌더링 결과 차이로 발생
-   - 비결정적 값(날짜, 랜덤 값 등) 사용 주의
-   - 조건부 렌더링은 동일한 조건으로 서버/클라이언트 일치 필요#
+### 프로덕션 빌드
+```bash
+# 프로덕션 빌드
+npm run build:prod
 
+# 프로덕션 빌드 (SSR)
+npm run build:ssr
+```
+
+### 빌드 최적화
+- 코드 분할을 통한 청크 최적화
+- 이미지 및 정적 자산 최적화
+- 트리 쉐이킹 및 데드 코드 제거
+
+### 배포 전 체크리스트
+- 환경 변수 검증
+- 타입 체크 실행 (`npm run type-check`)
+- 린트 검사 실행 (`npm run lint`)
+- 테스트 통과 여부 확인
+- 빌드 결과물 검증
+
+## 관련 문서
+
+프론트엔드 개발에 관한 추가 정보는 다음 문서를 참조하세요:
+
+- [SSR 가이드](./ssr-guide.md) - 서버 사이드 렌더링 구현 상세 정보
+- [Vite & Pinia 가이드](./vite-pinia-guide.md) - 빌드 도구 및 상태 관리 상세 정보
+- [하이브리드 렌더링 가이드](./hybrid-ssr-csr.md) - CSR과 SSR 혼합 사용 방법

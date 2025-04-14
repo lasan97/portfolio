@@ -1,503 +1,243 @@
-# SSR 구현 가이드
+# SSR (Server-Side Rendering) 가이드
 
-이 문서는 Vue 3 + Vite 환경에서 SSR(Server-Side Rendering) 및 하이브리드 렌더링을 구현하는 방법에 대한 가이드입니다.
+이 문서는 Portfolio 프로젝트에서 구현된 SSR(Server-Side Rendering) 시스템에 대한 상세 설명과 사용 방법을 제공합니다.
 
 ## 목차
-
 1. [SSR 개요](#ssr-개요)
-2. [SSR 구현 아키텍처](#ssr-구현-아키텍처)
-3. [하이브리드 CSR/SSR 구현](#하이브리드-csrssr-구현)
-4. [데이터 페칭 전략](#데이터-페칭-전략)
-5. [개발 및 배포 가이드](#개발-및-배포-가이드)
-6. [성능 최적화](#성능-최적화)
-7. [주의사항](#주의사항)
-8. [문제 해결](#문제-해결)
+2. [아키텍처](#아키텍처)
+3. [SSR 구현 방식](#ssr-구현-방식)
+4. [SSR 활성화 방법](#ssr-활성화-방법)
+5. [데이터 프리페칭](#데이터-프리페칭)
+6. [하이드레이션 과정](#하이드레이션-과정)
+7. [SSR 디버깅](#ssr-디버깅)
+8. [성능 최적화](#성능-최적화)
+9. [관련 문서](#관련-문서)
 
 ## SSR 개요
 
-### SSR이란?
+SSR(Server-Side Rendering)은 서버에서 초기 HTML을 생성하여 클라이언트로 전송하는 방식입니다. 이를 통해 다음과 같은 이점을 얻을 수 있습니다:
 
-SSR(Server-Side Rendering)은 서버에서 웹 페이지를 완전히 렌더링한 후 클라이언트에 전송하는 기술입니다. 이는 초기 페이지 로드 시 서버에서 페이지의 HTML을 생성하여 클라이언트에 제공하는 방식으로 작동합니다.
+- **초기 로딩 속도 개선**: 사용자는 JavaScript가 로드되기 전에 콘텐츠를 볼 수 있습니다.
+- **SEO 향상**: 검색 엔진이 JavaScript를 실행하지 않아도 콘텐츠를 인덱싱할 수 있습니다.
+- **메타데이터 제어**: 초기 HTML에 메타 태그를 포함할 수 있어 소셜 공유 시 미리보기가 올바르게 표시됩니다.
 
-### SSR의 장점
+이 프로젝트는 특정 페이지에 대해서만 SSR을 적용하는 하이브리드 방식을 사용합니다.
 
-- **향상된 초기 로딩 속도**: 사용자는 JavaScript 번들이 로드되기 전에도 콘텐츠를 볼 수 있습니다.
-- **개선된 SEO**: 검색 엔진은 클라이언트 렌더링보다 서버 렌더링된 콘텐츠를 더 잘 인덱싱합니다.
-- **소셜 미디어 최적화**: 소셜 미디어 플랫폼에서 공유할 때 메타 태그가 올바르게 표시됩니다.
-- **성능 향상**: 특히 저사양 기기나 느린 네트워크 환경에서 사용자 경험이 개선됩니다.
+## 아키텍처
 
-### SSR vs CSR
+SSR 아키텍처는 다음과 같은 주요 컴포넌트로 구성됩니다:
 
-|                 | 서버 사이드 렌더링 (SSR) | 클라이언트 사이드 렌더링 (CSR) |
-|-----------------|-------------------------|------------------------------|
-| 초기 로드 시간    | 더 빠름                  | 더 느림                      |
-| SEO             | 우수함                   | 제한적                        |
-| 서버 부하        | 더 높음                  | 더 낮음                      |
-| 인터랙티브 지연   | 약간 있음                | 없음                         |
-| 개발 복잡성      | 더 복잡함                | 덜 복잡함                    |
-
-## SSR 구현 아키텍처
-
-### 프로젝트 구조
+1. **Express 서버**: SSR 요청을 처리하고 HTML을 생성합니다. (`server.js`)
+2. **entry-server.ts**: 서버 측 렌더링을 담당하는 진입점입니다.
+3. **entry-client.ts**: 클라이언트 측 하이드레이션을 담당하는 진입점입니다.
+4. **manifest.json**: 프로덕션 빌드 시 생성되는 자산 맵핑 파일입니다.
 
 ```
 frontend/
+├── server.js           # Express 서버
 ├── src/
-│   ├── entry-client.ts     # 클라이언트 진입점
-│   ├── entry-server.ts     # 서버 진입점
-│   ├── app/                # 애플리케이션 코드
-│   ├── ...
-├── server.js               # Express SSR 서버
-├── index.html              # HTML 템플릿
-└── vite.config.ts          # Vite 설정
+│   ├── entry-server.ts # 서버 진입점
+│   ├── entry-client.ts # 클라이언트 진입점
+│   └── app/            # 공유 앱 코드
+├── dist/
+│   ├── client/         # 클라이언트 빌드 결과물
+│   └── server/         # 서버 빌드 결과물
+└── index.html          # HTML 템플릿
 ```
 
-### 핵심 컴포넌트
+## SSR 구현 방식
 
-1. **entry-client.ts**: 클라이언트 측 하이드레이션을 담당합니다.
-   ```typescript
-   import { createApp } from 'vue';
-   import { App, router, pinia } from './app';
+이 프로젝트는 Vue 3와 Vite를 기반으로 한 커스텀 SSR 구현을 사용합니다:
 
-   // 서버에서 전달된 초기 상태가 있으면 적용
-   if (window.__INITIAL_STATE__) {
-     pinia.state.value = window.__INITIAL_STATE__;
-   }
+1. 서버는 들어오는 요청을 받아 현재 URL을 분석합니다.
+2. 라우터를 통해 해당 URL에 맞는 컴포넌트를 결정합니다.
+3. 해당 컴포넌트에 `meta: { ssr: true }` 설정이 있는지 확인합니다.
+4. SSR이 필요한 경우, 컴포넌트의 `ssrPrefetch` 훅을 실행하여 필요한 데이터를 미리 가져옵니다.
+5. 앱을 HTML 문자열로 렌더링합니다.
+6. 초기 상태(Pinia 스토어)를 직렬화하여 HTML에 포함시킵니다.
+7. 렌더링된 HTML과 초기 상태를 클라이언트로 전송합니다.
+8. 클라이언트에서는 하이드레이션 과정을 통해 이벤트 리스너를 연결하고 상호작용이 가능한 앱으로 전환합니다.
 
-   // 라우터 준비 후 앱 마운트
-   router.isReady().then(() => {
-     createApp(App)
-       .use(pinia)
-       .use(router)
-       .mount('#app');
-   });
-   ```
-
-2. **entry-server.ts**: 서버 측 렌더링을 담당합니다.
-   ```typescript
-   import { createSSRApp } from 'vue';
-   import { renderToString } from 'vue/server-renderer';
-   import { App, router, pinia } from './app';
-
-   export async function render(url) {
-     // 라우터 설정
-     await router.push(url);
-     await router.isReady();
-
-     // 앱 생성
-     const app = createSSRApp(App);
-     app.use(pinia);
-     app.use(router);
-
-     // 렌더링 수행
-     const appHtml = await renderToString(app);
-     const state = pinia.state.value;
-
-     return { appHtml, state };
-   }
-   ```
-
-3. **server.js**: Express 서버에서 SSR을 처리합니다.
-   ```javascript
-   const express = require('express');
-   const { createServer: createViteServer } = require('vite');
-   
-   async function createServer() {
-     const app = express();
-     const vite = await createViteServer({ server: { middlewareMode: true } });
-     
-     app.use(vite.middlewares);
-     
-     app.use('*', async (req, res) => {
-       const url = req.originalUrl;
-       
-       try {
-         // HTML 템플릿 로드
-         let template = fs.readFileSync('index.html', 'utf-8');
-         template = await vite.transformIndexHtml(url, template);
-         
-         // 서버 진입점 가져오기
-         const { render } = await vite.ssrLoadModule('/src/entry-server.ts');
-         
-         // 앱 렌더링
-         const { appHtml, state } = await render(url);
-         
-         // HTML 응답 생성
-         const html = template
-           .replace('<div id="app"></div>', `<div id="app">${appHtml}</div>`)
-           .replace('<!--initial-state-->', `<script>window.__INITIAL_STATE__=${JSON.stringify(state)}</script>`);
-         
-         res.status(200).set({ 'Content-Type': 'text/html' }).end(html);
-       } catch (e) {
-         vite.ssrFixStacktrace(e);
-         console.error(e);
-         res.status(500).end(e.message);
-       }
-     });
-     
-     app.listen(3000);
-   }
-   
-   createServer();
-   ```
-
-4. **index.html**: 서버와 클라이언트 모두에서 사용되는 HTML 템플릿입니다.
-   ```html
-   <!DOCTYPE html>
-   <html lang="ko">
-   <head>
-     <meta charset="UTF-8">
-     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-     <title>Vue SSR 애플리케이션</title>
-     <!--preload-links-->
-   </head>
-   <body>
-     <div id="app"></div>
-     <!--initial-state-->
-     <script type="module" src="/src/entry-client.ts"></script>
-   </body>
-   </html>
-   ```
-
-## 하이브리드 CSR/SSR 구현
-
-하이브리드 접근 방식은 일부 페이지는 SSR로, 다른 페이지는 CSR로 처리할 수 있게 해줍니다.
-
-### 라우트 기반 선택적 SSR
+현재 코드에서 주요 구현 방식:
 
 ```javascript
-// server.js에서
-app.use('*', async (req, res, next) => {
-
-  const url = req.originalUrl;
-
-   // entry-server 모듈 로드
-   const { render, router } = await vite.ssrLoadModule('/src/entry-server.ts');
-
-   // 라우터를 URL로 이동
-   await router.push(url);
-   await router.isReady();
-
-   // SSR 적용 여부 결정
-   const shouldSSR = router.currentRoute.value.meta.ssr === true;
-   
-  if (shouldSSR) {
-    // SSR 로직 실행
-    // ...
-  } else {
-    // CSR을 위한 빈 HTML 템플릿 제공
-    // ...
-  }
-});
-```
-
-### 라우터 메타데이터 활용
-
-```typescript
-// router/index.ts에서
-const routes = [
-  {
-    path: '/',
-    component: HomePage
-    // SSR 적용하지 않음 (기본값)
-  },
-  {
-    path: '/ssr',
-    component: SsrPage,
-    meta: { ssr: true } // SSR 적용
-  }
-];
-
-// server.js에서 활용
-const shouldSSR = router.currentRoute.value.meta.ssr;
-```
-
-## 데이터 페칭 전략
-
-### 서버에서 데이터 프리페칭
-
-#### 방법 1: `onServerPrefetch` 훅 사용
-
-```typescript
-<script setup>
-import { ref, onMounted, onServerPrefetch } from 'vue';
-
-const items = ref([]);
-const loading = ref(true);
-
-async function fetchData() {
-  loading.value = true;
-  items.value = await fetchItems();
-  loading.value = false;
-}
-
-// 서버에서 데이터 미리 가져오기
-onServerPrefetch(async () => {
-  await fetchData();
-});
-
-// 클라이언트에서 데이터 누락 시 다시 가져오기
-onMounted(() => {
-  if (items.value.length === 0) {
-    fetchData();
-  }
-});
-</script>
-```
-
-#### 방법 2: 컴포넌트 옵션 사용
-
-```typescript
-<script>
-export default {
-  name: 'ProductPage',
+// 서버 측 렌더링 로직 (entry-server.ts)
+export async function render(url: string, context?: any, manifest?: any) {
+  // 서버에서 전달된 쿠키 정보
+  const cookieString = context?.headers?.cookie || context?.cookie || '';
   
-  ssrPrefetch({ route, store }) {
-    // 제품 ID 가져오기
-    const productId = route.params.id;
-    // 데이터 가져오기
-    return store.product.fetchProduct(productId);
-  }
+  // 라우터 설정
+  await router.push(url);
+  await router.isReady();
+
+  // SSR 앱 인스턴스 생성
+  const app = createSSRApp(App);
+  app.use(pinia);
+  app.use(router);
+
+  // 데이터 프리페칭
+  const matchedComponents = router.currentRoute.value.matched.flatMap(
+    record => Object.values(record.components || {})
+  );
+  
+  // SSR 전용 데이터 프리페칭 처리
+  const asyncDataHooks = matchedComponents.map(Component => {
+    const comp = Component as any;
+    if (comp.ssrPrefetch) {
+      return comp.ssrPrefetch({
+        route: router.currentRoute.value,
+        store: pinia,
+        cookie: cookieString
+      });
+    }
+    return null;
+  }).filter(Boolean);
+  
+  await Promise.all(asyncDataHooks);
+
+  // 앱을 문자열로 렌더링
+  const appHtml = await renderToString(app);
+  
+  // Pinia 상태 추출
+  const initialState = pinia.state.value;
+
+  return { appHtml, preloadLinks, initialState };
 }
-</script>
 ```
 
-### 스토어 상태 하이드레이션
+## SSR 활성화 방법
+
+특정 페이지에 SSR을 적용하려면 다음과 같이 라우트 설정에 `ssr: true` 메타데이터를 추가하세요:
 
 ```typescript
-// entry-server.ts
-export async function render(url) {
-  // ...
-  const initialState = pinia.state.value;
-  return { appHtml, initialState };
-}
+// src/app/router/index.ts
+const routes: Array<RouteRecordRaw> = [
+  {
+    path: '/introduction',
+    name: 'introduction',
+    component: IntroductionPage,
+    meta: { ssr: true } // SSR 활성화
+  },
+  // 다른 라우트...
+]
+```
 
-// entry-client.ts
-const initialState = window.__INITIAL_STATE__;
+현재 프로젝트에서는 다음 페이지들이 SSR로 설정되어 있습니다:
+- `/introduction` - 소개 페이지
+- `/ssr` - SSR 데모 페이지
+
+## 데이터 프리페칭
+
+SSR 페이지에서 초기 데이터를 가져오려면 컴포넌트에 `ssrPrefetch` 정적 메소드를 구현하세요:
+
+```typescript
+// 컴포넌트 예시
+export default defineComponent({
+  name: 'IntroductionPage',
+  components: { /* ... */ },
+  
+  // SSR 데이터 프리페칭
+  static async ssrPrefetch({ route, store, cookie }) {
+    // 쿠키 정보를 이용한 API 호출
+    const introductionStore = useIntroductionStore(store);
+    await introductionStore.fetchIntroduction();
+    
+    return { success: true };
+  },
+  
+  // 컴포넌트 설정...
+});
+```
+
+프로젝트에서 SSR 데이터 프리페칭 예시:
+
+```typescript
+// 서버에서만 실행되는 비동기 데이터 가져오기
+static async ssrPrefetch({ route, store, cookie }) {
+  try {
+    // cookie 문자열을 사용하여 인증된 요청 수행
+    const introStore = useIntroductionStore(store);
+    
+    // 인증 토큰 확인 (쿠키에서)
+    if (cookie) {
+      // 쿠키 문자열로부터 인증 토큰 추출 (필요한 경우)
+      const authToken = getAuthToken(cookie);
+      
+      if (authToken) {
+        // 서버 측에서 인증된 API 요청
+        await introStore.fetchIntroduction();
+      }
+    }
+    
+    return { success: true };
+  } catch (error) {
+    console.error('SSR 데이터 프리페칭 오류:', error);
+    return { error: true };
+  }
+}
+```
+
+## 하이드레이션 과정
+
+하이드레이션은 서버에서 렌더링된 정적 HTML에 클라이언트 측 JavaScript가 연결되는 과정입니다:
+
+1. 서버는 초기 HTML과 함께 `window.__INITIAL_STATE__`를 제공합니다.
+2. `entry-client.ts`는 이 초기 상태를 Pinia 스토어에 적용합니다.
+3. `app.mount('#app', true)`는 Vue 앱을 하이드레이션 모드로 마운트합니다.
+4. Vue는 기존 DOM 노드를 재사용하면서 이벤트 리스너를 연결합니다.
+
+```typescript
+// entry-client.ts의 핵심 부분
+const initialState = (window as any).__INITIAL_STATE__;
+
+// 초기 상태가 있으면 Pinia에 적용
 if (initialState) {
   pinia.state.value = initialState;
 }
+
+// SSR에서 hydrate 모드로 마운트
+app.mount('#app', initialState ? true : undefined);
 ```
 
-## 개발 및 배포 가이드
+## SSR 디버깅
 
-### 개발 환경 설정
+SSR 디버깅을 위해 다음과 같은 도구를 사용할 수 있습니다:
+
+1. **환경 변수 설정**: `.env.local` 파일에서 `VITE_SSR_DEBUG=true`로 설정하여 상세 로그를 활성화합니다.
+
+2. **서버 로그 확인**: 개발 모드에서 SSR 서버는 다음과 같은 정보를 로깅합니다:
+   - 요청 URL
+   - SSR/CSR 렌더링 결정
+   - 쿠키 및 헤더 정보
+   - 렌더링 오류
+
+3. **클라이언트-서버 불일치 확인**: 하이드레이션 과정에서 오류가 발생하면 콘솔에서 "Hydration mismatch" 경고를 확인하세요.
+
+일반적인 SSR 디버깅 프로세스:
 
 ```bash
-# 개발 서버 실행 (CSR 모드)
-npm run dev
-
-# SSR 개발 서버 실행
-npm run dev:ssr
-```
-
-### 빌드 및 프로덕션 배포
-
-```bash
-# 클라이언트 및 서버 번들 빌드
-npm run build:ssr
-
-# 프로덕션 SSR 서버 실행
-npm run serve:ssr
-```
-
-### 패키지 스크립트 설정
-
-```json
-{
-  "scripts": {
-    "dev": "vite",
-    "dev:ssr": "node server",
-    "build": "vite build",
-    "build:ssr": "npm run build:client && npm run build:server",
-    "build:client": "vite build --outDir dist/client",
-    "build:server": "vite build --ssr src/entry-server.ts --outDir dist/server",
-    "serve:ssr": "cross-env NODE_ENV=production node server"
-  }
-}
+# 디버깅 모드로 SSR 서버 실행
+VITE_SSR_DEBUG=true npm run dev:ssr
 ```
 
 ## 성능 최적화
 
-### 캐싱 전략
+SSR 성능을 최적화하기 위한 방법:
 
-```javascript
-// 간단한 인메모리 캐시
-const cache = new Map();
-const cacheTTL = 60 * 1000; // 1분
+1. **선택적 SSR**: 모든 페이지가 아닌 필요한 페이지만 SSR을 사용합니다.
 
-app.use('*', async (req, res) => {
-  const url = req.originalUrl;
-  
-  // 캐시 확인
-  const cacheEntry = cache.get(url);
-  if (cacheEntry && Date.now() - cacheEntry.timestamp < cacheTTL) {
-    return res.send(cacheEntry.html);
-  }
-  
-  // 렌더링 수행
-  const html = await renderPage(url);
-  
-  // 캐시 저장
-  cache.set(url, { html, timestamp: Date.now() });
-  
-  res.send(html);
-});
-```
+2. **데이터 요청 최소화**: `ssrPrefetch`에서 필요한 데이터만 가져오세요.
 
-### 코드 분할
+3. **컴포넌트 캐싱**: 동일한 컴포넌트를 여러 번 렌더링할 경우 결과를 캐싱하는 것을 고려하세요.
 
-```typescript
-// 동적 임포트를 사용한 라우트 수준 코드 분할
-const routes = [
-  {
-    path: '/',
-    component: () => import('@pages/home')
-  },
-  {
-    path: '/profile',
-    component: () => import('@pages/profile')
-  }
-];
-```
+4. **최적화된 빌드**: 프로덕션 모드에서는 `npm run build:ssr`를 사용하여 최적화된 빌드를 생성하세요.
 
-### Prefetch/Preload 최적화
+5. **CSS 최적화**: 중요한 CSS는 인라인으로 포함하고, 나머지는 비동기 로드를 고려하세요.
 
-```typescript
-// SSR 진입점에서 필요한 자원 프리로드
-export async function render(url, manifest) {
-  // ...
-  
-  // 현재 경로에 필요한 자원 결정
-  const matched = router.currentRoute.value.matched;
-  const preloadLinks = [];
-  
-  // 매니페스트에서 필요한 리소스 찾기
-  for (const component of matched) {
-    if (component.name && manifest[component.name]) {
-      preloadLinks.push(`<link rel="modulepreload" href="${manifest[component.name]}">`);
-    }
-  }
-  
-  return { appHtml, preloadLinks, state };
-}
-```
+## 관련 문서
 
-## 주의사항
+더 자세한 정보는 다음 문서를 참조하세요:
 
-1. **window 및 document 접근**: 서버에서는 window나 document 객체가 없으므로, 이에 의존하는 코드는 조건부로 실행해야 합니다.
-
-```typescript
-if (typeof window !== 'undefined') {
-  // 클라이언트 측에서만 실행할 코드
-}
-```
-
-2. **데이터 페칭**: 데이터 페칭은 서버에서 발생한 후 클라이언트에 전달되어야 합니다.
-
-3. **상태 관리**: Pinia 스토어 상태가 서버에서 클라이언트로 전달되도록 설정해야 합니다.
-
-4. **인증 처리**: SSR 환경에서는 인증 정보를 쿠키를 통해 관리해야 합니다.
-
-```typescript
-// 브라우저와 서버 모두에서 작동하는 쿠키 기반 인증
-export function getAuthToken(cookieString?: string): string | null {
-  // 브라우저 환경
-  if (typeof document !== 'undefined' && !cookieString) {
-    cookieString = document.cookie;
-  }
-  
-  // 쿠키에서 토큰 가져오기
-  const cookies = (cookieString || '').split('; ');
-  const token = cookies.find(c => c.startsWith('auth_token='));
-  return token ? decodeURIComponent(token.split('=')[1]) : null;
-}
-```
-
-## 문제 해결
-
-### 일반적인 문제 및 해결 방법
-
-#### 1. 하이드레이션 불일치 오류
-
-**증상**: 콘솔에 "Hydration error"와 관련된 경고가 표시됩니다.
-**원인**: 서버에서 렌더링된 HTML과 클라이언트 측 Virtual DOM이 일치하지 않습니다.
-
-**해결 방법**:
-- 서버와 클라이언트 간 조건부 렌더링 일치 확인
-- 날짜, 랜덤 값 등 비결정적 값 사용 주의
-- 컴포넌트에서 `v-if`와 `v-show` 올바르게 사용
-
-#### 2. 브라우저 API 접근 오류
-
-**증상**: 서버에서 "window is not defined" 등의 오류가 발생합니다.
-**원인**: 서버에서 실행 중일 때 브라우저 API를 접근하려고 시도합니다.
-
-**해결 방법**:
-```typescript
-// 브라우저 환경 확인 후 접근
-const isBrowser = typeof window !== 'undefined';
-if (isBrowser) {
-  // 브라우저 API 사용
-  window.localStorage.getItem('token');
-}
-```
-
-#### 3. 외부 라이브러리 호환성 문제
-
-**증상**: 특정 라이브러리가 SSR 환경에서 작동하지 않습니다.
-**원인**: 라이브러리가 브라우저 API에 직접 의존하고 있습니다.
-
-**해결 방법**:
-- SSR 호환 라이브러리 사용
-- 라이브러리를 동적으로 임포트하여 클라이언트에서만 로드
-```typescript
-onMounted(async () => {
-  // 클라이언트에서만 로드
-  const { Chart } = await import('chart.js');
-  // 차트 초기화
-});
-```
-
-#### 4. 데이터 페칭 이슈
-
-**증상**: 서버에서 데이터를 가져오지만 클라이언트에 전달되지 않습니다.
-**원인**: Pinia 상태가 클라이언트로 올바르게 전달되지 않았습니다.
-
-**해결 방법**:
-- `__INITIAL_STATE__` 올바르게 전달되는지 확인
-- 비동기 데이터 페칭이 완료될 때까지 기다리는지 확인
-
-```typescript
-// entry-server.ts
-export async function render(url) {
-  // 라우터 설정
-  await router.push(url);
-  
-  // 비동기 데이터 페칭 대기
-  await Promise.all(router.currentRoute.value.matched.map(component => {
-    if (component.components.default.ssrPrefetch) {
-      return component.components.default.ssrPrefetch({
-        route: router.currentRoute.value,
-        store: pinia
-      });
-    }
-  }).filter(Boolean));
-  
-  // 이제 렌더링 수행
-  // ...
-}
-```
-
-## 확장 및 개선 방안
-
-- **코드 분할**: 경로 기반 코드 분할을 통해 성능 최적화
-- **프리페치**: 링크에 마우스 오버 시 데이터 프리페치로 인터랙션 속도 향상
-- **성능 모니터링**: 서버 및 클라이언트 렌더링 성능 모니터링 추가
-- **스트리밍 SSR**: 대규모 페이지를 위한 스트리밍 렌더링 구현
-
-## 참고 자료
-
-- [Vue.js SSR 가이드](https://v3.vuejs.org/guide/ssr/introduction.html)
-- [Vite SSR 문서](https://vitejs.dev/guide/ssr.html)
-- [Pinia SSR 문서](https://pinia.vuejs.org/ssr/)
+- [하이브리드 렌더링 가이드](./hybrid-ssr-csr.md) - CSR과 SSR 함께 사용하기
+- [개발 가이드](./development-guide.md) - 전반적인 개발 가이드라인
+- [Vite & Pinia 가이드](./vite-pinia-guide.md) - Vite와 Pinia 통합 방법
