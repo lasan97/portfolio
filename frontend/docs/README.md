@@ -116,7 +116,7 @@ src/
    - 슬라이스 간 공유가 필요한 로직은 상위 슬라이스나 적절한 레이어로 이동
 
 3. **공개 API (Public API)**:
-   - 각 모듈은 `index.ts` 파일을 통해서만 외부에 노출
+   - 각 계층의 모듈은 `index.ts` 파일을 통해서만 외부에 노출
    - 직접적인 내부 파일 임포트 금지 (예: `@features/auth/login/ui/LoginForm.vue`)
    - 올바른 예: `import { LoginForm } from '@features/auth/login'`
 

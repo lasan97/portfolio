@@ -1,10 +1,9 @@
 import axios from 'axios'
-import { API_URL } from '../config'
-import { getAuthToken } from '../lib'
+import {getAuthToken} from '../lib'
 
 // Axios 인스턴스 생성
 export const apiInstance = axios.create({
-  baseURL: API_URL,
+  baseURL: import.meta.env.VITE_API_URL,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',

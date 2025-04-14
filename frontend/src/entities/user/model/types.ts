@@ -1,9 +1,12 @@
+import { UserRole } from "@shared/config";
+
 export interface User {
   id: number;
   email: string;
   nickname: string;
   profileImageUrl: string | null;
-  role?: string; // ADMIN, USER 등 역할 정보
+  role?: UserRole; // ADMIN, USER 등 역할 정보
+  credit: number; // 사용자 크레딧
 }
 
 export interface UserState {

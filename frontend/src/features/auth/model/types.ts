@@ -8,5 +8,4 @@ export interface AuthState {
 
 export interface TokenResponse {
   token: string;
-  user: User;
 }

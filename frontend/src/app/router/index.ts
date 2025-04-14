@@ -4,6 +4,7 @@ import { LoginPage, OAuthCallbackPage } from '@pages/auth'
 import { ProfilePage } from '@pages/profile'
 import { SsrPage } from '@pages/ssr'
 import { IntroductionPage } from '@pages/introduction'
+import { ProductsPage, ProductDetailPage } from '@pages/products'
 import { ROUTES } from '@shared/config'
 
 const routes: Array<RouteRecordRaw> = [
@@ -39,6 +40,16 @@ const routes: Array<RouteRecordRaw> = [
     name: 'ssr',
     component: SsrPage,
     meta: { ssr: true } // SSR로 처리할 페이지
+  },
+  {
+    path: ROUTES.PRODUCTS,
+    name: 'products',
+    component: ProductsPage
+  },
+  {
+    path: ROUTES.PRODUCT_DETAIL,
+    name: 'product-detail',
+    component: ProductDetailPage
   },
   {
     path: ROUTES.NOT_FOUND,

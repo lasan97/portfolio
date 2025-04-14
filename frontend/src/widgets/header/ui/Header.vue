@@ -6,6 +6,7 @@
         
         <nav class="flex items-center space-x-4">
           <router-link to="/" class="text-gray-700 hover:text-blue-600">홈</router-link>
+          <router-link to="/products" class="text-gray-700 hover:text-blue-600">상품목록</router-link>
           <router-link to="/introduction" class="text-gray-700 hover:text-blue-600">자기소개</router-link>
           <template v-if="isAdmin">
             <router-link to="/ssr" class="text-gray-700 hover:text-blue-600">SSR 예제</router-link>
@@ -35,6 +36,7 @@ import { defineComponent, computed, watch, onMounted } from 'vue';
 import { useAuthStore } from '@features/auth';
 import { useUserStore } from '@entities/user';
 import { useRouter } from 'vue-router';
+import {UserRole} from "@shared/config";
 
 export default defineComponent({
   name: 'Header',
@@ -46,7 +48,7 @@ export default defineComponent({
     // 인증 상태 리액티브하게 계산
     const isAuthenticated = computed(() => authStore.isAuthenticated);
     const isAdmin = computed(() => {
-      return userStore.user?.role?.includes('ADMIN') || false;
+      return userStore.user?.role === UserRole.ADMIN || false;
     });
     // 사용자 이름 표시
     const userDisplayName = computed(() => userStore.userDisplayName);

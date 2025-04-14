@@ -63,6 +63,7 @@ import { useUserStore } from '@entities/user/model/userStore';
 import { useIntroduction } from '@features/introduction';
 import { IntroductionView, IntroductionEditor } from '@widgets/introduction';
 import { type IntroductionDto, type IntroductionUpdateRequest, type IntroductionCreateRequest } from '@entities/introduction';
+import {UserRole} from "@shared/config";
 
 const authStore = useAuthStore();
 const userStore = useUserStore();
@@ -76,7 +77,7 @@ const initialLoading = ref(true); // 초기 로딩 상태 추가
 
 // 현재 로그인한 사용자가 ADMIN 권한을 가지고 있는지 확인
 const isAdmin = computed(() => {
-  return userStore.user?.role?.includes('ADMIN') || false;
+  return userStore.user?.role === UserRole.ADMIN || false;
 });
 
 // 페이지 제목 계산
