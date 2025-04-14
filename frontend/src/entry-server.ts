@@ -1,8 +1,6 @@
 import { createSSRApp } from 'vue';
 import { renderToString } from 'vue/server-renderer';
 import { App, router, pinia } from './app';
-import { ROUTES } from '@shared/config';
-import { isAuthenticated, getUserInfo } from '@shared/lib';
 
 export { router };
 

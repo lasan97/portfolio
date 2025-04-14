@@ -9,9 +9,9 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue';
-import { Card } from '@shared/ui';
-import { LoginForm } from '@features/auth';
+import {defineComponent} from 'vue';
+import {Card} from '@shared/ui';
+import {LoginForm} from '@features/auth';
 
 export default defineComponent({
   name: 'LoginPage',

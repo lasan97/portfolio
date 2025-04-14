@@ -14,7 +14,6 @@ import { useAuthStore } from '@features/auth';
 import { useUserStore } from '@entities/user';
 import { Header } from '@widgets/header';
 import { Footer } from '@widgets/footer';
-import Cookies from 'universal-cookie';
 import { recoverAuthState, syncAuthState } from '@shared/lib';
 
 export default defineComponent({

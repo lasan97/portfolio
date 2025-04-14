@@ -85,12 +85,11 @@
 <script lang="ts">
 import { defineComponent, computed, onMounted, ref } from 'vue';
 import { useAuthStore } from '@features/auth';
-import { useUserStore } from '@entities/user';
+import { useUserStore, UserCard } from '@entities/user';
 import { useRouter } from 'vue-router';
-import { UserCard } from '@entities/user';
 import { Button } from '@shared/ui';
 import { CreditCard } from '@features/credit';
-import {UserRole} from "../../../shared/config";
+import {UserRole} from "@shared/config";
 
 export default defineComponent({
   name: 'ProfilePage',

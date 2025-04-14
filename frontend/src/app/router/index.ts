@@ -7,6 +7,10 @@ import { IntroductionPage } from '@pages/introduction'
 import { ProductsPage, ProductDetailPage } from '@pages/products'
 import { ROUTES } from '@shared/config'
 
+// 인증 관련 유틸리티 import (통합된 auth-utils 사용)
+import {storeToRefs} from 'pinia';
+import {useAuthStore} from '@features/auth';
+
 const routes: Array<RouteRecordRaw> = [
   {
     path: ROUTES.HOME,
@@ -72,11 +76,6 @@ const router = createRouter({
   history,
   routes
 })
-
-// 인증 관련 유틸리티 import (통합된 auth-utils 사용)
-import { isAuthenticated } from '@shared/lib';
-import { storeToRefs } from 'pinia';
-import { useAuthStore } from '@features/auth';
 
 // 인증 미들웨어 (서버와 클라이언트 모두 동작)
 router.beforeEach(async (to, from, next) => {

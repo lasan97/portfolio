@@ -74,8 +74,8 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, onMounted, ref } from 'vue';
-import { ProductCard, useProductStore, Product } from '@entities/product';
+import {computed, defineComponent, onMounted, ref} from 'vue';
+import {ProductCard, useProductStore} from '@entities/product';
 
 export default defineComponent({
   name: 'ProductList',

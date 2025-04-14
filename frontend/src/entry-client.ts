@@ -1,7 +1,7 @@
 import { createApp } from 'vue';
 import { App, router, pinia } from './app';
-import './shared/assets/styles/main.css';
-import { getAuthToken, recoverAuthState, backupAuthState, syncAuthState } from '@shared/lib';
+import '@shared/assets/styles/main.css';
+import { recoverAuthState, backupAuthState, syncAuthState } from '@shared/lib';
 
 // 서버에서 전달된 초기 상태가 있는지 확인
 const initialState = (window as any).__INITIAL_STATE__;

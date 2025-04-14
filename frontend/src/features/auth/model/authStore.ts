@@ -2,7 +2,7 @@ import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { useUserStore } from '@entities/user/model/userStore';
 import { processOAuthCallback } from '../api';
-import { setAuthToken, getAuthToken, logout as logoutAuth, isAuthenticated as checkAuth, recoverAuthState, syncAuthState } from '@shared/lib';
+import { setAuthToken, getAuthToken, logout as logoutAuth, recoverAuthState, syncAuthState } from '@shared/lib';
 import { useRouter } from 'vue-router';
 
 export const useAuthStore = defineStore('auth', () => {
