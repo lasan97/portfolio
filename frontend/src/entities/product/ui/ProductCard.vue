@@ -14,23 +14,20 @@
     </div>
     <div class="p-4">
       <h3 class="text-lg font-semibold mb-1 text-gray-800">{{ product.name }}</h3>
-      <div class="flex items-center mb-2">
-        <div class="flex items-center mr-2">
-          <span v-for="i in 5" :key="i" class="text-yellow-400">
-            <svg v-if="i <= Math.round(product.rating)" class="w-4 h-4 fill-current" viewBox="0 0 24 24">
-              <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path>
-            </svg>
-            <svg v-else class="w-4 h-4 fill-current text-gray-300" viewBox="0 0 24 24">
-              <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path>
-            </svg>
+      <p class="text-sm text-gray-600 mb-3 line-clamp-2">{{ product.description }}</p>
+      <div class="space-y-1">
+        <!-- 원가 표시 (취소선) -->
+        <div v-if="product.originalPrice > product.price" class="text-sm text-gray-500">
+          <span class="line-through">{{ formatPrice(product.originalPrice) }}</span>
+          <span class="ml-1 text-xs text-red-500">
+            {{ calculateDiscountRate(product.originalPrice, product.price) }}% 할인
           </span>
         </div>
-        <span class="text-sm text-gray-600">{{ product.rating }}/5</span>
-      </div>
-      <p class="text-sm text-gray-600 mb-3 line-clamp-2">{{ product.description }}</p>
-      <div class="flex justify-between items-center">
-        <span class="text-lg font-bold text-gray-900">{{ formatPrice(product.price) }}</span>
-        <span class="text-xs px-2 py-1 bg-gray-100 rounded-full text-gray-600">{{ product.category }}</span>
+        <!-- 판매가 표시 -->
+        <div class="flex justify-between items-center">
+          <span class="text-lg font-bold text-gray-900">{{ formatPrice(product.price) }}</span>
+          <span class="text-xs px-2 py-1 bg-gray-100 rounded-full text-gray-600">{{ product.category }}</span>
+        </div>
       </div>
     </div>
   </div>
@@ -56,9 +53,15 @@ export default defineComponent({
         currency: 'KRW'
       }).format(price);
     };
+    
+    const calculateDiscountRate = (originalPrice: number, currentPrice: number): number => {
+      const discountRate = ((originalPrice - currentPrice) / originalPrice) * 100;
+      return Math.round(discountRate);
+    };
 
     return {
-      formatPrice
+      formatPrice,
+      calculateDiscountRate
     };
   }
 });

@@ -26,7 +26,9 @@ export const ROUTES = {
   SSR: '/ssr',
   INTRODUCTION: '/introduction',
   PRODUCTS: '/products',
-  PRODUCT_DETAIL: '/products/:id'
+  PRODUCT_DETAIL: '/products/:id',
+  CHECKOUT: '/checkout',
+  ORDER_COMPLETE: '/order-complete'
 };
 
 /**

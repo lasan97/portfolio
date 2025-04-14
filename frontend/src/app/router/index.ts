@@ -5,6 +5,8 @@ import { ProfilePage } from '@pages/profile'
 import { SsrPage } from '@pages/ssr'
 import { IntroductionPage } from '@pages/introduction'
 import { ProductsPage, ProductDetailPage } from '@pages/products'
+import { CheckoutPage } from '@pages/checkout'
+import { OrderCompletePage } from '@pages/order-complete'
 import { ROUTES } from '@shared/config'
 
 // 인증 관련 유틸리티 import (통합된 auth-utils 사용)
@@ -54,6 +56,16 @@ const routes: Array<RouteRecordRaw> = [
     path: ROUTES.PRODUCT_DETAIL,
     name: 'product-detail',
     component: ProductDetailPage
+  },
+  {
+    path: ROUTES.CHECKOUT,
+    name: 'checkout',
+    component: CheckoutPage
+  },
+  {
+    path: ROUTES.ORDER_COMPLETE,
+    name: 'order-complete',
+    component: OrderCompletePage
   },
   {
     path: ROUTES.NOT_FOUND,

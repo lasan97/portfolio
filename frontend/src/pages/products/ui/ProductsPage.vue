@@ -7,7 +7,21 @@
       </div>
     </div>
     
-    <product-list @select-product="handleProductSelect" />
+    <div class="container mx-auto px-4 py-6">
+      <div class="flex flex-col md:flex-row gap-6">
+        <!-- 상품 목록 영역 -->
+        <div class="md:w-3/4">
+          <product-list @select-product="handleProductSelect" />
+        </div>
+        
+        <!-- 장바구니 요약 영역 -->
+        <div class="md:w-1/4 mb-6">
+          <div class="sticky top-6">
+            <cart-summary @checkout="goToCheckout" />
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -15,11 +29,13 @@
 import { defineComponent } from 'vue';
 import { useRouter } from 'vue-router';
 import { ProductList } from '@widgets/productList';
+import { CartSummary } from '@entities/cart';
 
 export default defineComponent({
   name: 'ProductsPage',
   components: {
-    ProductList
+    ProductList,
+    CartSummary
   },
   setup() {
     const router = useRouter();
@@ -29,8 +45,13 @@ export default defineComponent({
       router.push(`/products/${productId}`);
     };
     
+    const goToCheckout = () => {
+      router.push('/checkout');
+    };
+    
     return {
-      handleProductSelect
+      handleProductSelect,
+      goToCheckout
     };
   }
 });

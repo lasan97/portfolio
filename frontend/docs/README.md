@@ -207,7 +207,7 @@ SSR이 필요한 페이지에는 ssr meta가 적용되어 있습니다.
 
 더 자세한 정보는 다음 문서를 참조하세요:
 
-- [개발 가이드](./docs/development-guide.md) - 개발 프로세스 및 코딩 규칙
-- [SSR 가이드](./docs/ssr-guide.md) - SSR 구현 상세 정보
-- [Vite & Pinia 가이드](./docs/vite-pinia-guide.md) - 빌드 도구 및 상태 관리 
-- [하이브리드 렌더링 가이드](./docs/hybrid-ssr-csr.md) - CSR과 SSR 혼합 사용 방법
+- [개발 가이드](development-guide.md) - 개발 프로세스 및 코딩 규칙
+- [SSR 가이드](ssr-guide.md) - SSR 구현 상세 정보
+- [Vite & Pinia 가이드](vite-pinia-guide.md) - 빌드 도구 및 상태 관리 
+- [하이브리드 렌더링 가이드](hybrid-ssr-csr.md) - CSR과 SSR 혼합 사용 방법
