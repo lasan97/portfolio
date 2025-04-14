@@ -29,24 +29,20 @@
             </div>
             <h1 class="mt-2 text-3xl font-bold text-gray-900">{{ product.name }}</h1>
             
-            <!-- 상품 평점 -->
-            <div class="mt-4 flex items-center">
-              <div class="flex items-center">
-                <span v-for="i in 5" :key="i" class="text-yellow-400">
-                  <svg v-if="i <= Math.round(product.rating)" class="w-5 h-5 fill-current" viewBox="0 0 24 24">
-                    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path>
-                  </svg>
-                  <svg v-else class="w-5 h-5 fill-current text-gray-300" viewBox="0 0 24 24">
-                    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path>
-                  </svg>
+            <!-- 상품 가격 정보 -->
+            <div class="mt-4 space-y-1">
+              <!-- 원가 표시 (할인이 있는 경우) -->
+              <div v-if="product.originalPrice > product.price" class="text-lg text-gray-500">
+                <span class="line-through">{{ formatPrice(product.originalPrice) }}</span>
+                <span class="ml-2 text-red-500 font-medium">
+                  {{ calculateDiscountRate(product.originalPrice, product.price) }}% 할인
                 </span>
               </div>
-              <span class="ml-2 text-gray-600">{{ product.rating }}/5</span>
-            </div>
-            
-            <!-- 상품 가격 -->
-            <div class="mt-4">
-              <span class="text-3xl font-bold text-gray-900">{{ formatPrice(product.price) }}</span>
+              
+              <!-- 판매가 표시 -->
+              <div>
+                <span class="text-3xl font-bold text-gray-900">{{ formatPrice(product.price) }}</span>
+              </div>
             </div>
             
             <!-- 재고 상태 -->
@@ -110,30 +106,9 @@
           </ul>
         </div>
         
-        <!-- 구매 혜택 카드 -->
-        <div class="bg-white p-6 rounded-lg shadow-md">
-          <h3 class="text-lg font-medium text-gray-900 mb-4">구매 혜택</h3>
-          <ul class="space-y-3">
-            <li class="flex">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span>구매 금액의 2% 적립</span>
-            </li>
-            <li class="flex">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span>첫 구매 시 5,000원 할인</span>
-            </li>
-            <li class="flex">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span>리뷰 작성 시 500원 적립</span>
-            </li>
-          </ul>
-        </div>
+        <!-- 장바구니 요약 카드 -->
+        <cart-summary @checkout="goToCheckout" />
+
       </div>
     </template>
     
@@ -160,13 +135,19 @@
 import { defineComponent, ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useProductStore, type Product } from '@entities/product';
+import { useCartStore } from '@entities/cart';
+import { CartSummary } from '@entities/cart';
 
 export default defineComponent({
   name: 'ProductDetail',
+  components: {
+    CartSummary
+  },
   setup() {
     const route = useRoute();
     const router = useRouter();
     const productStore = useProductStore();
+    const cartStore = useCartStore();
     
     const loading = ref(true);
     const error = ref<string | null>(null);
@@ -214,8 +195,19 @@ export default defineComponent({
     };
     
     const addToCart = () => {
-      // 실제로는 장바구니 기능 구현
-      alert(`장바구니에 ${product.value?.name}이(가) 추가되었습니다.`);
+      if (product.value) {
+        cartStore.addToCart(product.value, 1);
+        alert(`장바구니에 ${product.value.name}이(가) 추가되었습니다.`);
+      }
+    };
+    
+    const goToCheckout = () => {
+      router.push('/checkout');
+    };
+    
+    const calculateDiscountRate = (originalPrice: number, currentPrice: number): number => {
+      const discountRate = ((originalPrice - currentPrice) / originalPrice) * 100;
+      return Math.round(discountRate);
     };
     
     return {
@@ -224,7 +216,9 @@ export default defineComponent({
       error,
       formatPrice,
       goBack,
-      addToCart
+      addToCart,
+      goToCheckout,
+      calculateDiscountRate
     };
   }
 });
