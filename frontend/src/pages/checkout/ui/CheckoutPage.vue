@@ -35,7 +35,7 @@
                   <div class="flex flex-col sm:flex-row sm:justify-between">
                     <div>
                       <h3 class="text-lg font-medium text-gray-900">{{ item.product.name }}</h3>
-                      <p class="text-sm text-gray-500">{{ item.product.category }}</p>
+                      <p class="text-sm text-gray-500">{{ getCategoryDescription(item.product.category) }}</p>
                     </div>
                     
                     <div class="mt-2 sm:mt-0 text-right">
@@ -249,6 +249,7 @@
 import { defineComponent, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useCartStore } from '@entities/cart';
+import { ProductCategory } from '@entities/product';
 
 interface OrderForm {
   name: string;
@@ -275,7 +276,7 @@ export default defineComponent({
       postcode: '',
       deliveryRequest: ''
     });
-    
+
     const isSubmitting = ref(false);
     
     const formatPrice = (price: number): string => {
@@ -319,7 +320,11 @@ export default defineComponent({
         isSubmitting.value = false;
       }
     };
-    
+
+    const getCategoryDescription = (category: ProductCategory): string => {
+      return ProductCategory.getDescription(category);
+    };
+
     return {
       cartStore,
       orderForm,
@@ -328,7 +333,8 @@ export default defineComponent({
       goToProducts,
       updateQuantity,
       removeItem,
-      placeOrder
+      placeOrder,
+      getCategoryDescription
     };
   }
 });

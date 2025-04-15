@@ -25,7 +25,7 @@
           <!-- 상품 정보 -->
           <div class="md:w-1/2 p-8">
             <div class="uppercase tracking-wide text-sm text-indigo-600 font-semibold">
-              {{ product.category }}
+              {{ getCategoryDescription(product.category) }}
             </div>
             <h1 class="mt-2 text-3xl font-bold text-gray-900">{{ product.name }}</h1>
             
@@ -134,7 +134,7 @@
 <script lang="ts">
 import { defineComponent, ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { useProductStore, type Product } from '@entities/product';
+import {useProductStore, type Product, ProductCategory} from '@entities/product';
 import { useCartStore } from '@entities/cart';
 import { CartSummary } from '@entities/cart';
 
@@ -209,6 +209,10 @@ export default defineComponent({
       const discountRate = ((originalPrice - currentPrice) / originalPrice) * 100;
       return Math.round(discountRate);
     };
+
+    const getCategoryDescription = (category: ProductCategory): string => {
+      return ProductCategory.getDescription(category);
+    };
     
     return {
       product,
@@ -218,7 +222,8 @@ export default defineComponent({
       goBack,
       addToCart,
       goToCheckout,
-      calculateDiscountRate
+      calculateDiscountRate,
+      getCategoryDescription
     };
   }
 });

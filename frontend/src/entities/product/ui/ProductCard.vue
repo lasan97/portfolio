@@ -26,7 +26,7 @@
         <!-- 판매가 표시 -->
         <div class="flex justify-between items-center">
           <span class="text-lg font-bold text-gray-900">{{ formatPrice(product.price) }}</span>
-          <span class="text-xs px-2 py-1 bg-gray-100 rounded-full text-gray-600">{{ product.category }}</span>
+          <span class="text-xs px-2 py-1 bg-gray-100 rounded-full text-gray-600">{{ getCategoryDescription(product.category) }}</span>
         </div>
       </div>
     </div>
@@ -35,7 +35,7 @@
 
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
-import { Product } from '../model/types';
+import { Product, ProductCategory } from '../model/types';
 
 export default defineComponent({
   name: 'ProductCard',
@@ -53,15 +53,20 @@ export default defineComponent({
         currency: 'KRW'
       }).format(price);
     };
-    
+
     const calculateDiscountRate = (originalPrice: number, currentPrice: number): number => {
       const discountRate = ((originalPrice - currentPrice) / originalPrice) * 100;
       return Math.round(discountRate);
     };
 
+    const getCategoryDescription = (category: ProductCategory): string => {
+      return ProductCategory.getDescription(category);
+    };
+
     return {
       formatPrice,
-      calculateDiscountRate
+      calculateDiscountRate,
+      getCategoryDescription
     };
   }
 });

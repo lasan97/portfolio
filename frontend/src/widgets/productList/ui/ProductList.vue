@@ -33,7 +33,7 @@
             >
               <option value="">전체 카테고리</option>
               <option v-for="category in categories" :key="category" :value="category">
-                {{ category }}
+                {{ getCategoryDescription(category) }}
               </option>
             </select>
             
@@ -79,7 +79,7 @@
 
 <script lang="ts">
 import {computed, defineComponent, onMounted, ref} from 'vue';
-import {ProductCard, useProductStore} from '@entities/product';
+import {ProductCard, ProductCategory, useProductStore} from '@entities/product';
 
 export default defineComponent({
   name: 'ProductList',
@@ -90,50 +90,50 @@ export default defineComponent({
   setup() {
     const productStore = useProductStore();
     const { products, isLoading, error } = productStore;
-    
+
     // 필터링 상태
     const searchQuery = ref('');
     const selectedCategory = ref('');
     const showInStockOnly = ref(false);
     const sortOption = ref('nameAsc');
-    
+
     // 데이터 로드
     onMounted(async () => {
       if (products.length === 0) {
         await productStore.fetchProducts();
       }
     });
-    
+
     // 카테고리 목록 계산
     const categories = computed(() => {
       const categorySet = new Set<string>();
       productStore.products.forEach(product => categorySet.add(product.category));
       return Array.from(categorySet);
     });
-    
+
     // 필터링된 상품 목록
     const filteredProducts = computed(() => {
       let result = [...productStore.products];
-      
+
       // 검색어 필터링
       if (searchQuery.value) {
         const query = searchQuery.value.toLowerCase();
-        result = result.filter(p => 
-          p.name.toLowerCase().includes(query) || 
+        result = result.filter(p =>
+          p.name.toLowerCase().includes(query) ||
           p.description.toLowerCase().includes(query)
         );
       }
-      
+
       // 카테고리 필터링
       if (selectedCategory.value) {
         result = result.filter(p => p.category === selectedCategory.value);
       }
-      
+
       // 재고 있는 상품만 필터링
       if (showInStockOnly.value) {
         result = result.filter(p => p.inStock);
       }
-      
+
       // 정렬
       switch (sortOption.value) {
         case 'nameAsc':
@@ -149,10 +149,14 @@ export default defineComponent({
           result.sort((a, b) => b.price - a.price);
           break;
       }
-      
+
       return result;
     });
-    
+
+    const getCategoryDescription = (category: ProductCategory): string => {
+      return ProductCategory.getDescription(category);
+    };
+
     return {
       products,
       isLoading,
@@ -162,7 +166,8 @@ export default defineComponent({
       categories,
       showInStockOnly,
       sortOption,
-      filteredProducts
+      filteredProducts,
+      getCategoryDescription
     };
   }
 });
