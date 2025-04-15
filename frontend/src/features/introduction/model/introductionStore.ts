@@ -1,7 +1,7 @@
 import {defineStore} from 'pinia';
 import {ref} from 'vue';
 import {createIntroduction, getIntroduction, updateIntroduction} from '../api';
-import type {IntroductionCreateRequest, IntroductionDto, IntroductionUpdateRequest} from '@entities/introduction';
+import type {IntroductionCreateRequest, IntroductionDto, IntroductionUpdateRequest} from '../model/types';
 
 export const useIntroductionStore = defineStore('introduction', () => {
   const loading = ref(false);

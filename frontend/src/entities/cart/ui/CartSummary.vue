@@ -67,7 +67,7 @@
 
 <script lang="ts">
 import { defineComponent, computed } from 'vue';
-import { useCartStore } from '../model/store';
+import { useCartStore } from '../model/cartStore';
 
 export default defineComponent({
   name: 'CartSummary',

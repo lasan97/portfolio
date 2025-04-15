@@ -1,5 +1,5 @@
 // 모델
-export { useProductStore } from './model/store';
+export { useProductStore } from './model/productStore';
 export type { Product } from './model/types';
 export { ProductCategory } from './model/types';
 

@@ -321,10 +321,6 @@ export default defineComponent({
       }
     };
 
-    const getCategoryDescription = (category: ProductCategory): string => {
-      return ProductCategory.getDescription(category);
-    };
-
     return {
       cartStore,
       orderForm,
@@ -334,7 +330,7 @@ export default defineComponent({
       updateQuantity,
       removeItem,
       placeOrder,
-      getCategoryDescription
+      getCategoryDescription: ProductCategory.getDescription
     };
   }
 });

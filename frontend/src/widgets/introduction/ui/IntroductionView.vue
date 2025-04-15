@@ -45,7 +45,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { LinkIcon, MarkdownRenderer } from '@shared/ui';
-import type { IntroductionDto } from '@entities/introduction';
+import type { IntroductionDto } from '@features/introduction';
 
 const props = defineProps<{
   introduction: IntroductionDto | null;

@@ -182,7 +182,7 @@
 import { ref, reactive, onMounted } from 'vue';
 import { MarkdownRenderer } from '@shared/ui';
 import { BoldIcon, ItalicIcon, HeadingIcon, ListIcon, CodeIcon, LinkEditorIcon, ImageIcon } from '@shared/ui';
-import type { IntroductionDto, IntroductionUpdateRequest, IntroductionCreateRequest, ExternalLink } from '@entities/introduction';
+import type { IntroductionDto, IntroductionUpdateRequest, IntroductionCreateRequest, ExternalLink } from '@features/introduction';
 import { uploadFile } from '@features/file';
 
 const props = defineProps<{

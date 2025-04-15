@@ -59,14 +59,10 @@ export default defineComponent({
       return Math.round(discountRate);
     };
 
-    const getCategoryDescription = (category: ProductCategory): string => {
-      return ProductCategory.getDescription(category);
-    };
-
     return {
       formatPrice,
       calculateDiscountRate,
-      getCategoryDescription
+      getCategoryDescription: ProductCategory.getDescription
     };
   }
 });

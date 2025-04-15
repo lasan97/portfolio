@@ -106,7 +106,7 @@ export default defineComponent({
 
     // 카테고리 목록 계산
     const categories = computed(() => {
-      const categorySet = new Set<string>();
+      const categorySet = new Set<ProductCategory>();
       productStore.products.forEach(product => categorySet.add(product.category));
       return Array.from(categorySet);
     });
@@ -153,10 +153,6 @@ export default defineComponent({
       return result;
     });
 
-    const getCategoryDescription = (category: ProductCategory): string => {
-      return ProductCategory.getDescription(category);
-    };
-
     return {
       products,
       isLoading,
@@ -167,7 +163,7 @@ export default defineComponent({
       showInStockOnly,
       sortOption,
       filteredProducts,
-      getCategoryDescription
+      getCategoryDescription: ProductCategory.getDescription
     };
   }
 });

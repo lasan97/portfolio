@@ -1,5 +1,7 @@
 import { useIntroductionStore } from './introductionStore';
-import { IntroductionUpdateRequest, IntroductionCreateRequest, IntroductionDto } from '@entities/introduction';
+import { IntroductionUpdateRequest, IntroductionCreateRequest, IntroductionDto } from '../model/types';
+
+export * from './types';
 
 /**
  * 자기소개 관련 커스텀 훅

@@ -62,7 +62,7 @@ import { useAuthStore } from '@features/auth';
 import { useUserStore } from '@entities/user/model/userStore';
 import { useIntroduction } from '@features/introduction';
 import { IntroductionView, IntroductionEditor } from '@widgets/introduction';
-import { type IntroductionDto, type IntroductionUpdateRequest, type IntroductionCreateRequest } from '@entities/introduction';
+import { type IntroductionDto, type IntroductionUpdateRequest, type IntroductionCreateRequest } from '@features/introduction';
 import {UserRole} from "@shared/config";
 
 const authStore = useAuthStore();

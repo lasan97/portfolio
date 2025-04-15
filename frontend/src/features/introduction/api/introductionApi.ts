@@ -1,5 +1,5 @@
 import { api } from '@shared/api';
-import type { IntroductionDto, IntroductionUpdateRequest, IntroductionCreateRequest } from '@entities/introduction';
+import type { IntroductionDto, IntroductionUpdateRequest, IntroductionCreateRequest } from '../model/types';
 import type { AxiosApiResponse } from '@shared/types';
 
 const BASE_URL = '/api/introduction';

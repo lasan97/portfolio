@@ -210,10 +210,6 @@ export default defineComponent({
       return Math.round(discountRate);
     };
 
-    const getCategoryDescription = (category: ProductCategory): string => {
-      return ProductCategory.getDescription(category);
-    };
-    
     return {
       product,
       loading,
@@ -223,7 +219,7 @@ export default defineComponent({
       addToCart,
       goToCheckout,
       calculateDiscountRate,
-      getCategoryDescription
+      getCategoryDescription: ProductCategory.getDescription
     };
   }
 });
