@@ -11,8 +11,7 @@ const dummyProducts: Product[] = [
     description: '고성능 프로세서와 그래픽이 탑재된 전문가용 노트북',
     imageUrl: 'https://placehold.co/300x200',
     category: '전자제품',
-    inStock: true,
-    rating: 4.8
+    inStock: true
   },
   {
     id: 2,
@@ -22,8 +21,7 @@ const dummyProducts: Product[] = [
     description: '장시간 앉아도 편안한 인체공학적 설계의 사무용 의자',
     imageUrl: 'https://placehold.co/300x200',
     category: '가구',
-    inStock: true,
-    rating: 4.5
+    inStock: true
   },
   {
     id: 3,
@@ -33,8 +31,7 @@ const dummyProducts: Product[] = [
     description: '노이즈 캔슬링 기능이 있는 고음질 무선 이어버드',
     imageUrl: 'https://placehold.co/300x200',
     category: '전자제품',
-    inStock: true,
-    rating: 4.6
+    inStock: true
   },
   {
     id: 4,
@@ -44,8 +41,7 @@ const dummyProducts: Product[] = [
     description: '건강 모니터링과 알림 기능이 있는 스마트 워치',
     imageUrl: 'https://placehold.co/300x200',
     category: '전자제품',
-    inStock: true,
-    rating: 4.3
+    inStock: true
   },
   {
     id: 5,
@@ -55,8 +51,7 @@ const dummyProducts: Product[] = [
     description: '강력한 음향과 휴대성이 뛰어난 블루투스 스피커',
     imageUrl: 'https://placehold.co/300x200',
     category: '전자제품',
-    inStock: false,
-    rating: 4.2
+    inStock: false
   },
   {
     id: 6,
@@ -66,8 +61,7 @@ const dummyProducts: Product[] = [
     description: '내추럴한 원목 소재의 6인용 식탁',
     imageUrl: 'https://placehold.co/300x200',
     category: '가구',
-    inStock: true,
-    rating: 4.7
+    inStock: true
   },
   {
     id: 7,
@@ -77,8 +71,7 @@ const dummyProducts: Product[] = [
     description: '슬림한 디자인의 고성능 태블릿 PC',
     imageUrl: 'https://placehold.co/300x200',
     category: '전자제품',
-    inStock: true,
-    rating: 4.4
+    inStock: true
   },
   {
     id: 8,
@@ -88,8 +81,7 @@ const dummyProducts: Product[] = [
     description: '모던한 디자인의 조립식 다용도 선반',
     imageUrl: 'https://placehold.co/300x200',
     category: '가구',
-    inStock: true,
-    rating: 4.1
+    inStock: true
   },
   {
     id: 9,
@@ -99,8 +91,7 @@ const dummyProducts: Product[] = [
     description: '스마트 맵핑 기능이 있는 자동 로봇 청소기',
     imageUrl: 'https://placehold.co/300x200',
     category: '가전제품',
-    inStock: false,
-    rating: 4.6
+    inStock: false
   },
   {
     id: 10,
@@ -110,8 +101,7 @@ const dummyProducts: Product[] = [
     description: 'RGB 백라이트와 기계식 스위치의 게이밍 키보드',
     imageUrl: 'https://placehold.co/300x200',
     category: '전자제품',
-    inStock: true,
-    rating: 4.5
+    inStock: true
   }
 ];
 
