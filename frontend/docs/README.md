@@ -174,7 +174,7 @@ SSR이 필요한 페이지에는 ssr meta가 적용되어 있습니다.
 ```javascript
 // 라우트 메타데이터에 ssr: true 설정
 {
-  path: ROUTES.INTRODUCTION,
+  path: '/introduction',
   name: 'introduction',
   component: IntroductionPage,
   meta: { ssr: true }

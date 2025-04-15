@@ -1,13 +1,9 @@
 import { createRouter, createWebHistory, createMemoryHistory, RouteRecordRaw } from 'vue-router'
 import { HomePage } from '@pages/home'
-import { LoginPage, OAuthCallbackPage } from '@pages/auth'
 import { ProfilePage } from '@pages/profile'
-import { SsrPage } from '@pages/ssr'
 import { IntroductionPage } from '@pages/introduction'
-import { ProductsPage, ProductDetailPage } from '@pages/products'
-import { CheckoutPage } from '@pages/checkout'
-import { OrderCompletePage } from '@pages/order-complete'
-import { ROUTES } from '@shared/config'
+
+import { authRouteConfig, errorRouteConfig, sampleRouteConfig, orderRouteConfig } from './routeConfig';
 
 // 인증 관련 유틸리티 import (통합된 auth-utils 사용)
 import {storeToRefs} from 'pinia';
@@ -15,67 +11,27 @@ import {useAuthStore} from '@features/auth';
 
 const routes: Array<RouteRecordRaw> = [
   {
-    path: ROUTES.HOME,
+    path: '/',
     name: 'home',
     component: HomePage
   },
   {
-    path: ROUTES.LOGIN,
-    name: 'login',
-    component: LoginPage
-  },
-  {
-    path: ROUTES.OAUTH_CALLBACK,
-    name: 'oauth-callback',
-    component: OAuthCallbackPage
-  },
-  {
-    path: ROUTES.PROFILE,
+    path: '/profile',
     name: 'profile',
     component: ProfilePage,
     meta: { requiresAuth: true }
   },
   {
-    path: ROUTES.INTRODUCTION,
+    path: '/introduction',
     name: 'introduction',
     component: IntroductionPage,
     meta: { ssr: true }
   },
-  {
-    path: ROUTES.SSR,
-    name: 'ssr',
-    component: SsrPage,
-    meta: { ssr: true } // SSR로 처리할 페이지
-  },
-  {
-    path: ROUTES.PRODUCTS,
-    name: 'products',
-    component: ProductsPage
-  },
-  {
-    path: ROUTES.PRODUCT_DETAIL,
-    name: 'product-detail',
-    component: ProductDetailPage
-  },
-  {
-    path: ROUTES.CHECKOUT,
-    name: 'checkout',
-    component: CheckoutPage
-  },
-  {
-    path: ROUTES.ORDER_COMPLETE,
-    name: 'order-complete',
-    component: OrderCompletePage
-  },
-  {
-    path: ROUTES.NOT_FOUND,
-    name: 'notFound',
-    component: () => import('@pages/notFound/ui/NotFoundPage.vue')
-  },
-  {
-    path: '/:pathMatch(.*)*',
-    redirect: ROUTES.NOT_FOUND
-  }
+  ...authRouteConfig,
+  ...errorRouteConfig,
+  ...sampleRouteConfig,
+  ...orderRouteConfig
+
 ]
 
 // SSR을 위한 라우터 히스토리 분기 처리

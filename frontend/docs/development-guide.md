@@ -347,27 +347,35 @@ export const useAuthStore = defineStore('auth', () => {
 - 라우트 메타데이터 활용 (인증, SSR 등)
 
 ```typescript
-// shared/config/routes.ts
-export const ROUTES = {
-  HOME: '/',
-  LOGIN: '/login',
-  PROFILE: '/profile',
-  // 기타 경로...
+// app/router/routeConfig.ts
+const sampleRouteConfig: RouteRecordRaw[] = [
+    {
+        path: '/ssr',
+        name: 'ssr',
+        component: SsrPage,
+        meta: { ssr: true }
+    },
+];
+
+export {
+    sampleRouteConfig,
+    // ...
 };
 
 // app/router/index.ts
 const routes: Array<RouteRecordRaw> = [
   {
-    path: ROUTES.HOME,
+    path: '/',
     name: 'home',
     component: HomePage
   },
   {
-    path: ROUTES.PROFILE,
+    path: '/profile',
     name: 'profile',
     component: ProfilePage,
     meta: { requiresAuth: true }
-  },
+  }, 
+  ...sampleRouteConfig
   // 기타 라우트...
 ];
 ```
