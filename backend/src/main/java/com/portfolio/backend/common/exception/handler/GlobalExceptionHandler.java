@@ -94,18 +94,4 @@ public class GlobalExceptionHandler {
 						ex.getMessage(),
 						request.getDescription(false)));
 	}
-
-//	@ExceptionHandler(Exception.class)
-//	public ResponseEntity<ErrorResponse> handleGlobalException(
-//			Exception ex, WebRequest request) {
-//
-//		log.error("예외 발생 - 유형: {}, 메시지: {}, 상세 정보: ", ex.getClass().getSimpleName(), ex.getMessage(), ex);
-//
-//		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-//				.body(new ErrorResponse(
-//						LocalDateTime.now(),
-//						HttpStatus.INTERNAL_SERVER_ERROR.value(),
-//						ex.getMessage(),
-//						request.getDescription(false)));
-//	}
 }
