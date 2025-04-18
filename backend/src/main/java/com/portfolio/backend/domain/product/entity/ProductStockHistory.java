@@ -2,6 +2,7 @@ package com.portfolio.backend.domain.product.entity;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
@@ -37,15 +38,12 @@ public class ProductStockHistory {
 	@Column(length = 500)
 	private String memo;
 
-	public static ProductStockHistory createHistory(Product product, int previous,
-											 int changed, StockChangeReason reason, String memo) {
-		ProductStockHistory history = new ProductStockHistory();
-		history.product = product;
-		history.previousQuantity = previous;
-		history.changedQuantity = changed;
-		history.currentQuantity = previous + changed;
-		history.reason = reason;
-		history.memo = memo;
-		return history;
+	public ProductStockHistory(Product product, int previous, int changed, StockChangeReason reason, String memo) {
+		this.product = product;
+		this.previousQuantity = previous;
+		this.changedQuantity = changed;
+		this.currentQuantity = previous + changed;
+		this.reason = reason;
+		this.memo = memo;
 	}
 }

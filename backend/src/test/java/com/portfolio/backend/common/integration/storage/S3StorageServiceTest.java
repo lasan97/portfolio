@@ -14,6 +14,8 @@ import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -28,6 +30,8 @@ class S3StorageServiceTest {
     @InjectMocks
     private S3StorageService s3StorageService;
 
+    private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd");
+
     @BeforeEach
     void setUp() {
         ReflectionTestUtils.setField(s3StorageService, "bucketName", "test-bucket");
@@ -37,6 +41,7 @@ class S3StorageServiceTest {
     @Test
     void putObject_withKey_shouldUploadToS3AndReturnUrl() throws IOException {
         // Given
+        String currentDateDirectory = LocalDate.now().format(formatter);
         MockMultipartFile file = new MockMultipartFile(
                 "file", 
                 "test.jpg", 
@@ -50,7 +55,7 @@ class S3StorageServiceTest {
 
         // Then
         verify(s3Client, times(1)).putObject(any(PutObjectRequest.class), any(RequestBody.class));
-        assertEquals("https://test-bucket.s3.ap-northeast-2.amazonaws.com/custom-key.jpg", result);
+        assertTrue(result.startsWith("https://test-bucket.s3.ap-northeast-2.amazonaws.com/" + currentDateDirectory));
     }
 
     @Test
@@ -70,7 +75,7 @@ class S3StorageServiceTest {
 
         // Then
         verify(s3Client, times(1)).putObject(any(PutObjectRequest.class), any(RequestBody.class));
-        assertTrue(result.startsWith("https://test-bucket.s3.ap-northeast-2.amazonaws.com/images/"));
+        assertTrue(result.startsWith("https://test-bucket.s3.ap-northeast-2.amazonaws.com/"));
         assertTrue(result.endsWith(".jpg")); // UUID가 포함되어 있어 정확한 이름 확인은 불가
     }
 

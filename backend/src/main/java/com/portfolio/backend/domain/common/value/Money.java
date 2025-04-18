@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Objects;
 
 public class Money {
@@ -39,7 +40,7 @@ public class Money {
     }
 
     public Money multiply(BigDecimal multiplier) {
-        return new Money(this.amount.multiply(multiplier));
+        return new Money(this.amount.multiply(multiplier).setScale(2, RoundingMode.HALF_UP));
     }
 
     public Money multiply(int multiplier) {
