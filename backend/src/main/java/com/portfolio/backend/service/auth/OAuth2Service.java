@@ -60,13 +60,14 @@ public class OAuth2Service {
             return userOptional.get();
         } else {
             // 신규 사용자인 경우 회원가입 처리
+            // 최초 가입자는 어드민
             User newUser = User.builder()
                     .provider(Oauth2ProviderType.GITHUB)
                     .providerId(providerId)
                     .email(email != null ? email : "github_" + providerId + "@example.com")
                     .nickname(nickname)
                     .profileImageUrl(profileImageUrl)
-                    .role(RoleType.USER)
+                    .role(userRepository.count() > 0 ? RoleType.USER : RoleType.ADMIN)
                     .build();
             return userRepository.save(newUser);
         }

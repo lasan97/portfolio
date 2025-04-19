@@ -96,6 +96,18 @@ public class Product {
 		}
 	}
 
+	public void update(String name, Money originalPrice, Money price, String description,
+					   String thumbnailImageUrl, ProductCategory category) {
+		this.name = name;
+		this.originalPrice = originalPrice;
+		this.price = price;
+		this.description = description;
+		this.thumbnailImageUrl = thumbnailImageUrl;
+		this.category = category;
+
+		validation();
+	}
+
 	public void increaseStock(int quantity) {
 		stock.increaseStock(quantity);
 		if (status == ProductStatus.SOLD_OUT && stock.isAvailable()) {
@@ -124,6 +136,10 @@ public class Product {
 
 	public void discontinued() {
 		this.status = ProductStatus.DISCONTINUED;
+	}
+
+	public void delete() {
+		this.status = ProductStatus.DELETED;
 	}
 
 	public int getDiscountRate() {
