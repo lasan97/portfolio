@@ -1,0 +1,65 @@
+package com.portfolio.backend.service.cart;
+
+import com.portfolio.backend.common.exception.ResourceNotFoundException;
+import com.portfolio.backend.common.security.UserImpl;
+import com.portfolio.backend.domain.cart.domain.ProductCart;
+import com.portfolio.backend.domain.cart.domain.ProductCartItem;
+import com.portfolio.backend.domain.cart.repository.ProductCartRepository;
+import com.portfolio.backend.domain.product.entity.Product;
+import com.portfolio.backend.domain.product.entity.ProductStatus;
+import com.portfolio.backend.domain.product.repository.ProductRepository;
+import com.portfolio.backend.domain.user.entity.User;
+import com.portfolio.backend.domain.user.repository.UserRepository;
+import com.portfolio.backend.service.cart.dto.ProductCartServiceMapper;
+import com.portfolio.backend.service.cart.dto.ProductCartServiceRequest.AddItem;
+import com.portfolio.backend.service.cart.dto.ProductCartServiceRequest.RemoveItem;
+import com.portfolio.backend.service.cart.dto.ProductCartServiceResponse;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+public class ProductCartService {
+
+    private final ProductCartRepository productCartRepository;
+    private final UserRepository userRepository;
+    private final ProductRepository productRepository;
+
+    public final ProductCartServiceMapper mapper;
+
+    public List<ProductCartServiceResponse.Get> getCartItems(UserImpl userImpl) {
+        User user = userRepository.findById(userImpl.id())
+                .orElseThrow(() -> new ResourceNotFoundException("해당 사용자가 존재하지 않습니다."));
+
+        ProductCart productCart = productCartRepository.findByUserId(user.getId())
+                .orElse(productCartRepository.save(new ProductCart(user)));
+
+        return productCart.getItems().stream().map(mapper::toGet).toList();
+    }
+
+    public void addCartItem(AddItem request, UserImpl userImpl) {
+        User user = userRepository.findById(userImpl.id())
+                .orElseThrow(() -> new ResourceNotFoundException("해당 사용자가 존재하지 않습니다."));
+        Product product = productRepository.findByIdAndStatusNot(request.productId(), ProductStatus.DELETED)
+                .orElseThrow(() -> new ResourceNotFoundException("상품을 찾을 수 없습니다. ID: " + request.productId()));
+
+        ProductCart productCart = productCartRepository.findByUserId(user.getId())
+                .orElse(productCartRepository.save(new ProductCart(user)));
+
+        productCart.addItem(new ProductCartItem(product, request.quantity()));
+    }
+
+    public void removeCartItem(RemoveItem request, UserImpl userImpl) {
+        User user = userRepository.findById(userImpl.id())
+                .orElseThrow(() -> new ResourceNotFoundException("해당 사용자가 존재하지 않습니다."));
+        Product product = productRepository.findById(request.productId())
+                .orElseThrow(() -> new ResourceNotFoundException("상품을 찾을 수 없습니다. ID: " + request.productId()));
+
+        ProductCart productCart = productCartRepository.findByUserId(user.getId())
+                .orElse(productCartRepository.save(new ProductCart(user)));
+
+        productCart.removeItem(new ProductCartItem(product, 0));
+    }
+}
