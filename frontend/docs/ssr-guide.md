@@ -65,7 +65,7 @@ frontend/
 export async function render(url: string, context?: any, manifest?: any) {
   // 서버에서 전달된 쿠키 정보
   const cookieString = context?.headers?.cookie || context?.cookie || '';
-  
+
   // 라우터 설정
   await router.push(url);
   await router.isReady();
@@ -79,7 +79,7 @@ export async function render(url: string, context?: any, manifest?: any) {
   const matchedComponents = router.currentRoute.value.matched.flatMap(
     record => Object.values(record.components || {})
   );
-  
+
   // SSR 전용 데이터 프리페칭 처리
   const asyncDataHooks = matchedComponents.map(Component => {
     const comp = Component as any;
@@ -92,12 +92,12 @@ export async function render(url: string, context?: any, manifest?: any) {
     }
     return null;
   }).filter(Boolean);
-  
+
   await Promise.all(asyncDataHooks);
 
   // 앱을 문자열로 렌더링
   const appHtml = await renderToString(app);
-  
+
   // Pinia 상태 추출
   const initialState = pinia.state.value;
 
@@ -135,16 +135,16 @@ SSR 페이지에서 초기 데이터를 가져오려면 컴포넌트에 `ssrPref
 export default defineComponent({
   name: 'IntroductionPage',
   components: { /* ... */ },
-  
+
   // SSR 데이터 프리페칭
   static async ssrPrefetch({ route, store, cookie }) {
     // 쿠키 정보를 이용한 API 호출
     const introductionStore = useIntroductionStore(store);
     await introductionStore.fetchIntroduction();
-    
+
     return { success: true };
   },
-  
+
   // 컴포넌트 설정...
 });
 ```
@@ -157,18 +157,18 @@ static async ssrPrefetch({ route, store, cookie }) {
   try {
     // cookie 문자열을 사용하여 인증된 요청 수행
     const introStore = useIntroductionStore(store);
-    
+
     // 인증 토큰 확인 (쿠키에서)
     if (cookie) {
       // 쿠키 문자열로부터 인증 토큰 추출 (필요한 경우)
       const authToken = getAuthToken(cookie);
-      
+
       if (authToken) {
         // 서버 측에서 인증된 API 요청
         await introStore.fetchIntroduction();
       }
     }
-    
+
     return { success: true };
   } catch (error) {
     console.error('SSR 데이터 프리페칭 오류:', error);
@@ -239,5 +239,4 @@ SSR 성능을 최적화하기 위한 방법:
 더 자세한 정보는 다음 문서를 참조하세요:
 
 - [하이브리드 렌더링 가이드](./hybrid-ssr-csr.md) - CSR과 SSR 함께 사용하기
-- [개발 가이드](./development-guide.md) - 전반적인 개발 가이드라인
-- [Vite & Pinia 가이드](./vite-pinia-guide.md) - Vite와 Pinia 통합 방법
+- [Vite와 Pinia 가이드](./vite-pinia-guide.md) - Vite와 Pinia 통합 방법

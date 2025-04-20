@@ -6,7 +6,7 @@
         <p class="text-gray-600 mt-2">상품 정보를 관리하고 재고를 조정할 수 있습니다</p>
       </div>
     </div>
-    
+
     <div class="container mx-auto px-4 py-6">
       <div class="flex flex-col gap-6">
         <!-- 관리자 전용 UI -->
@@ -20,7 +20,7 @@
               새 상품 등록
             </button>
           </div>
-          
+
           <!-- 상품 목록 테이블 -->
           <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
@@ -100,11 +100,11 @@
             </table>
           </div>
         </div>
-        
+
         <!-- 일반 사용자 UI -->
         <div v-else class="bg-white rounded-lg shadow-sm p-6">
           <h2 class="text-xl font-semibold text-gray-800 mb-4">상품 재고 관리</h2>
-          
+
           <!-- 상품 목록 테이블 -->
           <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
@@ -174,7 +174,7 @@
         </div>
       </div>
     </div>
-    
+
     <!-- 상품 등록/수정 폼 모달 -->
     <ProductFormModal 
       v-if="showProductForm" 
@@ -182,7 +182,7 @@
       @close="closeProductForm" 
       @submit="handleProductFormSubmit" 
     />
-    
+
     <!-- 재고 조정 모달 -->
     <StockAdjustmentModal 
       v-if="showStockAdjustmentModal && selectedProduct" 
@@ -198,7 +198,7 @@ import { defineComponent, onMounted, ref, computed, watch } from 'vue';
 import { useProductStore, Product, ProductCategory, ProductStatus } from '@entities/product';
 import { useUserStore } from '@entities/user';
 import { ProductFormData, StockAdjustmentData, ProductFormModal, StockAdjustmentModal } from '@features/productManagement';
-import { UserRole } from "@shared/config";
+import { UserRole } from "@entities/user";
 
 // 가격 포맷팅 함수
 const formatPrice = (price: number): string => {
@@ -223,19 +223,19 @@ export default defineComponent({
     const isAdmin = computed(() => {
       return userStore.user?.role === UserRole.ADMIN || false;
     });
-    
+
     // 상품 데이터
     const products = computed(() => productStore.products);
     const isLoading = computed(() => productStore.isLoading);
-    
+
     // 상품 폼 모달 상태
     const showProductForm = ref(false);
     const selectedProduct = ref<Product | null>(null);
     const selectedProductId = ref<number | null>(null);
-    
+
     // 재고 조정 모달 상태
     const showStockAdjustmentModal = ref(false);
-    
+
     // 데이터 로드
     onMounted(async () => {
       try {
@@ -244,21 +244,21 @@ export default defineComponent({
         console.error('상품 로드 실패:', err);
       }
     });
-    
+
     // 상품 폼 열기
     const openProductForm = (product: Product | null) => {
       selectedProduct.value = product;
       selectedProductId.value = product?.id || null;
       showProductForm.value = true;
     };
-    
+
     // 상품 폼 닫기
     const closeProductForm = () => {
       showProductForm.value = false;
       selectedProduct.value = null;
       selectedProductId.value = null;
     };
-    
+
     // 상품 폼 제출 처리
     const handleProductFormSubmit = async (productData: ProductFormData) => {
       try {
@@ -274,36 +274,36 @@ export default defineComponent({
         console.error('상품 저장 실패:', err);
       }
     };
-    
+
     // 상품 삭제
     const deleteProduct = async (productId: number) => {
       if (!confirm('정말 이 상품을 삭제하시겠습니까?')) {
         return;
       }
-      
+
       try {
         await productStore.deleteProduct(productId);
       } catch (err) {
         console.error('상품 삭제 실패:', err);
       }
     };
-    
+
     // 재고 조정 모달 열기
     const openStockAdjustmentModal = (product: Product) => {
       selectedProduct.value = product;
       showStockAdjustmentModal.value = true;
     };
-    
+
     // 재고 조정 모달 닫기
     const closeStockAdjustmentModal = () => {
       showStockAdjustmentModal.value = false;
       selectedProduct.value = null;
     };
-    
+
     // 재고 조정 처리
     const handleStockAdjustment = async (adjustmentData: StockAdjustmentData) => {
       if (!selectedProduct.value) return;
-      
+
       try {
         await productStore.adjustStock(selectedProduct.value.id, adjustmentData);
         closeStockAdjustmentModal();
@@ -311,7 +311,7 @@ export default defineComponent({
         console.error('재고 조정 실패:', err);
       }
     };
-    
+
     // 상품 상태 표시 클래스
     const getStatusClass = (status: string) => {
       switch (status) {
@@ -325,7 +325,7 @@ export default defineComponent({
           return 'bg-gray-100 text-gray-800';
       }
     };
-    
+
     // 상품 상태 텍스트
     const getStatusText = (status: string) => {
       switch (status) {
@@ -341,12 +341,12 @@ export default defineComponent({
           return status;
       }
     };
-    
+
     // 상품 카테고리 설명
     const getCategoryDescription = (category: ProductCategory) => {
       return ProductCategory.getDescription(category);
     };
-    
+
     return {
       products,
       isLoading,

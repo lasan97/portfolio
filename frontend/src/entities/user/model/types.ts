@@ -1,4 +1,4 @@
-import { UserRole } from "@shared/config";
+import { UserRole } from "./constants";
 
 export interface User {
   id: number;

@@ -1,6 +1,6 @@
 <template>
   <div class="introduction-page container mx-auto px-4 py-8">
-    
+
     <!-- 로딩 중 표시 -->
     <div v-if="initialLoading || loading" class="flex justify-center items-center py-10">
       <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-gray-900"></div>
@@ -15,7 +15,7 @@
         @cancel="cancelEditing" 
       />
     </template>
-    
+
     <!-- 보기 모드 - 자기소개가 있는 경우 -->
     <template v-else-if="introduction">
       <IntroductionView 
@@ -24,7 +24,7 @@
         @edit="startEditing" 
       />
     </template>
-    
+
     <!-- 자기소개가 없는 경우 (초기 로딩이 완료된 후에만 표시) -->
     <template v-else-if="!initialLoading">
       <div class="bg-white shadow-md rounded-lg p-8 text-center">
@@ -35,7 +35,7 @@
           <div class="text-gray-700 text-2xl font-medium mb-2">자기소개가 준비 중입니다</div>
           <p class="text-gray-600 mb-6">현재 등록된 자기소개 정보가 없습니다. 조금만 기다려주세요!</p>
         </div>
-        
+
         <button 
           v-if="isAdmin"
           @click="startCreating" 
@@ -59,11 +59,11 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@features/auth';
-import { useUserStore } from '@entities/user/model/userStore';
+import { useUserStore } from '@entities/user';
 import { useIntroduction } from '@features/introduction';
 import { IntroductionView, IntroductionEditor } from '@widgets/introduction';
 import { type IntroductionDto, type IntroductionUpdateRequest, type IntroductionCreateRequest } from '@features/introduction';
-import {UserRole} from "@shared/config";
+import {UserRole} from "@entities/user";
 
 const authStore = useAuthStore();
 const userStore = useUserStore();

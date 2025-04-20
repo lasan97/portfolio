@@ -98,13 +98,13 @@ onServerPrefetch(async () => {
 ```javascript
 export default {
   name: 'SsrPage',
-  
+
   // Options API 사용 시
   ssrPrefetch({ route, store }) {
     // 서버에서 실행될 데이터 페칭 로직
     return store.someModule.fetchData();
   },
-  
+
   setup() {
     // 컴포넌트 로직
   }
@@ -154,18 +154,18 @@ const ssrCache = new Map();
 
 app.use('*', async (req, res) => {
   const url = req.originalUrl;
-  
+
   // 캐시된 결과가 있으면 사용
   if (ssrCache.has(url)) {
     return res.send(ssrCache.get(url));
   }
-  
+
   // SSR 렌더링 수행
   const html = await renderPage(url);
-  
+
   // 결과 캐싱 (TTL 설정 가능)
   ssrCache.set(url, html);
-  
+
   res.send(html);
 });
 ```
@@ -187,6 +187,11 @@ app.use('*', async (req, res) => {
 
 ## 참고 자료
 
+### 프로젝트 내부 문서
+- [SSR 가이드](./ssr-guide.md) - 서버 사이드 렌더링 구현 상세 정보
+- [Vite와 Pinia 가이드](./vite-pinia-guide.md) - Vite와 Pinia 통합 방법
+
+### 외부 문서
 - [Vue.js SSR 가이드](https://v3.vuejs.org/guide/ssr/introduction.html)
 - [Vite SSR 문서](https://vitejs.dev/guide/ssr.html)
 - [Pinia SSR 문서](https://pinia.vuejs.org/ssr/)

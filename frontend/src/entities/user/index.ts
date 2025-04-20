@@ -1,4 +1,12 @@
-// User 엔티티 모듈 내보내기
-export { default as UserCard } from './ui/UserCard.vue';
+// 도메인 모델
+export type { User, UserState } from './model/types';
+export { UserRole } from './model/constants';
+
+// UI 모델
+export type { UserCardProps, UserDisplayProps } from './model/ui-types';
+
+// 스토어
 export { useUserStore } from './model/userStore';
-export * from './model/types';
+
+// UI 컴포넌트
+export { default as UserCard } from './ui/UserCard.vue';

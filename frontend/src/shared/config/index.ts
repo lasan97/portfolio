@@ -31,10 +31,3 @@ export const ROUTES = {
   ORDER_COMPLETE: '/order-complete'
 };
 
-/**
- * 사용자 역할
- */
-export enum UserRole {
-  ADMIN = 'ADMIN',
-  USER = 'USER'
-}

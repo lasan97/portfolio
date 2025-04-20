@@ -189,40 +189,40 @@ export const useAuthStore = defineStore('auth', () => {
   const loading = ref(false);
   const error = ref<string | null>(null);
   const authenticated = ref(!!token.value);
-  
+
   // 게터
   const isAuthenticated = computed(() => authenticated.value);
-  
+
   // 액션
   function setToken(newToken: string) {
     token.value = newToken;
     setAuthToken(newToken);
     authenticated.value = true;
   }
-  
+
   function clearAuth() {
     token.value = null;
     logoutAuth();
     authenticated.value = false;
   }
-  
+
   async function handleOAuthCallback(code: string) {
     // 구현...
   }
-  
+
   async function fetchCurrentUser() {
     // 구현...
   }
-  
+
   function logout() {
     // 구현...
   }
-  
+
   // 초기화 함수
   async function initialize() {
     // 구현...
   }
-  
+
   return {
     // 상태, 게터, 액션 등 내보내기
     token,
@@ -270,84 +270,15 @@ function handleLogout() {
 
 ## Pinia와 SSR
 
-이 프로젝트는 SSR과 Pinia를 통합하여 사용합니다:
+이 프로젝트는 SSR과 Pinia를 통합하여 사용합니다. Pinia 스토어의 상태는 서버에서 렌더링된 후 클라이언트로 전달되어 하이드레이션 과정에서 복원됩니다.
 
-### 1. 서버에서 Pinia 설정
+SSR 환경에서 Pinia를 사용할 때 주요 고려사항:
 
-```typescript
-// entry-server.ts
-import { createSSRApp } from 'vue';
-import { renderToString } from 'vue/server-renderer';
-import { App, router, pinia } from './app';
+1. 서버에서 Pinia 스토어 초기화 및 데이터 프리페칭
+2. 서버에서 렌더링된 상태를 클라이언트로 전달
+3. 클라이언트에서 초기 상태를 사용하여 하이드레이션
 
-export async function render(url, context) {
-  // 쿠키 정보 추출
-  const cookieString = context?.headers?.cookie || context?.cookie || '';
-  
-  // 라우터 설정
-  await router.push(url);
-  await router.isReady();
-
-  // SSR 앱 인스턴스 생성
-  const app = createSSRApp(App);
-  app.use(pinia);
-  app.use(router);
-  
-  // 데이터 프리페칭 처리
-  const matchedComponents = router.currentRoute.value.matched.flatMap(
-    record => Object.values(record.components || {})
-  );
-  
-  const asyncDataHooks = matchedComponents.map(Component => {
-    const comp = Component as any;
-    if (comp.ssrPrefetch) {
-      return comp.ssrPrefetch({
-        route: router.currentRoute.value,
-        store: pinia,
-        cookie: cookieString
-      });
-    }
-    return null;
-  }).filter(Boolean);
-  
-  await Promise.all(asyncDataHooks);
-
-  // 앱을 문자열로 렌더링
-  const appHtml = await renderToString(app);
-  
-  // Pinia 상태 추출
-  const initialState = pinia.state.value;
-
-  return { appHtml, initialState };
-}
-```
-
-### 2. 클라이언트에서 상태 하이드레이션
-
-```typescript
-// entry-client.ts
-import { createApp } from 'vue';
-import { App, router, pinia } from './app';
-
-// 서버에서 전달된 초기 상태가 있는지 확인
-const initialState = (window as any).__INITIAL_STATE__;
-
-// 초기 상태가 있으면 Pinia에 적용
-if (initialState) {
-  pinia.state.value = initialState;
-}
-
-// 클라이언트 측 앱 생성
-const app = createApp(App);
-app.use(pinia);
-app.use(router);
-
-// 초기 라우트가 해결되면 앱 마운트
-router.isReady().then(() => {
-  // SSR에서 hydrate 모드로 마운트하거나 CSR에서 일반 마운트
-  app.mount('#app', initialState ? true : undefined);
-});
-```
+SSR과 Pinia의 통합에 대한 자세한 내용은 [SSR 가이드](./ssr-guide.md)를 참조하세요.
 
 ## Pinia 스토어 설계 패턴
 
@@ -381,12 +312,12 @@ export default defineComponent({
   name: 'App',
   setup() {
     const authStore = useAuthStore();
-    
+
     onMounted(() => {
       // 인증 상태 초기화
       authStore.initialize();
     });
-    
+
     return {};
   }
 });
@@ -438,14 +369,14 @@ async function fetchData() {
   // 1. 로딩 상태 설정
   loading.value = true;
   error.value = null;
-  
+
   try {
     // 2. API 호출
     const response = await api.get('/some-endpoint');
-    
+
     // 3. 상태 업데이트
     data.value = response.data;
-    
+
     return response.data;
   } catch (err) {
     // 4. 오류 처리
@@ -470,18 +401,18 @@ import { useUserStore } from '@entities/user';
 export const useAuthStore = defineStore('auth', () => {
   // user 스토어 참조
   const userStore = useUserStore();
-  
+
   async function logout() {
     // 1. auth 스토어 상태 초기화
     clearAuth();
-    
+
     // 2. user 스토어 상태 초기화
     userStore.clearUser();
-    
+
     // 3. 라우팅 처리
     router.push('/');
   }
-  
+
   return {
     logout
   };
@@ -503,15 +434,15 @@ interface User {
 export const useUserStore = defineStore('user', () => {
   // 명시적 타입 지정
   const user = ref<User | null>(null);
-  
+
   // 게터도 타입이 자동으로 추론됨
   const userName = computed(() => user.value?.name || 'Guest');
-  
+
   // 타입이 지정된 매개변수
   function setUser(userData: User) {
     user.value = userData;
   }
-  
+
   return {
     user,
     userName,
@@ -534,12 +465,12 @@ function setToken(newToken: string) {
 // 페이지 새로고침 시 상태 복원
 function initialize() {
   recoverAuthState(); // 저장된 토큰 복원
-  
+
   const persistedToken = getAuthToken();
   if (persistedToken) {
     token.value = persistedToken;
     authenticated.value = true;
-    
+
     // 토큰이 있으면 사용자 정보 가져오기
     fetchCurrentUser();
   }
@@ -550,7 +481,6 @@ function initialize() {
 
 더 자세한 정보는 다음 문서들을 참조하세요:
 
-- [개발 가이드](./development-guide.md) - 전반적인 개발 가이드라인
 - [SSR 가이드](./ssr-guide.md) - 서버 사이드 렌더링 구현 상세 정보
 - [하이브리드 렌더링 가이드](./hybrid-ssr-csr.md) - CSR과 SSR 혼합 사용 방법
 

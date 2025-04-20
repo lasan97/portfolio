@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import { useUserStore } from '@entities/user/model/userStore';
+import { useUserStore } from '@entities/user';
 import { processOAuthCallback } from '../api';
 import { setAuthToken, getAuthToken, logout as logoutAuth, recoverAuthState, syncAuthState } from '@shared/lib';
 import { useRouter } from 'vue-router';
@@ -17,56 +17,56 @@ export const useAuthStore = defineStore('auth', () => {
   } catch (e) {
     // 라우터를 사용할 수 없는 경우 조용히 무시
   }
-  
+
   // 상태(state)
   const token = ref<string | null>(getAuthToken());
   const loading = ref(false);
   const error = ref<string | null>(null);
   // 인증 상태를 내부적으로 관리
   const authenticated = ref(!!token.value);
-  
+
   // 게터(getters)
   const isAuthenticated = computed(() => authenticated.value);
-  
+
   // 액션(actions)
   function setToken(newToken: string) {
     token.value = newToken;
-    
+
     // 새로운 유틸리티를 사용하여 토큰 저장
     setAuthToken(newToken);
-    
+
     // 내부 상태 업데이트
     authenticated.value = true;
   }
-  
+
   function setLoading(isLoading: boolean) {
     loading.value = isLoading;
   }
-  
+
   function setError(errorMessage: string | null) {
     error.value = errorMessage;
   }
-  
+
   function clearAuth() {
     token.value = null;
-    
+
     // 새로운 유틸리티를 사용하여 토큰 삭제
     logoutAuth();
-    
+
     // 내부 상태 업데이트
     authenticated.value = false;
   }
-  
+
   async function handleOAuthCallback(code: string) {
     const userStore = useUserStore();
-    
+
     setLoading(true);
     setError(null);
-    
+
     try {
       // 백엔드에 OAuth 콜백 코드 전송하여 로그인/회원가입 처리
       const response = await processOAuthCallback(code);
-      
+
       // 토큰 저장
       setToken(response.token);
 
@@ -79,18 +79,18 @@ export const useAuthStore = defineStore('auth', () => {
       setLoading(false);
     }
   }
-  
+
   async function handleTokenFromCallback(newToken: string) {
     setToken(newToken);
     await fetchCurrentUser();
   }
-  
+
   async function fetchCurrentUser() {
     const userStore = useUserStore();
-    
+
     setLoading(true);
     setError(null);
-    
+
     try {
       const { apiInstance } = await import('@shared/api');
       const response = await apiInstance.get('/api/users/me');
@@ -107,14 +107,14 @@ export const useAuthStore = defineStore('auth', () => {
       setLoading(false);
     }
   }
-  
+
   function logout() {
     const userStore = useUserStore();
-    
+
     // 인증 상태 및 사용자 정보 초기화
     clearAuth();
     userStore.clearUser();
-    
+
     // 홈페이지로 리다이렉트 (선택사항)
     if (router) {
       router.push('/');
@@ -122,7 +122,7 @@ export const useAuthStore = defineStore('auth', () => {
       window.location.href = '/';
     }
   }
-  
+
   // 초기화 함수 (명시적으로 호출 가능)
   async function initialize() {
     if (typeof window === 'undefined') {
@@ -132,18 +132,18 @@ export const useAuthStore = defineStore('auth', () => {
       }
       return;
     }
-    
+
     // 클라이언트 환경에서는 인증 상태 복원 시도
     try {
       // 인증 상태 복원
       recoverAuthState();
-      
+
       // 복원된 토큰으로 상태 업데이트
       const persistedToken = getAuthToken();
       if (persistedToken) {
         token.value = persistedToken;
         authenticated.value = true;
-        
+
         // 사용자 정보 가져오기
         await fetchCurrentUser();
       }
@@ -151,12 +151,12 @@ export const useAuthStore = defineStore('auth', () => {
       clearAuth();
     }
   }
-  
+
   // 컴포넌트 마운트 시 자동 초기화
   if (typeof window !== 'undefined') {
     // 페이지 로드 시 인증 상태 초기화
     setTimeout(initialize, 0);
-    
+
     // 주기적 토큰 검사 (5분마다)
     setInterval(() => {
       syncAuthState();
@@ -167,7 +167,7 @@ export const useAuthStore = defineStore('auth', () => {
       authenticated.value = true;
     }
   }
-  
+
   // 상태 리셋 함수 구현
   function reset() {
     token.value = getAuthToken();
@@ -175,16 +175,16 @@ export const useAuthStore = defineStore('auth', () => {
     error.value = null;
     authenticated.value = !!token.value;
   }
-  
+
   return {
     // 상태
     token,
     loading,
     error,
-    
+
     // 게터
     isAuthenticated,
-    
+
     // 액션
     setToken,
     setLoading,
