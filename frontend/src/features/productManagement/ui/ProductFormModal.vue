@@ -136,7 +136,7 @@
 <script lang="ts">
 import { defineComponent, PropType, ref, reactive, computed, onMounted, watch } from 'vue';
 import { useProductStore } from '@entities/product';
-import { Product, ProductCategory, ProductData } from '@entities/product/model/types';
+import { ProductCategory, ProductData } from '@entities/product';
 
 export default defineComponent({
   name: 'ProductFormModal',

@@ -97,7 +97,7 @@
 
 <script lang="ts">
 import {defineComponent, PropType, ref, reactive, computed} from 'vue';
-import { Product, StockChangeReason, StockAdjustmentData } from '@entities/product/model/types';
+import { Product, StockChangeReason, StockAdjustmentData } from '@entities/product';
 
 export default defineComponent({
   name: 'StockAdjustmentModal',

@@ -198,8 +198,8 @@ import { defineComponent, onMounted, ref, computed, watch } from 'vue';
 import { useProductStore } from '@entities/product';
 import { useUserStore } from '@entities/user';
 import { Product, ProductCategory, ProductStatus, StockAdjustmentData, ProductData } from '@entities/product/model/types';
-import ProductFormModal from '@features/productManagement/ui/ProductFormModal.vue';
-import StockAdjustmentModal from '@features/productManagement/ui/StockAdjustmentModal.vue';
+import { ProductFormModal } from '@features/productManagement';
+import { StockAdjustmentModal } from '@features/productManagement';
 import {UserRole} from "@shared/config";
 
 // 가격 포맷팅 함수
