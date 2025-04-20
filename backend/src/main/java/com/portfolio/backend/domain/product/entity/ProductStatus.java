@@ -8,7 +8,6 @@ import lombok.Getter;
 public enum ProductStatus {
 	ACTIVE("판매중"),
 	SOLD_OUT("품절"),
-	DISCONTINUED("판매중지"),
 	DELETED("삭제됨");
 
 	private final String description;

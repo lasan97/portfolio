@@ -67,9 +67,9 @@ class ProductControllerTest {
 
     // 테스트 데이터
     private ProductServiceResponse.Get productGetResponse;
-    private ProductServiceResponse.List productListResponse1;
-    private ProductServiceResponse.List productListResponse2;
-    private List<ProductServiceResponse.List> productListResponses;
+    private ProductServiceResponse.GetList productGetListResponse1;
+    private ProductServiceResponse.GetList productGetListResponse2;
+    private List<ProductServiceResponse.GetList> productGetListRespons;
     private ProductServiceRequest.Create createRequest;
     private ProductServiceRequest.Update updateRequest;
     private ProductServiceRequest.AdjustStock adjustStockRequest;
@@ -82,17 +82,17 @@ class ProductControllerTest {
                 ProductStatus.ACTIVE, 10, 10, LocalDateTime.now(), LocalDateTime.now()
         );
 
-        productListResponse1 = new ProductServiceResponse.List(
-                1L, "맥북 프로", new Money(BigDecimal.valueOf(1800000)),
-                "macbook-pro.jpg", ProductCategory.ELECTRONICS, ProductStatus.ACTIVE, 10
+        productGetListResponse1 = new ProductServiceResponse.GetList(
+                1L, "맥북 프로", new Money(BigDecimal.valueOf(1800000)), new Money(BigDecimal.valueOf(1620000)),
+                "macbook-pro.jpg", ProductCategory.ELECTRONICS, ProductStatus.ACTIVE, 10, 10
         );
 
-        productListResponse2 = new ProductServiceResponse.List(
-                2L, "아이폰 15", new Money(BigDecimal.valueOf(1500000)),
-                "iphone15.jpg", ProductCategory.ELECTRONICS, ProductStatus.ACTIVE, 15
+        productGetListResponse2 = new ProductServiceResponse.GetList(
+                2L, "아이폰 15", new Money(BigDecimal.valueOf(1500000)), new Money(BigDecimal.valueOf(1275000)),
+                "iphone15.jpg", ProductCategory.ELECTRONICS, ProductStatus.ACTIVE, 10, 15
         );
 
-        productListResponses = Arrays.asList(productListResponse1, productListResponse2);
+        productGetListRespons = Arrays.asList(productGetListResponse1, productGetListResponse2);
 
         createRequest = new ProductServiceRequest.Create(
                 "맥북 프로", new Money(BigDecimal.valueOf(2000000)), new Money(BigDecimal.valueOf(1800000)),
@@ -118,7 +118,7 @@ class ProductControllerTest {
         @WithAnonymousUser
         void shouldReturnProductListWithoutAuthentication() throws Exception {
             // Given
-            when(productService.getProducts()).thenReturn(productListResponses);
+            when(productService.getProducts()).thenReturn(productGetListRespons);
 
             // When & Then
             mockMvc.perform(get("/api/products")

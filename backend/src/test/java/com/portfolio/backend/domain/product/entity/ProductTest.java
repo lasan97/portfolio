@@ -323,14 +323,14 @@ class ProductTest {
             assertThat(product.isAvailable()).isTrue();
             
             // when
-            product.soldOut();
+            product.decreaseStock(product.getStock().getQuantity());
             
             // then
             assertThat(product.isAvailable()).isFalse();
             
             // when
-            product.active();
-            product.discontinued();
+            product.increaseStock(10);
+            product.delete();
             
             // then
             assertThat(product.isAvailable()).isFalse();

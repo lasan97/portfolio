@@ -125,20 +125,27 @@ public class Product {
 		}
 	}
 
+	public void adjustStock(int quantity) {
+		stock.adjustStock(quantity);
+		if (status != ProductStatus.DELETED) {
+			if (stock.isAvailable()) {
+				active();
+			} else {
+				soldOut();
+			}
+		}
+	}
+
 	public boolean isAvailable() {
 		return status == ProductStatus.ACTIVE && (stock != null && stock.isAvailable());
 	}
 
-	public void active() {
+	private void active() {
 		this.status = ProductStatus.ACTIVE;
 	}
 
-	public void soldOut() {
+	private void soldOut() {
 		this.status = ProductStatus.SOLD_OUT;
-	}
-
-	public void discontinued() {
-		this.status = ProductStatus.DISCONTINUED;
 	}
 
 	public void delete() {

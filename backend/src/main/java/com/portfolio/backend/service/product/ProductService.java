@@ -27,7 +27,7 @@ public class ProductService {
     private final ProductStockHistoryRepository productStockHistoryRepository;
 
     @Transactional(readOnly = true)
-    public List<ProductServiceResponse.List> getProducts() {
+    public List<ProductServiceResponse.GetList> getProducts() {
         List<Product> products = productRepository.findAllByStatusNot(ProductStatus.DELETED);
         return productServiceMapper.toList(products);
     }
@@ -86,11 +86,7 @@ public class ProductService {
 
         int previousQuantity = product.getStock().getQuantity();
 
-        if (request.quantity() > 0) {
-            product.increaseStock(request.quantity());
-        } else if (request.quantity() < 0) {
-            product.decreaseStock(Math.abs(request.quantity()));
-        }
+        product.adjustStock(request.quantity());
 
         ProductStockHistory history = new ProductStockHistory(
                 product, 

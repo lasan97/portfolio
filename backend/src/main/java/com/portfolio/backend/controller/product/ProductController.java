@@ -22,7 +22,7 @@ public class ProductController {
     private final ProductService productService;
 
     @GetMapping
-    public List<ProductServiceResponse.List> getProducts() {
+    public List<ProductServiceResponse.GetList> getProducts() {
         return productService.getProducts();
     }
 
@@ -54,7 +54,7 @@ public class ProductController {
     }
 
     @PatchMapping("/{id}/stock")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("isAuthenticated()") // 인증된 사용자라면 누구나 재고 조정 가능
     public Long adjustStock(@PathVariable Long id,
                          @Valid @RequestBody ProductServiceRequest.AdjustStock request,
                          @AuthenticationPrincipal UserDetailsImpl userDetails) {

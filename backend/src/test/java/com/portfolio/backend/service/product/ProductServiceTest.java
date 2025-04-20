@@ -52,9 +52,9 @@ class ProductServiceTest {
     private Product product2;
     private List<Product> productList;
     private ProductServiceResponse.Get productGetResponse;
-    private ProductServiceResponse.List productListResponse1;
-    private ProductServiceResponse.List productListResponse2;
-    private List<ProductServiceResponse.List> productListResponses;
+    private ProductServiceResponse.GetList productGetListResponse1;
+    private ProductServiceResponse.GetList productGetListResponse2;
+    private List<ProductServiceResponse.GetList> productGetListRespons;
     
     @BeforeEach
     void setUp() {
@@ -70,17 +70,17 @@ class ProductServiceTest {
                 ProductStatus.ACTIVE, 10, 20, null, null
         );
         
-        productListResponse1 = new ProductServiceResponse.List(
-                1L, "Product 1", new Money(BigDecimal.valueOf(8000)), 
-                "thumbnail1.jpg", ProductCategory.ELECTRONICS, ProductStatus.ACTIVE, 20
+        productGetListResponse1 = new ProductServiceResponse.GetList(
+                1L, "Product 1", new Money(BigDecimal.valueOf(8000)), new Money(BigDecimal.valueOf(8000)),
+                "thumbnail1.jpg", ProductCategory.ELECTRONICS, ProductStatus.ACTIVE, 1, 20
         );
         
-        productListResponse2 = new ProductServiceResponse.List(
-                2L, "Product 2", new Money(BigDecimal.valueOf(15000)), 
-                "thumbnail2.jpg", ProductCategory.CLOTHING, ProductStatus.ACTIVE, 25
+        productGetListResponse2 = new ProductServiceResponse.GetList(
+                2L, "Product 2", new Money(BigDecimal.valueOf(15000)), new Money(BigDecimal.valueOf(8000)),
+                "thumbnail2.jpg", ProductCategory.CLOTHING, ProductStatus.ACTIVE, 10, 25
         );
         
-        productListResponses = Arrays.asList(productListResponse1, productListResponse2);
+        productGetListRespons = Arrays.asList(productGetListResponse1, productGetListResponse2);
     }
 
     @Nested
@@ -92,15 +92,15 @@ class ProductServiceTest {
         void shouldReturnAllNonDeletedProducts() {
             // Given
             when(productRepository.findAllByStatusNot(ProductStatus.DELETED)).thenReturn(productList);
-            when(productServiceMapper.toList(productList)).thenReturn(productListResponses);
+            when(productServiceMapper.toList(productList)).thenReturn(productGetListRespons);
 
             // When
-            List<ProductServiceResponse.List> result = productService.getProducts();
+            List<ProductServiceResponse.GetList> result = productService.getProducts();
 
             // Then
             verify(productRepository).findAllByStatusNot(ProductStatus.DELETED);
             verify(productServiceMapper).toList(productList);
-            assertEquals(productListResponses, result);
+            assertEquals(productGetListRespons, result);
         }
     }
 

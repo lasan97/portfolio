@@ -24,7 +24,7 @@ public class ProductServiceResponse {
     ) {
     }
 
-    public record List(
+    public record GetList(
             Long id,
             String name,
             Money originalPrice,
@@ -32,6 +32,7 @@ public class ProductServiceResponse {
             String thumbnailImageUrl,
             ProductCategory category,
             ProductStatus status,
+            Integer stock,
             Integer discountRate
     ) {
     }

@@ -65,4 +65,11 @@ public class ProductStock {
 		}
 		this.quantity += amount;
 	}
+
+	protected void adjustStock(int amount) {
+		if (amount < 0) {
+			throw new DomainException("quantity는 0보다 작을 수 없습니다.");
+		}
+		this.quantity = amount;
+	}
 }
