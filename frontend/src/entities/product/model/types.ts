@@ -5,8 +5,17 @@ export interface Product {
   price: number; // 판매가
   description: string;
   imageUrl: string;
+  thumbnailImageUrl?: string; // API 응답에 맞추어 추가
   category: ProductCategory;
   inStock: boolean;
+  status?: string; // 상품 상태 (ACTIVE, SOLD_OUT, DISCONTINUED 등)
+  stock?: ProductStock; // 재고 정보
+}
+
+export interface ProductStock {
+  id?: number;
+  quantity: number;
+  version?: number;
 }
 
 export enum ProductCategory {
@@ -68,7 +77,7 @@ export namespace ProductCategory {
 
   // getDescription 메서드
   export function getDescription(category: ProductCategory): string {
-    return descriptions[category];
+    return descriptions[category] || category;
   }
 
   // entries 메서드 - key-value 쌍 배열 반환
@@ -77,7 +86,7 @@ export namespace ProductCategory {
         .filter(value => typeof value === 'string') // enum에 추가되는 숫자 값 필터링
         .map(code => ({
           code: code as ProductCategory,
-          description: descriptions[code as ProductCategory]
+          description: descriptions[code as ProductCategory] || code as string
         }));
   }
 
@@ -86,4 +95,76 @@ export namespace ProductCategory {
     return Object.values(ProductCategory)
         .filter(value => typeof value === 'string') as ProductCategory[];
   }
+}
+
+// 재고 변경 사유 Enum
+export enum StockChangeReason {
+  ADJUSTMENT = 'ADJUSTMENT', // 판매
+  LOSS = 'LOSS'              // 구매
+}
+
+// 재고 변경 사유에 대한 설명을 제공하는 네임스페이스
+export namespace StockChangeReason {
+  export const descriptions: Record<StockChangeReason, string> = {
+    [StockChangeReason.ADJUSTMENT]: '재고조정',
+    [StockChangeReason.LOSS]: '손실'
+  };
+
+  export function getDescription(reason: StockChangeReason): string {
+    return descriptions[reason];
+  }
+
+  // entries 메서드 - key-value 쌍 배열 반환
+  export function entries(): Array<{ code: StockChangeReason; description: string }> {
+    return Object.values(StockChangeReason)
+        .filter(value => typeof value === 'string') // enum에 추가되는 숫자 값 필터링
+        .map(code => ({
+          code: code as StockChangeReason,
+          description: descriptions[code as StockChangeReason] || code as string
+        }));
+  }
+
+  // values 메서드 - 모든 enum 값 반환
+  export function values(): StockChangeReason[] {
+    return Object.values(StockChangeReason)
+        .filter(value => typeof value === 'string') as StockChangeReason[];
+  }
+}
+
+// 상품 상태 Enum
+export enum ProductStatus {
+  ACTIVE = 'ACTIVE',             // 판매중
+  SOLD_OUT = 'SOLD_OUT',         // 품절
+  DELETED = 'DELETED'            // 삭제됨
+}
+
+// 상품 상태에 대한 설명을 제공하는 네임스페이스
+export namespace ProductStatus {
+  export const descriptions: Record<ProductStatus, string> = {
+    [ProductStatus.ACTIVE]: '판매중',
+    [ProductStatus.SOLD_OUT]: '품절',
+    [ProductStatus.DELETED]: '삭제됨'
+  };
+
+  export function getDescription(status: ProductStatus): string {
+    return descriptions[status] || status;
+  }
+}
+
+// 재고 조정 데이터 인터페이스
+export interface StockAdjustmentData {
+  quantity: number;
+  reason: StockChangeReason;
+  memo?: string;
+}
+
+// 상품 생성/수정 데이터 인터페이스
+export interface ProductData {
+  name: string;
+  originalPrice: number;
+  price: number;
+  description: string;
+  thumbnailImageUrl: string;
+  category: ProductCategory;
+  stock?: number; // 신규 등록 시에만 사용
 }

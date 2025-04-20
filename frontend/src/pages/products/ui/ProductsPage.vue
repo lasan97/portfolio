@@ -2,8 +2,20 @@
   <div class="min-h-screen bg-gray-50">
     <div class="bg-white shadow">
       <div class="container mx-auto px-4 py-6">
-        <h1 class="text-3xl font-bold text-gray-800">상품 목록</h1>
-        <p class="text-gray-600 mt-2">다양한 상품을 살펴보세요</p>
+        <div class="flex justify-between items-center">
+          <div>
+            <h1 class="text-3xl font-bold text-gray-800">상품 목록</h1>
+            <p class="text-gray-600 mt-2">다양한 상품을 살펴보세요</p>
+          </div>
+          <div v-if="isAuthenticated">
+            <router-link 
+              to="/products/manage" 
+              class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              상품 관리
+            </router-link>
+          </div>
+        </div>
       </div>
     </div>
     
@@ -26,10 +38,11 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue';
+import { defineComponent, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { ProductList } from '@widgets/productList';
 import { CartSummary } from '@entities/cart';
+import { useAuthStore } from '@features/auth';
 
 export default defineComponent({
   name: 'ProductsPage',
@@ -39,6 +52,10 @@ export default defineComponent({
   },
   setup() {
     const router = useRouter();
+    const authStore = useAuthStore();
+    
+    // 인증 상태 확인
+    const isAuthenticated = computed(() => authStore.isAuthenticated);
     
     const handleProductSelect = (productId: number) => {
       // 상품 상세 페이지로 이동
@@ -51,7 +68,8 @@ export default defineComponent({
     
     return {
       handleProductSelect,
-      goToCheckout
+      goToCheckout,
+      isAuthenticated
     };
   }
 });

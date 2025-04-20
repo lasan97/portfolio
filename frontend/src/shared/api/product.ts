@@ -1,5 +1,5 @@
 import apiInstance from './instance';
-import { ProductCategory } from '@entities/product/model/types';
+import { ProductCategory, StockAdjustmentData, ProductData } from '@entities/product/model/types';
 
 export interface ProductResponse {
   id: number;
@@ -24,6 +24,7 @@ export interface ProductListResponse {
   thumbnailImageUrl: string;
   category: ProductCategory;
   status: string;
+  stock: number;
   discountRate: number;
 }
 
@@ -41,13 +42,13 @@ export const productApi = {
   },
 
   // 관리자용 상품 추가
-  createProduct: async (productData: any) => {
+  createProduct: async (productData: ProductData) => {
     const response = await apiInstance.post<number>('/api/products', productData);
     return response.data;
   },
 
   // 관리자용 상품 수정
-  updateProduct: async (id: number, productData: any) => {
+  updateProduct: async (id: number, productData: ProductData) => {
     const response = await apiInstance.put<number>(`/api/products/${id}`, productData);
     return response.data;
   },
@@ -58,7 +59,8 @@ export const productApi = {
   },
 
   // 관리자용 재고 조정
-  adjustStock: async (id: number, adjustData: any) => {
+  adjustStock: async (id: number, adjustData: StockAdjustmentData) => {
+    console.log(adjustData);
     const response = await apiInstance.patch<number>(`/api/products/${id}/stock`, adjustData);
     return response.data;
   }
