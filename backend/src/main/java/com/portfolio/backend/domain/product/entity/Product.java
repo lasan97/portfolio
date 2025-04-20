@@ -85,6 +85,9 @@ public class Product {
 		if(price == null){
 			throw new DomainException("판매가는 null일 수 없습니다.");
 		}
+		if (originalPrice.isLessThan(price)) {
+			throw new DomainException("원가는 판매가 보다 작을 수 없습니다.");
+		}
 		if(description == null || description.isBlank()) {
 			throw new DomainException("상품설명은 비어있을 수 없습니다.");
 		}

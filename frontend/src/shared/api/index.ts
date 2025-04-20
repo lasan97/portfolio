@@ -2,4 +2,5 @@
 export { default as api } from './instance';
 
 // API 요청 함수들
-// ...
+export { productApi } from './product';
+

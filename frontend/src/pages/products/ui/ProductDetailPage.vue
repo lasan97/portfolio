@@ -163,13 +163,8 @@ export default defineComponent({
         loading.value = true;
         error.value = null;
         
-        // 상품 목록이 비어있으면 먼저 로드
-        if (productStore.products.length === 0) {
-          await productStore.fetchProducts();
-        }
-        
-        // 상품 ID로 상품 조회
-        const foundProduct = productStore.getProductById(productId.value);
+        // 상품 ID로 상세 정보 조회 (API 호출)
+        const foundProduct = await productStore.fetchProductById(productId.value);
         
         if (foundProduct) {
           product.value = foundProduct;

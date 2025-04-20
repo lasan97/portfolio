@@ -31,6 +31,10 @@ public class Money {
         return this.amount.compareTo(other.amount) <= 0;
     }
 
+    public boolean isLessThan(Money other) {
+        return this.amount.compareTo(other.amount) < 0;
+    }
+
     public Money add(Money money) {
         return new Money(this.amount.add(money.amount));
     }

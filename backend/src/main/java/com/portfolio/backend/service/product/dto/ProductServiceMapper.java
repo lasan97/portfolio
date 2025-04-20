@@ -29,6 +29,7 @@ public class ProductServiceMapper {
         return new ProductServiceResponse.List(
                 product.getId(),
                 product.getName(),
+                product.getOriginalPrice(),
                 product.getPrice(),
                 product.getThumbnailImageUrl(),
                 product.getCategory(),

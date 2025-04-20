@@ -27,6 +27,7 @@ public class ProductServiceResponse {
     public record List(
             Long id,
             String name,
+            Money originalPrice,
             Money price,
             String thumbnailImageUrl,
             ProductCategory category,

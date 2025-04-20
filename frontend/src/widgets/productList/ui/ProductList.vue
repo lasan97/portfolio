@@ -99,8 +99,11 @@ export default defineComponent({
 
     // 데이터 로드
     onMounted(async () => {
-      if (products.length === 0) {
+      try {
         await productStore.fetchProducts();
+      } catch (err) {
+        // 에러는 productStore 내부에서 처리됨
+        console.error('상품 로드 실패:', err);
       }
     });
 
