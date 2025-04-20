@@ -1,4 +1,4 @@
-package com.portfolio.backend.domain.cart.domain;
+package com.portfolio.backend.domain.cart.entity;
 
 import com.portfolio.backend.domain.user.entity.User;
 import jakarta.persistence.*;

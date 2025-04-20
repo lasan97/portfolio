@@ -6,6 +6,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.util.ReflectionTestUtils;
 import software.amazon.awssdk.core.sync.RequestBody;
@@ -32,9 +33,12 @@ class S3StorageServiceTest {
 
     private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd");
 
+    @Value("${aws.s3.bucket-name}")
+    private String bucketName;
+
     @BeforeEach
     void setUp() {
-        ReflectionTestUtils.setField(s3StorageService, "bucketName", "test-bucket");
+        ReflectionTestUtils.setField(s3StorageService, "bucketName", bucketName);
         ReflectionTestUtils.setField(s3StorageService, "region", "ap-northeast-2");
     }
 
@@ -55,7 +59,7 @@ class S3StorageServiceTest {
 
         // Then
         verify(s3Client, times(1)).putObject(any(PutObjectRequest.class), any(RequestBody.class));
-        assertTrue(result.startsWith("https://test-bucket.s3.ap-northeast-2.amazonaws.com/" + currentDateDirectory));
+        assertTrue(result.startsWith("https://" + bucketName + ".s3.ap-northeast-2.amazonaws.com/" + currentDateDirectory));
     }
 
     @Test
@@ -75,7 +79,7 @@ class S3StorageServiceTest {
 
         // Then
         verify(s3Client, times(1)).putObject(any(PutObjectRequest.class), any(RequestBody.class));
-        assertTrue(result.startsWith("https://test-bucket.s3.ap-northeast-2.amazonaws.com/"));
+        assertTrue(result.startsWith("https://" + bucketName + ".s3.ap-northeast-2.amazonaws.com/"));
         assertTrue(result.endsWith(".jpg")); // UUID가 포함되어 있어 정확한 이름 확인은 불가
     }
 
@@ -95,7 +99,7 @@ class S3StorageServiceTest {
     @Test
     void deleteObject_whenExceptionOccurs_shouldReturnFalse() {
         // Given
-        String fileUrl = "https://test-bucket.s3.ap-northeast-2.amazonaws.com/images/test.jpg";
+        String fileUrl = "https://" + bucketName + ".s3.ap-northeast-2.amazonaws.com/images/test.jpg";
         doThrow(new RuntimeException("S3 Error")).when(s3Client).deleteObject(any(DeleteObjectRequest.class));
 
         // When

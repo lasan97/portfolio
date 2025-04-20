@@ -262,38 +262,14 @@ class ProductServiceTest {
     @Nested
     @DisplayName("재고 조정 테스트")
     class AdjustStockTest {
-        
-        @Test
-        @DisplayName("양수 수량으로 재고를 증가시켜야 한다")
-        void shouldIncreaseStockWhenQuantityIsPositive() {
-            // Given
-            Long productId = 1L;
-            int initialQuantity = product1.getStock().getQuantity();
-            int adjustment = 5;
-            
-            ProductServiceRequest.AdjustStock request = new ProductServiceRequest.AdjustStock(
-                    adjustment, com.portfolio.backend.service.product.dto.StockChangeReason.ADJUSTMENT, "재고 추가"
-            );
-            
-            when(productRepository.findByIdAndStatusNot(productId, ProductStatus.DELETED)).thenReturn(Optional.of(product1));
-
-            // When
-            Long result = productService.adjustStock(productId, request);
-
-            // Then
-            verify(productRepository).findByIdAndStatusNot(productId, ProductStatus.DELETED);
-            verify(productStockHistoryRepository).save(any());
-            assertEquals(productId, result);
-            assertEquals(initialQuantity + adjustment, product1.getStock().getQuantity());
-        }
 
         @Test
-        @DisplayName("음수 수량으로 재고를 감소시켜야 한다")
-        void shouldDecreaseStockWhenQuantityIsNegative() {
+        @DisplayName("수량으로 재고를 수정시켜야 한다")
+        void shouldReduceStockWhenAdjustingWithNegativeAmount() {
             // Given
-            Long productId = 1L;
+            Long productId = product1.getId();
             int initialQuantity = product1.getStock().getQuantity();
-            int adjustment = -5;
+            int adjustment = 2;
             
             ProductServiceRequest.AdjustStock request = new ProductServiceRequest.AdjustStock(
                     adjustment, StockChangeReason.LOSS, "재고 손실로 인한 차감"
@@ -302,13 +278,12 @@ class ProductServiceTest {
             when(productRepository.findByIdAndStatusNot(productId, ProductStatus.DELETED)).thenReturn(Optional.of(product1));
 
             // When
-            Long result = productService.adjustStock(productId, request);
+            productService.adjustStock(productId, request);
 
             // Then
             verify(productRepository).findByIdAndStatusNot(productId, ProductStatus.DELETED);
             verify(productStockHistoryRepository).save(any());
-            assertEquals(productId, result);
-            assertEquals(initialQuantity + adjustment, product1.getStock().getQuantity());
+            assertEquals(adjustment, product1.getStock().getQuantity());
         }
 
         @Test

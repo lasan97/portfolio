@@ -55,9 +55,9 @@ public class ProductController {
 
     @PatchMapping("/{id}/stock")
     @PreAuthorize("isAuthenticated()") // 인증된 사용자라면 누구나 재고 조정 가능
-    public Long adjustStock(@PathVariable Long id,
+    public void adjustStock(@PathVariable Long id,
                          @Valid @RequestBody ProductServiceRequest.AdjustStock request,
                          @AuthenticationPrincipal UserDetailsImpl userDetails) {
-        return productService.adjustStock(id, request);
+        productService.adjustStock(id, request);
     }
 }

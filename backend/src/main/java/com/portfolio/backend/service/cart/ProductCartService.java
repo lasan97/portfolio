@@ -2,8 +2,8 @@ package com.portfolio.backend.service.cart;
 
 import com.portfolio.backend.common.exception.ResourceNotFoundException;
 import com.portfolio.backend.common.security.UserImpl;
-import com.portfolio.backend.domain.cart.domain.ProductCart;
-import com.portfolio.backend.domain.cart.domain.ProductCartItem;
+import com.portfolio.backend.domain.cart.entity.ProductCart;
+import com.portfolio.backend.domain.cart.entity.ProductCartItem;
 import com.portfolio.backend.domain.cart.repository.ProductCartRepository;
 import com.portfolio.backend.domain.product.entity.Product;
 import com.portfolio.backend.domain.product.entity.ProductStatus;

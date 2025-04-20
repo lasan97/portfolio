@@ -24,7 +24,6 @@ import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithAnonymousUser;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -73,9 +72,18 @@ class ProductControllerTest {
     private ProductServiceRequest.Create createRequest;
     private ProductServiceRequest.Update updateRequest;
     private ProductServiceRequest.AdjustStock adjustStockRequest;
+    private UserDetailsImpl adminUserDetails;
+    private UserDetailsImpl userUserDetails;
 
     @BeforeEach
     void setUp() {
+        // 사용자 상세 설정
+        UserImpl adminUserImpl = new UserImpl(1L, "admin@example.com", RoleType.ADMIN);
+        adminUserDetails = new UserDetailsImpl(adminUserImpl);
+        
+        UserImpl userUserImpl = new UserImpl(2L, "user@example.com", RoleType.USER);
+        userUserDetails = new UserDetailsImpl(userUserImpl);
+        
         productGetResponse = new ProductServiceResponse.Get(
                 1L, "맥북 프로", new Money(BigDecimal.valueOf(2000000)), new Money(BigDecimal.valueOf(1800000)),
                 "Apple 맥북 프로 M3 칩", "macbook-pro.jpg", ProductCategory.ELECTRONICS,
@@ -169,7 +177,6 @@ class ProductControllerTest {
 
         @Test
         @DisplayName("ADMIN 권한으로 상품을 생성할 수 있다")
-        @WithMockUser(roles = "ADMIN")
         void shouldCreateProductWithAdminRole() throws Exception {
             // Given
             Long createdProductId = 1L;
@@ -178,6 +185,7 @@ class ProductControllerTest {
             // When & Then
             mockMvc.perform(post("/api/products")
                             .with(SecurityMockMvcRequestPostProcessors.csrf())
+                            .with(SecurityMockMvcRequestPostProcessors.user(adminUserDetails))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(createRequest)))
                     .andDo(print())
@@ -189,11 +197,11 @@ class ProductControllerTest {
 
         @Test
         @DisplayName("USER 권한으로 상품 생성 시 접근이 거부되어야 한다")
-        @WithMockUser(roles = "USER")
         void shouldDenyCreateProductWithUserRole() throws Exception {
             // When & Then
             mockMvc.perform(post("/api/products")
                             .with(SecurityMockMvcRequestPostProcessors.csrf())
+                            .with(SecurityMockMvcRequestPostProcessors.user(userUserDetails))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(createRequest)))
                     .andDo(print())
@@ -221,7 +229,6 @@ class ProductControllerTest {
 
         @Test
         @DisplayName("잘못된 요청으로 상품 생성 시 검증 오류가 발생해야 한다")
-        @WithMockUser(roles = "ADMIN")
         void shouldValidateCreateProductRequest() throws Exception {
             // Given
             ProductServiceRequest.Create invalidRequest = new ProductServiceRequest.Create(
@@ -237,6 +244,7 @@ class ProductControllerTest {
             // When & Then
             mockMvc.perform(post("/api/products")
                             .with(SecurityMockMvcRequestPostProcessors.csrf())
+                            .with(SecurityMockMvcRequestPostProcessors.user(adminUserDetails))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(invalidRequest)))
                     .andDo(print())
@@ -250,7 +258,6 @@ class ProductControllerTest {
 
         @Test
         @DisplayName("ADMIN 권한으로 상품을 수정할 수 있다")
-        @WithMockUser(roles = "ADMIN")
         void shouldUpdateProductWithAdminRole() throws Exception {
             // Given
             Long productId = 1L;
@@ -259,6 +266,7 @@ class ProductControllerTest {
             // When & Then
             mockMvc.perform(put("/api/products/{id}", productId)
                             .with(SecurityMockMvcRequestPostProcessors.csrf())
+                            .with(SecurityMockMvcRequestPostProcessors.user(adminUserDetails))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(updateRequest)))
                     .andDo(print())
@@ -270,11 +278,11 @@ class ProductControllerTest {
 
         @Test
         @DisplayName("USER 권한으로 상품 수정 시 접근이 거부되어야 한다")
-        @WithMockUser(roles = "USER")
         void shouldDenyUpdateProductWithUserRole() throws Exception {
             // When & Then
             mockMvc.perform(put("/api/products/{id}", 1L)
                             .with(SecurityMockMvcRequestPostProcessors.csrf())
+                            .with(SecurityMockMvcRequestPostProcessors.user(userUserDetails))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(updateRequest)))
                     .andDo(print())
@@ -307,14 +315,14 @@ class ProductControllerTest {
 
         @Test
         @DisplayName("ADMIN 권한으로 상품을 삭제할 수 있다")
-        @WithMockUser(roles = "ADMIN")
         void shouldDeleteProductWithAdminRole() throws Exception {
             // Given
             Long productId = 1L;
 
             // When & Then
             mockMvc.perform(delete("/api/products/{id}", productId)
-                            .with(SecurityMockMvcRequestPostProcessors.csrf()))
+                            .with(SecurityMockMvcRequestPostProcessors.csrf())
+                            .with(SecurityMockMvcRequestPostProcessors.user(adminUserDetails)))
                     .andDo(print())
                     .andExpect(status().isOk());
 
@@ -323,11 +331,11 @@ class ProductControllerTest {
 
         @Test
         @DisplayName("USER 권한으로 상품 삭제 시 접근이 거부되어야 한다")
-        @WithMockUser(roles = "USER")
         void shouldDenyDeleteProductWithUserRole() throws Exception {
             // When & Then
             mockMvc.perform(delete("/api/products/{id}", 1L)
-                            .with(SecurityMockMvcRequestPostProcessors.csrf()))
+                            .with(SecurityMockMvcRequestPostProcessors.csrf())
+                            .with(SecurityMockMvcRequestPostProcessors.user(userUserDetails)))
                     .andDo(print())
                     .andExpect(status().isForbidden());
         }
@@ -355,36 +363,39 @@ class ProductControllerTest {
     class AdjustStockTest {
 
         @Test
-        @DisplayName("ADMIN 권한으로 재고를 조정할 수 있다")
-        @WithMockUser(roles = "ADMIN")
-        void shouldAdjustStockWithAdminRole() throws Exception {
+        @DisplayName("USER 권한으로 재고를 조정할 수 있다")
+        void shouldAdjustStockWithUserRole() throws Exception {
             // Given
             Long productId = 1L;
-            when(productService.adjustStock(eq(productId), any(ProductServiceRequest.AdjustStock.class))).thenReturn(productId);
 
             // When & Then
             mockMvc.perform(patch("/api/products/{id}/stock", productId)
                             .with(SecurityMockMvcRequestPostProcessors.csrf())
+                            .with(SecurityMockMvcRequestPostProcessors.user(userUserDetails))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(adjustStockRequest)))
                     .andDo(print())
-                    .andExpect(status().isOk())
-                    .andExpect(content().string(productId.toString()));
+                    .andExpect(status().isOk());
 
             verify(productService).adjustStock(eq(productId), any(ProductServiceRequest.AdjustStock.class));
         }
 
         @Test
-        @DisplayName("USER 권한으로 재고 조정 시 접근이 거부되어야 한다")
-        @WithMockUser(roles = "USER")
-        void shouldDenyAdjustStockWithUserRole() throws Exception {
+        @DisplayName("ADMIN 권한으로도 재고를 조정할 수 있다")
+        void shouldAdjustStockWithAdminRole() throws Exception {
+            // Given
+            Long productId = 1L;
+
             // When & Then
-            mockMvc.perform(patch("/api/products/{id}/stock", 1L)
+            mockMvc.perform(patch("/api/products/{id}/stock", productId)
                             .with(SecurityMockMvcRequestPostProcessors.csrf())
+                            .with(SecurityMockMvcRequestPostProcessors.user(adminUserDetails))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(adjustStockRequest)))
                     .andDo(print())
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isOk());
+
+            verify(productService).adjustStock(eq(productId), any(ProductServiceRequest.AdjustStock.class));
         }
 
         @Test
@@ -404,34 +415,6 @@ class ProductControllerTest {
                             "Expected status 401 or 403, but was " + status
                         );
                     });
-        }
-    }
-
-    @Nested
-    @DisplayName("실제 사용자 인증을 사용한 테스트")
-    class WithActualUserDetailsTest {
-
-        @Test
-        @DisplayName("UserDetailsImpl을 사용하여 상품을 생성할 수 있다")
-        void shouldCreateProductWithUserDetailsImpl() throws Exception {
-            // Given
-            Long createdProductId = 1L;
-            UserImpl userImpl = new UserImpl(1L, "admin@example.com", RoleType.ADMIN);
-            UserDetailsImpl userDetails = new UserDetailsImpl(userImpl);
-
-            when(productService.createProduct(any(ProductServiceRequest.Create.class))).thenReturn(createdProductId);
-
-            // When & Then
-            mockMvc.perform(post("/api/products")
-                            .with(SecurityMockMvcRequestPostProcessors.csrf())
-                            .with(SecurityMockMvcRequestPostProcessors.user(userDetails))
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(createRequest)))
-                    .andDo(print())
-                    .andExpect(status().isOk())
-                    .andExpect(content().string(createdProductId.toString()));
-
-            verify(productService).createProduct(any(ProductServiceRequest.Create.class));
         }
     }
 }
