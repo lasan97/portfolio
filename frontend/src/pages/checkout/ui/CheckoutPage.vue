@@ -28,7 +28,7 @@
             <ul class="divide-y divide-gray-200">
               <li v-for="item in cartStore.items" :key="item.product.id" class="p-6 flex flex-col sm:flex-row sm:items-center">
                 <div class="flex-shrink-0 mb-4 sm:mb-0 sm:mr-4">
-                  <img :src="item.product.imageUrl" :alt="item.product.name" class="w-24 h-24 object-cover rounded-md">
+                  <img :src="item.product.thumbnailImageUrl" :alt="item.product.name" class="w-24 h-24 object-cover rounded-md">
                 </div>
                 
                 <div class="flex-grow">

@@ -4,7 +4,7 @@
     @click="$emit('click')"
   >
     <div class="relative">
-      <img :src="product.imageUrl" :alt="product.name" class="w-full h-48 object-cover">
+      <img :src="product.thumbnailImageUrl" :alt="product.name" class="w-full h-48 object-cover">
       <span 
         v-if="!product.inStock" 
         class="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded"
@@ -35,7 +35,7 @@
 
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
-import { Product, ProductCategory } from '../model/types';
+import { Product, ProductCategory } from '@entities/product';
 
 export default defineComponent({
   name: 'ProductCard',

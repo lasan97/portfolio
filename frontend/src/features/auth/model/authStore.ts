@@ -92,8 +92,8 @@ export const useAuthStore = defineStore('auth', () => {
     setError(null);
     
     try {
-      const { api } = await import('@shared/api');
-      const response = await api.get('/api/users/me');
+      const { apiInstance } = await import('@shared/api');
+      const response = await apiInstance.get('/api/users/me');
       userStore.setUser(response.data);
       // 사용자 정보를 성공적으로 가져왔으면 인증됨으로 표시
       authenticated.value = true;

@@ -10,7 +10,7 @@
         <div class="mb-4">
           <div class="flex items-center">
             <div class="h-12 w-12 flex-shrink-0 mr-4">
-              <img class="h-12 w-12 rounded-md object-cover" :src="product?.thumbnailImageUrl || product?.imageUrl" alt="" />
+              <img class="h-12 w-12 rounded-md object-cover" :src="product?.thumbnailImageUrl" alt="" />
             </div>
             <div>
               <div class="text-lg font-medium text-gray-900">{{ product?.name }}</div>
@@ -96,8 +96,9 @@
 </template>
 
 <script lang="ts">
-import {defineComponent, PropType, ref, reactive, computed} from 'vue';
-import { Product, StockChangeReason, StockAdjustmentData } from '@entities/product';
+import { defineComponent, PropType, ref, reactive, computed } from 'vue';
+import { Product, StockChangeReason } from '@entities/product';
+import { StockAdjustmentData } from '@features/productManagement';
 
 export default defineComponent({
   name: 'StockAdjustmentModal',
@@ -110,8 +111,8 @@ export default defineComponent({
   emits: ['close', 'submit'],
   setup(props, { emit }) {
     // 폼 상태
-    const form = reactive({
-      quantity: props.product.stock?.quantity,
+    const form = reactive<StockAdjustmentData>({
+      quantity: props.product.stock?.quantity || 0,
       reason: StockChangeReason.ADJUSTMENT,
       memo: ''
     });
@@ -136,15 +137,8 @@ export default defineComponent({
       try {
         isSubmitting.value = true;
         
-        // 제출할 데이터 구성
-        const stockAdjustmentData: StockAdjustmentData = {
-          quantity: form.quantity,
-          reason: form.reason,
-          memo: form.memo
-        };
-        
         // 폼 제출 이벤트 발생
-        emit('submit', stockAdjustmentData);
+        emit('submit', form);
       } catch (err) {
         console.error('폼 제출 오류:', err);
         error.value = '오류가 발생했습니다. 다시 시도해주세요.';

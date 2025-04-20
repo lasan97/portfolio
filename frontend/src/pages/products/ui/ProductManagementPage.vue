@@ -49,7 +49,7 @@
                   <td class="px-6 py-4 whitespace-nowrap">
                     <div class="flex items-center">
                       <div class="h-10 w-10 flex-shrink-0 mr-4">
-                        <img class="h-10 w-10 rounded-full object-cover" :src="product.thumbnailImageUrl || product.imageUrl" alt="" />
+                        <img class="h-10 w-10 rounded-full object-cover" :src="product.thumbnailImageUrl" alt="" />
                       </div>
                       <div>
                         <div class="text-sm font-medium text-gray-900">{{ product.name }}</div>
@@ -133,7 +133,7 @@
                   <td class="px-6 py-4 whitespace-nowrap">
                     <div class="flex items-center">
                       <div class="h-10 w-10 flex-shrink-0 mr-4">
-                        <img class="h-10 w-10 rounded-full object-cover" :src="product.thumbnailImageUrl || product.imageUrl" alt="" />
+                        <img class="h-10 w-10 rounded-full object-cover" :src="product.thumbnailImageUrl" alt="" />
                       </div>
                       <div>
                         <div class="text-sm font-medium text-gray-900">{{ product.name }}</div>
@@ -185,7 +185,7 @@
     
     <!-- 재고 조정 모달 -->
     <StockAdjustmentModal 
-      v-if="showStockAdjustmentModal" 
+      v-if="showStockAdjustmentModal && selectedProduct" 
       :product="selectedProduct" 
       @close="closeStockAdjustmentModal" 
       @submit="handleStockAdjustment" 
@@ -195,12 +195,10 @@
 
 <script lang="ts">
 import { defineComponent, onMounted, ref, computed, watch } from 'vue';
-import { useProductStore } from '@entities/product';
+import { useProductStore, Product, ProductCategory, ProductStatus } from '@entities/product';
 import { useUserStore } from '@entities/user';
-import { Product, ProductCategory, ProductStatus, StockAdjustmentData, ProductData } from '@entities/product/model/types';
-import { ProductFormModal } from '@features/productManagement';
-import { StockAdjustmentModal } from '@features/productManagement';
-import {UserRole} from "@shared/config";
+import { ProductFormData, StockAdjustmentData, ProductFormModal, StockAdjustmentModal } from '@features/productManagement';
+import { UserRole } from "@shared/config";
 
 // 가격 포맷팅 함수
 const formatPrice = (price: number): string => {
@@ -262,7 +260,7 @@ export default defineComponent({
     };
     
     // 상품 폼 제출 처리
-    const handleProductFormSubmit = async (productData: ProductData) => {
+    const handleProductFormSubmit = async (productData: ProductFormData) => {
       try {
         if (selectedProduct.value) {
           // 상품 수정

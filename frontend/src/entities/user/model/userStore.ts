@@ -43,8 +43,8 @@ export const useUserStore = defineStore('user', () => {
     setError(null);
     
     try {
-      const { api } = await import('@shared/api');
-      const response = await api.get(`/api/users/${userId}`);
+      const { apiInstance } = await import('@shared/api');
+      const response = await apiInstance.get(`/api/users/${userId}`);
       setUser(response.data.data);
     } catch (err: any) {
       setError(err.response?.data?.message || '사용자 정보를 가져오는데 실패했습니다.');

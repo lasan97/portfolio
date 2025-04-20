@@ -134,9 +134,9 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, PropType, ref, reactive, computed, onMounted, watch } from 'vue';
-import { useProductStore } from '@entities/product';
-import { ProductCategory, ProductData } from '@entities/product';
+import { defineComponent, PropType, ref, reactive, computed, watch } from 'vue';
+import { useProductStore, ProductCategory, Product } from '@entities/product';
+import { ProductFormData, mapToProductFormData } from '@features/productManagement';
 
 export default defineComponent({
   name: 'ProductFormModal',
@@ -156,15 +156,15 @@ export default defineComponent({
     const isLoading = ref(false);
     
     // 상품 데이터 (스토어에서 가져옴)
-    const productData = computed(() => {
+    const productData = computed<Product | null>(() => {
       if (props.productId) {
-        return productStore.getProductById(props.productId);
+        return productStore.getProductById(props.productId) || null;
       }
       return null;
     });
 
     // 폼 상태
-    const form = reactive({
+    const form = reactive<ProductFormData>({
       name: '',
       originalPrice: 0,
       price: 0,
@@ -197,12 +197,9 @@ export default defineComponent({
     // 상품 데이터가 변경될 때마다 폼 업데이트
     watch(() => productData.value, (newProductData) => {
       if (newProductData) {
-        form.name = newProductData.name;
-        form.originalPrice = newProductData.originalPrice;
-        form.price = newProductData.price;
-        form.description = newProductData.description;
-        form.thumbnailImageUrl = newProductData.thumbnailImageUrl || newProductData.imageUrl || '';
-        form.category = newProductData.category;
+        // 매핑 함수를 사용하여 도메인 모델을 폼 데이터로 변환
+        const formData = mapToProductFormData(newProductData);
+        Object.assign(form, formData);
       } else {
         // 새 상품 등록 시 초기화
         form.name = '';
@@ -228,19 +225,8 @@ export default defineComponent({
       try {
         isSubmitting.value = true;
         
-        // 제출할 데이터 구성
-        const productData: ProductData = {
-          name: form.name,
-          originalPrice: form.originalPrice,
-          price: form.price,
-          description: form.description,
-          thumbnailImageUrl: form.thumbnailImageUrl,
-          category: form.category,
-          stock: form.stock // 신규 등록 시에만 사용
-        };
-        
         // 폼 제출 이벤트 발생
-        emit('submit', productData);
+        emit('submit', form);
       } catch (err) {
         console.error('폼 제출 오류:', err);
         error.value = '오류가 발생했습니다. 다시 시도해주세요.';

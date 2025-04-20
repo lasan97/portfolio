@@ -1,4 +1,4 @@
-import { api } from '@shared/api';
+import { apiInstance } from '@shared/api';
 import type { AxiosResponse } from 'axios';
 import type { FileUploadResponse } from '../model/types';
 
@@ -10,7 +10,7 @@ export const uploadFile = async (file: File): Promise<FileUploadResponse> => {
   formData.append('file', file);
 
   // FormData를 전송할 때 Content-Type을 자동으로 설정하도록 합니다
-  const response: AxiosResponse<FileUploadResponse> = await api.post('api/files/upload', formData, {
+  const response: AxiosResponse<FileUploadResponse> = await apiInstance.post('api/files/upload', formData, {
     headers: {
       'Content-Type': 'multipart/form-data'
     }
@@ -28,7 +28,7 @@ export const uploadMultipleFiles = async (files: File[]): Promise<FileUploadResp
     formData.append('files', file);
   });
 
-  const response: AxiosResponse<FileUploadResponse[]> = await api.post('api/files/upload-multiple', formData, {
+  const response: AxiosResponse<FileUploadResponse[]> = await apiInstance.post('api/files/upload-multiple', formData, {
     headers: {
       'Content-Type': 'multipart/form-data'
     }
@@ -41,7 +41,7 @@ export const uploadMultipleFiles = async (files: File[]): Promise<FileUploadResp
  * 파일 삭제 API
  */
 export const deleteFile = async (fileUrl: string): Promise<boolean> => {
-  await api.delete('api/files', {
+  await apiInstance.delete('api/files', {
     params: { fileUrl }
   });
   

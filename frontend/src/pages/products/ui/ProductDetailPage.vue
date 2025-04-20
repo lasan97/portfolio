@@ -15,7 +15,7 @@
           <!-- 상품 이미지 -->
           <div class="md:w-1/2">
             <img 
-              :src="product.imageUrl" 
+              :src="product.thumbnailImageUrl"
               :alt="product.name" 
               class="w-full h-full object-cover object-center"
               style="min-height: 300px;"
