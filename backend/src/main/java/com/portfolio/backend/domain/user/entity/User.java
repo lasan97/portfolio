@@ -1,17 +1,21 @@
 package com.portfolio.backend.domain.user.entity;
 
 import com.portfolio.backend.common.exception.DomainException;
+import com.portfolio.backend.domain.common.entity.AggregateRoot;
+import com.portfolio.backend.domain.user.event.UserCreatedEvent;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
+
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(name = "users")
-public class User {
+public class User extends AggregateRoot {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -45,6 +49,11 @@ public class User {
         this.profileImageUrl = profileImageUrl;
         this.role = role;
         validation();
+
+        registerEvent(UserCreatedEvent.builder()
+                .user(this)
+                .transactionDateTime(LocalDateTime.now())
+                .build());
     }
 
     public void updateProfile(String nickname, String profileImageUrl) {

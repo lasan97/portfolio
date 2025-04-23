@@ -51,6 +51,10 @@ public class Money {
         return multiply(BigDecimal.valueOf(multiplier));
     }
 
+    public static Money zero() {
+        return new Money(BigDecimal.ZERO);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;

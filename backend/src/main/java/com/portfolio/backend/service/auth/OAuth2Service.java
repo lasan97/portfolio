@@ -5,6 +5,7 @@ import com.portfolio.backend.common.integration.oauth2.github.GithubIntegration;
 import com.portfolio.backend.common.integration.oauth2.github.dto.GithubResponse;
 import com.portfolio.backend.common.security.UserDetailsImpl;
 import com.portfolio.backend.common.security.jwt.JwtTokenProvider;
+import com.portfolio.backend.domain.common.event.DomainEventPublisher;
 import com.portfolio.backend.domain.user.entity.Oauth2ProviderType;
 import com.portfolio.backend.domain.user.entity.RoleType;
 import com.portfolio.backend.domain.user.entity.User;
@@ -23,6 +24,7 @@ public class OAuth2Service {
     private final UserRepository userRepository;
     private final GithubIntegration githubIntegration;
     private final JwtTokenProvider jwtTokenProvider;
+    private final DomainEventPublisher eventPublisher;
 
     @Transactional
     public TokenResponse processGithubLogin(String code) {
@@ -69,7 +71,11 @@ public class OAuth2Service {
                     .profileImageUrl(profileImageUrl)
                     .role(userRepository.count() > 0 ? RoleType.USER : RoleType.ADMIN)
                     .build();
-            return userRepository.save(newUser);
+            User user = userRepository.save(newUser);
+
+            eventPublisher.publishEventsFrom(user);
+
+            return user;
         }
     }
 
