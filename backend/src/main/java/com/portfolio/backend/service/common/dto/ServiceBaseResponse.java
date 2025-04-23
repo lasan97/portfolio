@@ -23,6 +23,7 @@ public class ServiceBaseResponse {
 			String name,
 			BigDecimal price,
 			BigDecimal originalPrice,
+			String thumbnailImageUrl,
 			ProductStatus status
 	) {
 	}

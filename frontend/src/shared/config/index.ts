@@ -27,7 +27,6 @@ export const ROUTES = {
   INTRODUCTION: '/introduction',
   PRODUCTS: '/products',
   PRODUCT_DETAIL: '/products/:id',
-  CHECKOUT: '/checkout',
   ORDER_COMPLETE: '/order-complete'
 };
 

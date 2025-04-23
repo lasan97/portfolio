@@ -2,6 +2,8 @@ import { defineStore } from 'pinia';
 import { CartItem, CartState, ShippingInfo } from './types';
 import { Product } from '@entities/product';
 import { FREE_SHIPPING_THRESHOLD, SHIPPING_COST } from './constants';
+import { cartRepository } from '../api';
+import { useAuthStore } from '@features/auth';
 
 export const useCartStore = defineStore('cart', {
   state: (): CartState => ({
@@ -85,45 +87,138 @@ export const useCartStore = defineStore('cart', {
   },
 
   actions: {
-    // 장바구니에 상품 추가
-    addToCart(product: Product, quantity: number = 1) {
-      const existingItem = this.items.find(item => item.product.id === product.id);
+    // 장바구니 아이템 목록 조회
+    async fetchCartItems() {
+      try {
+        // API에서 장바구니 아이템 목록 조회
+        const items = await cartRepository.getCartItems();
+        this.items = items;
+        return items;
+      } catch (error) {
+        console.error('장바구니 아이템 조회 중 오류 발생:', error);
+        throw error;
+      }
+    },
 
-      if (existingItem) {
-        // 이미 장바구니에 있는 상품이면 수량만 증가
-        existingItem.quantity += quantity;
-      } else {
-        // 새 상품이면 장바구니에 추가
-        this.items.push({ product, quantity });
+    // 장바구니에 상품 추가
+    async addToCart(product: Product, quantity: number = 1) {
+      try {
+        // 이미 장바구니에 있는 상품인지 확인
+        const existingItem = this.items.find(item => item.product.id === product.id);
+        
+        if (existingItem) {
+          // 이미 장바구니에 있는 상품이면 수량 증가 (API에서 제거 후 새 수량으로 추가)
+          const newQuantity = existingItem.quantity + quantity;
+          
+          // 기존 아이템 제거 후 새 수량으로 다시 추가
+          await cartRepository.removeCartItem(product.id);
+          await cartRepository.addCartItem(product.id, newQuantity);
+          
+          // 로컬 상태 업데이트
+          existingItem.quantity = newQuantity;
+          
+          console.log(`상품 수량 업데이트: ${product.name}, 새 수량: ${newQuantity}`);
+        } else {
+          // 새 상품이면 장바구니에 추가
+          await cartRepository.addCartItem(product.id, quantity);
+          
+          // 로컬 상태 업데이트
+          this.items.push({ product, quantity });
+          
+          console.log(`새 상품 추가: ${product.name}, 수량: ${quantity}`);
+        }
+        
+        return true;
+      } catch (error) {
+        console.error('장바구니 상품 추가 중 오류 발생:', error);
+        throw error;
       }
     },
 
     // 장바구니에서 상품 제거
-    removeFromCart(productId: number) {
-      const index = this.items.findIndex(item => item.product.id === productId);
+    async removeFromCart(productId: number) {
+      try {
+        // API를 통해 장바구니에서 상품 제거
+        await cartRepository.removeCartItem(productId);
+        
+        // API 호출이 성공하면 로컬 상태도 업데이트
+        const index = this.items.findIndex(item => item.product.id === productId);
 
-      if (index !== -1) {
-        this.items.splice(index, 1);
+        if (index !== -1) {
+          this.items.splice(index, 1);
+        }
+        
+        return true;
+      } catch (error) {
+        console.error('장바구니 상품 제거 중 오류 발생:', error);
+        throw error;
       }
     },
 
     // 장바구니 상품 수량 변경
-    updateQuantity(productId: number, quantity: number) {
-      const item = this.items.find(item => item.product.id === productId);
-
-      if (item) {
-        if (quantity > 0) {
-          item.quantity = quantity;
-        } else {
+    async updateQuantity(productId: number, quantity: number) {
+      try {
+        if (quantity <= 0) {
           // 수량이 0 이하면 상품 제거
-          this.removeFromCart(productId);
+          await this.removeFromCart(productId);
+          return true;
         }
+        
+        // 현재 아이템 찾기
+        const item = this.items.find(item => item.product.id === productId);
+        
+        if (item) {
+          // 장바구니에서 제거 후 새 수량으로 다시 추가
+          await cartRepository.removeCartItem(productId);
+          await cartRepository.addCartItem(productId, quantity);
+          
+          // 로컬 상태 업데이트
+          item.quantity = quantity;
+        }
+        
+        return true;
+      } catch (error) {
+        console.error('장바구니 상품 수량 변경 중 오류 발생:', error);
+        throw error;
       }
     },
 
     // 장바구니 비우기
-    clearCart() {
-      this.items = [];
+    async clearCart() {
+      try {
+        // 각 아이템을 순회하며 개별적으로 제거
+        const removePromises = this.items.map(item => 
+          cartRepository.removeCartItem(item.product.id)
+        );
+        
+        await Promise.all(removePromises);
+        
+        // 로컬 상태 업데이트
+        this.items = [];
+        
+        return true;
+      } catch (error) {
+        console.error('장바구니 비우기 중 오류 발생:', error);
+        throw error;
+      }
+    },
+    
+    // 앱 시작 시 장바구니 초기화 (API에서 가져오기)
+    async initializeCart() {
+      try {
+        const authStore = useAuthStore();
+        
+        if (authStore.isAuthenticated) {
+          console.log('장바구니 초기화: API에서 데이터 가져오기');
+          await this.fetchCartItems();
+        } else {
+          console.log('비로그인 상태: 장바구니 초기화 생략');
+          // 비로그인 상태에서는 빈 장바구니 상태 유지
+          this.items = [];
+        }
+      } catch (error) {
+        console.error('장바구니 초기화 중 오류 발생:', error);
+      }
     }
   }
 });

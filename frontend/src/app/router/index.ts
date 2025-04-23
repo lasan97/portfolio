@@ -4,6 +4,7 @@ import { ProfilePage } from '@pages/profile'
 import { IntroductionPage } from '@pages/introduction'
 
 import { authRouteConfig, errorRouteConfig, sampleRouteConfig, orderRouteConfig } from './routeConfig';
+import { cartRouteConfig } from './cartRouteConfig';
 
 // 인증 관련 유틸리티 import (통합된 auth-utils 사용)
 import {storeToRefs} from 'pinia';
@@ -30,8 +31,8 @@ const routes: Array<RouteRecordRaw> = [
   ...authRouteConfig,
   ...errorRouteConfig,
   ...sampleRouteConfig,
-  ...orderRouteConfig
-
+  ...orderRouteConfig,
+  ...cartRouteConfig
 ]
 
 // SSR을 위한 라우터 히스토리 분기 처리
@@ -57,7 +58,7 @@ router.beforeEach(async (to, from, next) => {
     if (to.matched.some(record => record.meta.requiresAuth)) {
       if (!isAuthenticated.value) {
         // 비인증 상태에서 인증이 필요한 페이지 접근 시 로그인 페이지로 리다이렉트
-        next({ name: 'login' });
+        next({ name: 'login', query: { returnUrl: to.fullPath } });
         return;
       }
     } else if (to.name === 'login' && isAuthenticated.value) {

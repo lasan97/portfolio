@@ -5,11 +5,11 @@
 ## 가이드 목록
 
 1. [**메인 개발 가이드**](./README.md) - 프로젝트 개요, 아키텍처, 개발 환경 설정, 워크플로우 등 전반적인 내용을 다룹니다.
-2. [**엔티티 개발 가이드**](./entity-development-guide.md) - 엔티티 레이어 개발에 관한 상세 가이드입니다.
-3. [**피처 개발 가이드**](./feature-development-guide.md) - 피처 레이어 개발에 관한 상세 가이드입니다.
-4. [**컴포넌트 개발 가이드**](./component-development-guide.md) - UI 컴포넌트 개발에 관한 상세 가이드입니다.
-5. [**SSR 가이드**](./ssr-guide.md) - 서버 사이드 렌더링 구현 및 사용에 관한 상세 가이드입니다.
-6. [**하이브리드 CSR/SSR 가이드**](./hybrid-ssr-csr.md) - 클라이언트 사이드 렌더링과 서버 사이드 렌더링을 함께 사용하는 방법에 관한 가이드입니다.
+2. [**엔티티 개발 가이드**](./entity-guide.md) - 엔티티 레이어 개발에 관한 상세 가이드입니다.
+3. [**피처 개발 가이드**](./feature-guide.md) - 피처 레이어 개발에 관한 상세 가이드입니다.
+4. [**컴포넌트 개발 가이드**](./component-guide.md) - UI 컴포넌트 개발에 관한 상세 가이드입니다.
+5. [**SSR 가이드**](./ssr-architecture-guide.md) - 서버 사이드 렌더링 구현 및 사용에 관한 상세 가이드입니다.
+6. [**하이브리드 CSR/SSR 가이드**](./ssr-csr-hybrid-guide.md) - 클라이언트 사이드 렌더링과 서버 사이드 렌더링을 함께 사용하는 방법에 관한 가이드입니다.
 7. [**Vite와 Pinia 가이드**](./vite-pinia-guide.md) - Vite 빌드 도구와 Pinia 상태 관리 라이브러리 사용에 관한 상세 가이드입니다.
 
 ## 프로젝트 아키텍처 개요
@@ -70,7 +70,7 @@
 - **스타일링**: TailwindCSS
 - **빌드 도구**: Vite
 - **API 통신**: Axios
-- **SSR 지원**: 하이브리드 렌더링 (CSR + SSR) - 자세한 내용은 [SSR 가이드](./ssr-guide.md)와 [하이브리드 CSR/SSR 가이드](./hybrid-ssr-csr.md)를 참조하세요.
+- **SSR 지원**: 하이브리드 렌더링 (CSR + SSR) - 자세한 내용은 [SSR 가이드](./ssr-architecture-guide.md)와 [하이브리드 CSR/SSR 가이드](./ssr-csr-hybrid-guide.md)를 참조하세요.
 
 ## 개발 환경 설정
 
@@ -98,7 +98,7 @@ npm install
 # 일반 개발 모드 (CSR)
 npm run dev
 
-# SSR 개발 모드 (자세한 내용은 [SSR 가이드](./ssr-guide.md) 참조)
+# SSR 개발 모드 (자세한 내용은 [SSR 가이드](./ssr-architecture-guide.md) 참조)
 npm run dev:ssr
 ```
 

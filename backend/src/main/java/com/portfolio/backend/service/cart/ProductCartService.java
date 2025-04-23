@@ -14,6 +14,7 @@ import com.portfolio.backend.service.cart.dto.ProductCartServiceMapper;
 import com.portfolio.backend.service.cart.dto.ProductCartServiceRequest.AddItem;
 import com.portfolio.backend.service.cart.dto.ProductCartServiceRequest.RemoveItem;
 import com.portfolio.backend.service.cart.dto.ProductCartServiceResponse;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -33,32 +34,34 @@ public class ProductCartService {
         User user = userRepository.findById(userImpl.id())
                 .orElseThrow(() -> new ResourceNotFoundException("해당 사용자가 존재하지 않습니다."));
 
-        ProductCart productCart = productCartRepository.findByUserId(user.getId())
-                .orElse(productCartRepository.save(new ProductCart(user)));
+        ProductCart productCart = productCartRepository.findByUserId(userImpl.id())
+                .orElseGet(() -> productCartRepository.save(new ProductCart(user)));
 
         return productCart.getItems().stream().map(mapper::toGet).toList();
     }
 
+    @Transactional
     public void addCartItem(AddItem request, UserImpl userImpl) {
         User user = userRepository.findById(userImpl.id())
                 .orElseThrow(() -> new ResourceNotFoundException("해당 사용자가 존재하지 않습니다."));
         Product product = productRepository.findByIdAndStatusNot(request.productId(), ProductStatus.DELETED)
                 .orElseThrow(() -> new ResourceNotFoundException("상품을 찾을 수 없습니다. ID: " + request.productId()));
 
-        ProductCart productCart = productCartRepository.findByUserId(user.getId())
-                .orElse(productCartRepository.save(new ProductCart(user)));
+        ProductCart productCart = productCartRepository.findByUserId(userImpl.id())
+                .orElseGet(() -> productCartRepository.save(new ProductCart(user)));
 
         productCart.addItem(new ProductCartItem(product, request.quantity()));
     }
 
+    @Transactional
     public void removeCartItem(RemoveItem request, UserImpl userImpl) {
         User user = userRepository.findById(userImpl.id())
                 .orElseThrow(() -> new ResourceNotFoundException("해당 사용자가 존재하지 않습니다."));
         Product product = productRepository.findById(request.productId())
                 .orElseThrow(() -> new ResourceNotFoundException("상품을 찾을 수 없습니다. ID: " + request.productId()));
 
-        ProductCart productCart = productCartRepository.findByUserId(user.getId())
-                .orElse(productCartRepository.save(new ProductCart(user)));
+        ProductCart productCart = productCartRepository.findByUserId(userImpl.id())
+                .orElseGet(() -> productCartRepository.save(new ProductCart(user)));
 
         productCart.removeItem(new ProductCartItem(product, 0));
     }

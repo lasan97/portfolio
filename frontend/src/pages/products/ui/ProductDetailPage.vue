@@ -13,13 +13,30 @@
       <div class="bg-white rounded-xl shadow-lg overflow-hidden">
         <div class="md:flex">
           <!-- 상품 이미지 -->
-          <div class="md:w-1/2">
-            <img 
-              :src="product.thumbnailImageUrl"
-              :alt="product.name" 
-              class="w-full h-full object-cover object-center"
-              style="min-height: 300px;"
-            />
+          <div class="md:w-1/2 relative">
+            <!-- 이미지 로딩 처리 개선 -->
+            <div class="relative" style="min-height: 300px;">
+              <img 
+                v-if="!imageError" 
+                :src="product.thumbnailImageUrl"
+                :alt="product.name" 
+                class="w-full h-full object-cover object-center"
+                style="min-height: 300px;"
+                @error="handleImageError"
+                @load="imageLoading = false"
+              />
+              <img 
+                v-else 
+                src="https://via.placeholder.com/600x400" 
+                :alt="product.name" 
+                class="w-full h-full object-cover object-center"
+                style="min-height: 300px;"
+              />
+              <!-- 이미지 로딩 스피너 -->
+              <div v-if="imageLoading" class="absolute inset-0 flex items-center justify-center bg-gray-100 bg-opacity-50">
+                <div class="animate-spin rounded-full h-10 w-10 border-2 border-indigo-600"></div>
+              </div>
+            </div>
           </div>
           
           <!-- 상품 정보 -->
@@ -134,9 +151,9 @@
 <script lang="ts">
 import { defineComponent, ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import {useProductStore, type Product, ProductCategory} from '@entities/product';
-import { useCartStore } from '@entities/cart';
+import { useProductStore, type Product, ProductCategory } from '@entities/product';
 import { CartSummary } from '@entities/cart';
+import { useCartWithAuth } from '@features/cart';
 
 export default defineComponent({
   name: 'ProductDetail',
@@ -147,11 +164,15 @@ export default defineComponent({
     const route = useRoute();
     const router = useRouter();
     const productStore = useProductStore();
-    const cartStore = useCartStore();
+    const { addToCart: addProductToCart } = useCartWithAuth();
     
     const loading = ref(true);
     const error = ref<string | null>(null);
     const product = ref<Product | null>(null);
+    
+    // 이미지 로딩 상태 관리
+    const imageLoading = ref(true);
+    const imageError = ref(false);
     
     const productId = computed(() => {
       const id = route.params.id;
@@ -178,6 +199,13 @@ export default defineComponent({
       }
     });
     
+    // 이미지 오류 처리 함수
+    const handleImageError = (e: Event) => {
+      imageLoading.value = false;
+      imageError.value = true;
+      e.stopPropagation();
+    };
+    
     const formatPrice = (price: number): string => {
       return new Intl.NumberFormat('ko-KR', {
         style: 'currency',
@@ -189,15 +217,20 @@ export default defineComponent({
       router.push('/products');
     };
     
-    const addToCart = () => {
+    const addToCart = async () => {
       if (product.value) {
-        cartStore.addToCart(product.value, 1);
-        alert(`장바구니에 ${product.value.name}이(가) 추가되었습니다.`);
+        try {
+          // useCartWithAuth를 사용하여 인증 체크와 토스트 메시지 표시
+          await addProductToCart(product.value, 1);
+          // 토스트 메시지는 useCartWithAuth 내부에서 처리하므로 여기서는 별도 처리 필요 없음
+        } catch (error) {
+          console.error('장바구니 추가 실패:', error);
+        }
       }
     };
     
     const goToCheckout = () => {
-      router.push('/checkout');
+      router.push('/cart');
     };
     
     const calculateDiscountRate = (originalPrice: number, currentPrice: number): number => {
@@ -209,6 +242,9 @@ export default defineComponent({
       product,
       loading,
       error,
+      imageLoading,
+      imageError,
+      handleImageError,
       formatPrice,
       goBack,
       addToCart,

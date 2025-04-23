@@ -78,8 +78,8 @@
 </template>
 
 <script lang="ts">
-import {computed, defineComponent, onMounted, ref} from 'vue';
-import {ProductCard, ProductCategory, useProductStore} from '@entities/product';
+import { computed, defineComponent, onMounted, ref } from 'vue';
+import { ProductCard, ProductCategory, useProductStore } from '@entities/product';
 
 export default defineComponent({
   name: 'ProductList',

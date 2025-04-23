@@ -4,8 +4,8 @@ import { LoginPage, OAuthCallbackPage } from '@pages/auth'
 import { NotFoundPage } from '@pages/notFound'
 import {SsrPage} from "@pages/ssr";
 import {ProductDetailPage, ProductManagementPage, ProductsPage} from "@pages/products";
-import {CheckoutPage} from "@pages/checkout";
 import {OrderCompletePage} from "@pages/order-complete";
+import { CartPage } from '@entities/cart';
 
 
 // 인증 관련 routeer
@@ -64,9 +64,9 @@ const orderRouteConfig: RouteRecordRaw[] = [
         meta: { requiresAuth: true } // 로그인 필요
     },
     {
-        path: '/checkout',
-        name: 'checkout',
-        component: CheckoutPage
+        path: '/cart',
+        name: 'cart',
+        component: CartPage
     },
     {
         path: '/order-complete',

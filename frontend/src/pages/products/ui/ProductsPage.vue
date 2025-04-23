@@ -63,7 +63,7 @@ export default defineComponent({
     };
     
     const goToCheckout = () => {
-      router.push('/checkout');
+      router.push('/cart');
     };
     
     return {

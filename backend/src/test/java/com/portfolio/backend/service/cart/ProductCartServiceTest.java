@@ -1,16 +1,14 @@
 package com.portfolio.backend.service.cart;
 
+import com.portfolio.backend.common.TestFixtures;
 import com.portfolio.backend.common.exception.ResourceNotFoundException;
 import com.portfolio.backend.common.security.UserImpl;
 import com.portfolio.backend.domain.cart.entity.ProductCart;
 import com.portfolio.backend.domain.cart.entity.ProductCartItem;
 import com.portfolio.backend.domain.cart.repository.ProductCartRepository;
-import com.portfolio.backend.domain.common.value.Money;
 import com.portfolio.backend.domain.product.entity.Product;
-import com.portfolio.backend.domain.product.entity.ProductCategory;
 import com.portfolio.backend.domain.product.entity.ProductStatus;
 import com.portfolio.backend.domain.product.repository.ProductRepository;
-import com.portfolio.backend.domain.user.entity.Oauth2ProviderType;
 import com.portfolio.backend.domain.user.entity.RoleType;
 import com.portfolio.backend.domain.user.entity.User;
 import com.portfolio.backend.domain.user.repository.UserRepository;
@@ -26,20 +24,23 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+/**
+ * ProductCartService에 대한 단위 테스트
+ */
 @ExtendWith(MockitoExtension.class)
+@DisplayName("ProductCartService 테스트")
 class ProductCartServiceTest {
 
     @Mock
@@ -66,31 +67,16 @@ class ProductCartServiceTest {
     @BeforeEach
     void setUp() {
         // 기본 테스트 데이터 설정
-        user = User.builder()
-                .email("test@example.com")
-                .nickname("테스트유저")
-                .provider(Oauth2ProviderType.GITHUB)
-                .providerId("github-1")
-                .profileImageUrl("https://example.com/profile.jpg")
-                .role(RoleType.USER)
-                .build();
-        setId(user, 1L);
-
-        userImpl = new UserImpl(1L, "test@example.com", RoleType.USER);
-
-        product = Product.builder()
-                .name("테스트 상품")
-                .originalPrice(new Money(BigDecimal.valueOf(10000)))
-                .price(new Money(BigDecimal.valueOf(8000)))
-                .description("테스트 상품 설명")
-                .thumbnailImageUrl("test.jpg")
-                .category(ProductCategory.ELECTRONICS)
-                .stock(10)
-                .build();
-        setId(product, 1L);
+        user = TestFixtures.createRegularUser();
+        userImpl = new UserImpl(TestFixtures.USER_ID_1, "test@example.com", RoleType.USER);
+        product = TestFixtures.createDefaultProduct();
 
         ServiceBaseResponse.SimpleProduct simpleProduct = new ServiceBaseResponse.SimpleProduct(
-                1L, "테스트 상품", BigDecimal.valueOf(8000), BigDecimal.valueOf(10000), ProductStatus.ACTIVE
+                TestFixtures.PRODUCT_ID_1,
+                product.getName(),
+                BigDecimal.valueOf(8000),
+                BigDecimal.valueOf(10000),
+                ProductStatus.ACTIVE
         );
 
         cartResponse = new ProductCartServiceResponse.Get(simpleProduct, 2);
@@ -101,16 +87,16 @@ class ProductCartServiceTest {
     class GetCartItems {
 
         @Test
-        @DisplayName("장바구니가 존재하면 아이템 목록을 반환한다")
+        @DisplayName("장바구니가 존재하면 아이템 목록을 반환해야 한다")
         void shouldReturnCartItemsWhenCartExists() {
             // Given
             ProductCart productCart = mock(ProductCart.class);
             ProductCartItem cartItem = new ProductCartItem(product, 2);
             List<ProductCartItem> cartItems = List.of(cartItem);
-            List<ProductCartServiceResponse.Get> cartResponses = List.of(cartResponse);
-            
-            when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-            when(productCartRepository.findByUserId(1L)).thenReturn(Optional.of(productCart));
+            List<ProductCartServiceResponse.Get> expectedResponses = List.of(cartResponse);
+
+            when(userRepository.findById(TestFixtures.USER_ID_1)).thenReturn(Optional.of(user));
+            when(productCartRepository.findByUserId(TestFixtures.USER_ID_1)).thenReturn(Optional.of(productCart));
             when(productCart.getItems()).thenReturn(cartItems);
             when(mapper.toGet(cartItem)).thenReturn(cartResponse);
 
@@ -118,22 +104,24 @@ class ProductCartServiceTest {
             List<ProductCartServiceResponse.Get> result = productCartService.getCartItems(userImpl);
 
             // Then
-            assertEquals(cartResponses.size(), result.size());
-            assertEquals(cartResponses, result);
-            verify(userRepository).findById(1L);
-            verify(productCartRepository).findByUserId(1L);
+            assertThat(result)
+                .hasSize(expectedResponses.size())
+                .isEqualTo(expectedResponses);
+
+            verify(userRepository).findById(TestFixtures.USER_ID_1);
+            verify(productCartRepository).findByUserId(TestFixtures.USER_ID_1);
             verify(productCart).getItems();
             verify(mapper).toGet(cartItem);
         }
 
         @Test
-        @DisplayName("장바구니가 없으면 새 장바구니를 생성하고 빈 목록을 반환한다")
+        @DisplayName("장바구니가 없으면 새 장바구니를 생성하고 빈 목록을 반환해야 한다")
         void shouldCreateNewCartAndReturnEmptyListWhenCartNotExists() {
             // Given
             ProductCart productCart = mock(ProductCart.class);
-            
-            when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-            when(productCartRepository.findByUserId(1L)).thenReturn(Optional.empty());
+
+            when(userRepository.findById(TestFixtures.USER_ID_1)).thenReturn(Optional.of(user));
+            when(productCartRepository.findByUserId(TestFixtures.USER_ID_1)).thenReturn(Optional.empty());
             when(productCartRepository.save(any(ProductCart.class))).thenReturn(productCart);
             when(productCart.getItems()).thenReturn(new ArrayList<>());
 
@@ -141,22 +129,26 @@ class ProductCartServiceTest {
             List<ProductCartServiceResponse.Get> result = productCartService.getCartItems(userImpl);
 
             // Then
-            assertTrue(result.isEmpty());
-            verify(userRepository).findById(1L);
-            verify(productCartRepository).findByUserId(1L);
+            assertThat(result).isEmpty();
+
+            verify(userRepository).findById(TestFixtures.USER_ID_1);
+            verify(productCartRepository).findByUserId(TestFixtures.USER_ID_1);
             verify(productCartRepository).save(any(ProductCart.class));
             verify(productCart).getItems();
         }
 
         @Test
-        @DisplayName("사용자가 존재하지 않으면 예외가 발생한다")
+        @DisplayName("사용자가 존재하지 않으면 예외가 발생해야 한다")
         void shouldThrowExceptionWhenUserNotExists() {
             // Given
-            when(userRepository.findById(1L)).thenReturn(Optional.empty());
+            when(userRepository.findById(TestFixtures.USER_ID_1)).thenReturn(Optional.empty());
 
             // When & Then
-            assertThrows(ResourceNotFoundException.class, () -> productCartService.getCartItems(userImpl));
-            verify(userRepository).findById(1L);
+            assertThatThrownBy(() -> productCartService.getCartItems(userImpl))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("해당 사용자가 존재하지 않습니다.");
+
+            verify(userRepository).findById(TestFixtures.USER_ID_1);
         }
     }
 
@@ -165,86 +157,103 @@ class ProductCartServiceTest {
     class AddCartItem {
 
         @Test
-        @DisplayName("장바구니가 존재하면 아이템을 추가한다")
+        @DisplayName("장바구니가 존재하면 아이템을 추가해야 한다")
         void shouldAddItemWhenCartExists() {
             // Given
             ProductCart productCart = mock(ProductCart.class);
-            ProductCartServiceRequest.AddItem request = new ProductCartServiceRequest.AddItem(1L, 2);
-            
-            when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-            when(productRepository.findByIdAndStatusNot(1L, ProductStatus.DELETED)).thenReturn(Optional.of(product));
-            when(productCartRepository.findByUserId(1L)).thenReturn(Optional.of(productCart));
-            
+            ProductCartServiceRequest.AddItem request = new ProductCartServiceRequest.AddItem(
+                TestFixtures.PRODUCT_ID_1, 2
+            );
+
+            when(userRepository.findById(TestFixtures.USER_ID_1)).thenReturn(Optional.of(user));
+            when(productRepository.findByIdAndStatusNot(TestFixtures.PRODUCT_ID_1, ProductStatus.DELETED))
+                .thenReturn(Optional.of(product));
+            when(productCartRepository.findByUserId(TestFixtures.USER_ID_1)).thenReturn(Optional.of(productCart));
+
             // When
             productCartService.addCartItem(request, userImpl);
-            
+
             // Then
-            verify(userRepository).findById(1L);
-            verify(productRepository).findByIdAndStatusNot(1L, ProductStatus.DELETED);
-            verify(productCartRepository).findByUserId(1L);
-            
+            verify(userRepository).findById(TestFixtures.USER_ID_1);
+            verify(productRepository).findByIdAndStatusNot(TestFixtures.PRODUCT_ID_1, ProductStatus.DELETED);
+            verify(productCartRepository).findByUserId(TestFixtures.USER_ID_1);
+
             ArgumentCaptor<ProductCartItem> cartItemCaptor = ArgumentCaptor.forClass(ProductCartItem.class);
             verify(productCart).addItem(cartItemCaptor.capture());
-            
+
             ProductCartItem capturedItem = cartItemCaptor.getValue();
-            assertEquals(product, capturedItem.getProduct());
-            assertEquals(2, capturedItem.getQuantity());
+            assertThat(capturedItem.getProduct()).isEqualTo(product);
+            assertThat(capturedItem.getQuantity()).isEqualTo(2);
         }
 
         @Test
-        @DisplayName("장바구니가 없으면 새 장바구니를 생성하고 아이템을 추가한다")
+        @DisplayName("장바구니가 없으면 새 장바구니를 생성하고 아이템을 추가해야 한다")
         void shouldCreateCartAndAddItemWhenCartNotExists() {
             // Given
             ProductCart productCart = mock(ProductCart.class);
-            ProductCartServiceRequest.AddItem request = new ProductCartServiceRequest.AddItem(1L, 2);
-            
-            when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-            when(productRepository.findByIdAndStatusNot(1L, ProductStatus.DELETED)).thenReturn(Optional.of(product));
-            when(productCartRepository.findByUserId(1L)).thenReturn(Optional.empty());
+            ProductCartServiceRequest.AddItem request = new ProductCartServiceRequest.AddItem(
+                TestFixtures.PRODUCT_ID_1, 2
+            );
+
+            when(userRepository.findById(TestFixtures.USER_ID_1)).thenReturn(Optional.of(user));
+            when(productRepository.findByIdAndStatusNot(TestFixtures.PRODUCT_ID_1, ProductStatus.DELETED))
+                .thenReturn(Optional.of(product));
+            when(productCartRepository.findByUserId(TestFixtures.USER_ID_1)).thenReturn(Optional.empty());
             when(productCartRepository.save(any(ProductCart.class))).thenReturn(productCart);
-            
+
             // When
             productCartService.addCartItem(request, userImpl);
-            
+
             // Then
-            verify(userRepository).findById(1L);
-            verify(productRepository).findByIdAndStatusNot(1L, ProductStatus.DELETED);
-            verify(productCartRepository).findByUserId(1L);
+            verify(userRepository).findById(TestFixtures.USER_ID_1);
+            verify(productRepository).findByIdAndStatusNot(TestFixtures.PRODUCT_ID_1, ProductStatus.DELETED);
+            verify(productCartRepository).findByUserId(TestFixtures.USER_ID_1);
             verify(productCartRepository).save(any(ProductCart.class));
-            
+
             ArgumentCaptor<ProductCartItem> cartItemCaptor = ArgumentCaptor.forClass(ProductCartItem.class);
             verify(productCart).addItem(cartItemCaptor.capture());
-            
+
             ProductCartItem capturedItem = cartItemCaptor.getValue();
-            assertEquals(product, capturedItem.getProduct());
-            assertEquals(2, capturedItem.getQuantity());
+            assertThat(capturedItem.getProduct()).isEqualTo(product);
+            assertThat(capturedItem.getQuantity()).isEqualTo(2);
         }
 
         @Test
-        @DisplayName("사용자가 존재하지 않으면 예외가 발생한다")
+        @DisplayName("사용자가 존재하지 않으면 예외가 발생해야 한다")
         void shouldThrowExceptionWhenUserNotExists() {
             // Given
-            ProductCartServiceRequest.AddItem request = new ProductCartServiceRequest.AddItem(1L, 2);
-            when(userRepository.findById(1L)).thenReturn(Optional.empty());
-            
+            ProductCartServiceRequest.AddItem request = new ProductCartServiceRequest.AddItem(
+                TestFixtures.PRODUCT_ID_1, 2
+            );
+            when(userRepository.findById(TestFixtures.USER_ID_1)).thenReturn(Optional.empty());
+
             // When & Then
-            assertThrows(ResourceNotFoundException.class, () -> productCartService.addCartItem(request, userImpl));
-            verify(userRepository).findById(1L);
+            assertThatThrownBy(() -> productCartService.addCartItem(request, userImpl))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("해당 사용자가 존재하지 않습니다.");
+
+            verify(userRepository).findById(TestFixtures.USER_ID_1);
         }
 
         @Test
-        @DisplayName("상품이 존재하지 않으면 예외가 발생한다")
+        @DisplayName("상품이 존재하지 않으면 예외가 발생해야 한다")
         void shouldThrowExceptionWhenProductNotExists() {
             // Given
-            ProductCartServiceRequest.AddItem request = new ProductCartServiceRequest.AddItem(1L, 2);
-            
-            when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-            when(productRepository.findByIdAndStatusNot(1L, ProductStatus.DELETED)).thenReturn(Optional.empty());
-            
+            ProductCartServiceRequest.AddItem request = new ProductCartServiceRequest.AddItem(
+                TestFixtures.PRODUCT_ID_1, 2
+            );
+
+            when(userRepository.findById(TestFixtures.USER_ID_1)).thenReturn(Optional.of(user));
+            when(productRepository.findByIdAndStatusNot(TestFixtures.PRODUCT_ID_1, ProductStatus.DELETED))
+                .thenReturn(Optional.empty());
+
             // When & Then
-            assertThrows(ResourceNotFoundException.class, () -> productCartService.addCartItem(request, userImpl));
-            verify(userRepository).findById(1L);
-            verify(productRepository).findByIdAndStatusNot(1L, ProductStatus.DELETED);
+            assertThatThrownBy(() -> productCartService.addCartItem(request, userImpl))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining(TestFixtures.PRODUCT_ID_1.toString());
+
+            verify(userRepository).findById(TestFixtures.USER_ID_1);
+            verify(productRepository).findByIdAndStatusNot(TestFixtures.PRODUCT_ID_1, ProductStatus.DELETED);
         }
     }
 
@@ -253,96 +262,98 @@ class ProductCartServiceTest {
     class RemoveCartItem {
 
         @Test
-        @DisplayName("장바구니가 존재하면 아이템을 제거한다")
+        @DisplayName("장바구니가 존재하면 아이템을 제거해야 한다")
         void shouldRemoveItemWhenCartExists() {
             // Given
             ProductCart productCart = mock(ProductCart.class);
-            ProductCartServiceRequest.RemoveItem request = new ProductCartServiceRequest.RemoveItem(1L);
-            
-            when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-            when(productRepository.findById(1L)).thenReturn(Optional.of(product));
-            when(productCartRepository.findByUserId(1L)).thenReturn(Optional.of(productCart));
-            
+            ProductCartServiceRequest.RemoveItem request = new ProductCartServiceRequest.RemoveItem(
+                TestFixtures.PRODUCT_ID_1
+            );
+
+            when(userRepository.findById(TestFixtures.USER_ID_1)).thenReturn(Optional.of(user));
+            when(productRepository.findById(TestFixtures.PRODUCT_ID_1)).thenReturn(Optional.of(product));
+            when(productCartRepository.findByUserId(TestFixtures.USER_ID_1)).thenReturn(Optional.of(productCart));
+
             // When
             productCartService.removeCartItem(request, userImpl);
-            
+
             // Then
-            verify(userRepository).findById(1L);
-            verify(productRepository).findById(1L);
-            verify(productCartRepository).findByUserId(1L);
-            
+            verify(userRepository).findById(TestFixtures.USER_ID_1);
+            verify(productRepository).findById(TestFixtures.PRODUCT_ID_1);
+            verify(productCartRepository).findByUserId(TestFixtures.USER_ID_1);
+
             ArgumentCaptor<ProductCartItem> cartItemCaptor = ArgumentCaptor.forClass(ProductCartItem.class);
             verify(productCart).removeItem(cartItemCaptor.capture());
-            
+
             ProductCartItem capturedItem = cartItemCaptor.getValue();
-            assertEquals(product, capturedItem.getProduct());
+            assertThat(capturedItem.getProduct()).isEqualTo(product);
         }
 
         @Test
-        @DisplayName("장바구니가 없으면 새 장바구니를 생성하고 아이템 제거를 시도한다")
-        void shouldCreateCartAndRemoveItemWhenCartNotExists() {
+        @DisplayName("장바구니가 없으면 새 장바구니를 생성하고 아이템 제거를 시도해야 한다")
+        void shouldCreateCartAndTryToRemoveItemWhenCartNotExists() {
             // Given
             ProductCart productCart = mock(ProductCart.class);
-            ProductCartServiceRequest.RemoveItem request = new ProductCartServiceRequest.RemoveItem(1L);
-            
-            when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-            when(productRepository.findById(1L)).thenReturn(Optional.of(product));
-            when(productCartRepository.findByUserId(1L)).thenReturn(Optional.empty());
+            ProductCartServiceRequest.RemoveItem request = new ProductCartServiceRequest.RemoveItem(
+                TestFixtures.PRODUCT_ID_1
+            );
+
+            when(userRepository.findById(TestFixtures.USER_ID_1)).thenReturn(Optional.of(user));
+            when(productRepository.findById(TestFixtures.PRODUCT_ID_1)).thenReturn(Optional.of(product));
+            when(productCartRepository.findByUserId(TestFixtures.USER_ID_1)).thenReturn(Optional.empty());
             when(productCartRepository.save(any(ProductCart.class))).thenReturn(productCart);
-            
+
             // When
             productCartService.removeCartItem(request, userImpl);
-            
+
             // Then
-            verify(userRepository).findById(1L);
-            verify(productRepository).findById(1L);
-            verify(productCartRepository).findByUserId(1L);
+            verify(userRepository).findById(TestFixtures.USER_ID_1);
+            verify(productRepository).findById(TestFixtures.PRODUCT_ID_1);
+            verify(productCartRepository).findByUserId(TestFixtures.USER_ID_1);
             verify(productCartRepository).save(any(ProductCart.class));
-            
+
             ArgumentCaptor<ProductCartItem> cartItemCaptor = ArgumentCaptor.forClass(ProductCartItem.class);
             verify(productCart).removeItem(cartItemCaptor.capture());
-            
+
             ProductCartItem capturedItem = cartItemCaptor.getValue();
-            assertEquals(product, capturedItem.getProduct());
+            assertThat(capturedItem.getProduct()).isEqualTo(product);
         }
 
         @Test
-        @DisplayName("사용자가 존재하지 않으면 예외가 발생한다")
+        @DisplayName("사용자가 존재하지 않으면 예외가 발생해야 한다")
         void shouldThrowExceptionWhenUserNotExists() {
             // Given
-            ProductCartServiceRequest.RemoveItem request = new ProductCartServiceRequest.RemoveItem(1L);
-            when(userRepository.findById(1L)).thenReturn(Optional.empty());
-            
+            ProductCartServiceRequest.RemoveItem request = new ProductCartServiceRequest.RemoveItem(
+                TestFixtures.PRODUCT_ID_1
+            );
+            when(userRepository.findById(TestFixtures.USER_ID_1)).thenReturn(Optional.empty());
+
             // When & Then
-            assertThrows(ResourceNotFoundException.class, () -> productCartService.removeCartItem(request, userImpl));
-            verify(userRepository).findById(1L);
+            assertThatThrownBy(() -> productCartService.removeCartItem(request, userImpl))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("해당 사용자가 존재하지 않습니다.");
+
+            verify(userRepository).findById(TestFixtures.USER_ID_1);
         }
 
         @Test
-        @DisplayName("상품이 존재하지 않으면 예외가 발생한다")
+        @DisplayName("상품이 존재하지 않으면 예외가 발생해야 한다")
         void shouldThrowExceptionWhenProductNotExists() {
             // Given
-            ProductCartServiceRequest.RemoveItem request = new ProductCartServiceRequest.RemoveItem(1L);
-            
-            when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-            when(productRepository.findById(1L)).thenReturn(Optional.empty());
-            
-            // When & Then
-            assertThrows(ResourceNotFoundException.class, () -> productCartService.removeCartItem(request, userImpl));
-            verify(userRepository).findById(1L);
-            verify(productRepository).findById(1L);
-        }
-    }
+            ProductCartServiceRequest.RemoveItem request = new ProductCartServiceRequest.RemoveItem(
+                TestFixtures.PRODUCT_ID_1
+            );
 
-    // Helper method to set ID
-    private <T> void setId(T entity, Long id) {
-        try {
-            Class<?> clazz = entity.getClass();
-            java.lang.reflect.Field idField = clazz.getDeclaredField("id");
-            idField.setAccessible(true);
-            idField.set(entity, id);
-        } catch (Exception e) {
-            throw new RuntimeException("ID 설정 실패: " + entity.getClass().getSimpleName(), e);
+            when(userRepository.findById(TestFixtures.USER_ID_1)).thenReturn(Optional.of(user));
+            when(productRepository.findById(TestFixtures.PRODUCT_ID_1)).thenReturn(Optional.empty());
+
+            // When & Then
+            assertThatThrownBy(() -> productCartService.removeCartItem(request, userImpl))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining(TestFixtures.PRODUCT_ID_1.toString());
+
+            verify(userRepository).findById(TestFixtures.USER_ID_1);
+            verify(productRepository).findById(TestFixtures.PRODUCT_ID_1);
         }
     }
 }

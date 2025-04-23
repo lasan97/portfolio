@@ -12,6 +12,7 @@
 import { defineComponent, onMounted, onUnmounted, provide } from 'vue';
 import { useAuthStore } from '@features/auth';
 import { useUserStore } from '@entities/user';
+import { useCartStore } from '@entities/cart';
 import { Header } from '@widgets/header';
 import { Footer } from '@widgets/footer';
 import { recoverAuthState, syncAuthState } from '@shared/lib';
@@ -25,6 +26,7 @@ export default defineComponent({
   setup() {
     const authStore = useAuthStore();
     const userStore = useUserStore();
+    const cartStore = useCartStore();
 
     // 다른 브라우저 탭에서의 로그인/로그아웃 감지
     const handleStorageChange = (event: StorageEvent) => {
@@ -37,6 +39,8 @@ export default defineComponent({
           if (!authStore.isAuthenticated) {
             authStore.setToken(newToken);
             authStore.fetchCurrentUser();
+            // 로그인 시 장바구니 정보 가져오기
+            fetchCartItems();
           }
         } else {
           // 토큰이 삭제됐으면 (로그아웃) 상태 초기화
@@ -51,11 +55,21 @@ export default defineComponent({
       }
     };
 
+    // 장바구니 정보 가져오기
+    const fetchCartItems = async () => {
+      if (authStore.isAuthenticated) {
+        try {
+          await cartStore.fetchCartItems();
+        } catch (error) {
+          console.error('장바구니 정보 가져오기 실패:', error);
+        }
+      }
+    };
+
     onMounted(() => {
       // 로컬 스토리지 변경 이벤트 리스너 등록
       window.addEventListener('storage', handleStorageChange);
       
-      // 수정: 새로운 초기화 방식 사용
       // 첫 번째: 새로고침 후 인증 상태 복원 시도
       recoverAuthState();
       
@@ -63,7 +77,13 @@ export default defineComponent({
       syncAuthState();
       
       // 세 번째: 저장소 토큰 확인 후 인증 스토어 초기화
-      authStore.initialize();
+      authStore.initialize().then(() => {
+        // 인증 정보 초기화 후 장바구니 정보 가져오기
+        fetchCartItems();
+      });
+      
+      // 장바구니 초기화 (인증된 사용자만)
+      cartStore.initializeCart();
     });
     
     onUnmounted(() => {
@@ -79,6 +99,9 @@ export default defineComponent({
         
         // 인증 스토어 초기화 (전체 프로세스 수행)
         await authStore.initialize();
+        
+        // 인증 정보 초기화 후 장바구니 정보 가져오기
+        await fetchCartItems();
       } catch (error) {
         // 오류 발생 시 기존 방식으로 폴백
         authStore.reset();
@@ -87,9 +110,12 @@ export default defineComponent({
     };
     
     provide('refreshAuthState', refreshAuthState);
+    // 장바구니 관련 메서드 제공
+    provide('fetchCartItems', fetchCartItems);
 
     return {
-      refreshAuthState
+      refreshAuthState,
+      fetchCartItems
     };
   }
 });

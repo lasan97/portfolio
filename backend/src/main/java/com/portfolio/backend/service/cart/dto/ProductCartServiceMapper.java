@@ -21,6 +21,7 @@ public class ProductCartServiceMapper {
                 product.getName(),
                 product.getPrice().getAmount(),
                 product.getOriginalPrice().getAmount(),
+                product.getThumbnailImageUrl(),
                 product.getStatus()
         );
     }

@@ -14,6 +14,26 @@
             <router-link to="/ssr" class="text-gray-700 hover:text-blue-600">SSR 예제</router-link>
           </template>
 
+          <!-- 장바구니 링크 -->
+          <router-link 
+            to="/cart" 
+            class="relative flex items-center text-gray-700 hover:text-blue-600"
+            title="장바구니"
+          >
+            <!-- 장바구니 아이콘 -->
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+            
+            <!-- 장바구니 아이템 수 뱃지 -->
+            <span 
+              v-if="totalItems > 0" 
+              class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center"
+            >
+              {{ totalItems > 99 ? '99+' : totalItems }}
+            </span>
+          </router-link>
+
           <template v-if="isAuthenticated">
             <router-link to="/profile" class="text-gray-700 hover:text-blue-600">프로필</router-link>
             <button 
@@ -37,6 +57,7 @@
 import { defineComponent, computed, watch, onMounted } from 'vue';
 import { useAuthStore } from '@features/auth';
 import { useUserStore } from '@entities/user';
+import { useCartStore } from '@entities/cart';
 import { useRouter } from 'vue-router';
 import {UserRole} from "@entities/user";
 
@@ -45,6 +66,7 @@ export default defineComponent({
   setup() {
     const authStore = useAuthStore();
     const userStore = useUserStore();
+    const cartStore = useCartStore();
     const router = useRouter();
 
     // 인증 상태 리액티브하게 계산
@@ -54,6 +76,9 @@ export default defineComponent({
     });
     // 사용자 이름 표시
     const userDisplayName = computed(() => userStore.userDisplayName);
+    
+    // 장바구니 아이템 수 계산
+    const totalItems = computed(() => cartStore.totalItems);
 
     // 인증 상태 변경 시 새로고침 없이 UI 업데이트
     watch(() => authStore.token, (newToken) => {
@@ -72,6 +97,13 @@ export default defineComponent({
       if (tokenExists && !userStore.user) {
         authStore.fetchCurrentUser();
       }
+      
+      // 페이지 로드 시 장바구니 정보 가져오기
+      if (isAuthenticated.value) {
+        cartStore.fetchCartItems().catch(error => {
+          console.error('장바구니 데이터 로드 중 오류 발생:', error);
+        });
+      }
     });
 
     const handleLogout = () => {
@@ -87,6 +119,7 @@ export default defineComponent({
       isAuthenticated,
       isAdmin,
       userDisplayName,
+      totalItems,
       handleLogout
     };
   }
