@@ -2,6 +2,7 @@ package com.portfolio.backend.domain.user.entity;
 
 import com.portfolio.backend.common.config.converter.MoneyConverter;
 import com.portfolio.backend.common.exception.DomainException;
+import com.portfolio.backend.common.exception.UnprocessableEntityException;
 import com.portfolio.backend.domain.common.entity.AggregateRoot;
 import com.portfolio.backend.domain.common.value.Money;
 import com.portfolio.backend.domain.user.event.UserCreditAmountChangedEvent;
@@ -51,7 +52,7 @@ public class UserCredit extends AggregateRoot {
     
     public void add(Money amount) {
         if (Money.zero().isLessThanOrEqual(amount)) {
-            throw new DomainException("충전금액은 0과 같거나 작을 수 없습니다.");
+            throw new UnprocessableEntityException("충전금액은 0과 같거나 작을 수 없습니다.");
         }
 
         this.amount = this.amount.add(amount);
@@ -67,7 +68,7 @@ public class UserCredit extends AggregateRoot {
 
     public void subtract(Money amount) {
         if (Money.zero().isLessThanOrEqual(amount)) {
-            throw new DomainException("차감금액은 0과 같거나 작을 수 없습니다.");
+            throw new UnprocessableEntityException("차감금액은 0과 같거나 작을 수 없습니다.");
         }
 
         this.amount = this.amount.subtract(amount);

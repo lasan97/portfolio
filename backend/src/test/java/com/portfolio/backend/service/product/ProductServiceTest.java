@@ -3,9 +3,7 @@ package com.portfolio.backend.service.product;
 import com.portfolio.backend.common.TestFixtures;
 import com.portfolio.backend.common.exception.DomainException;
 import com.portfolio.backend.common.exception.ResourceNotFoundException;
-import com.portfolio.backend.domain.common.value.Money;
 import com.portfolio.backend.domain.product.entity.Product;
-import com.portfolio.backend.domain.product.entity.ProductCategory;
 import com.portfolio.backend.domain.product.entity.ProductStatus;
 import com.portfolio.backend.domain.product.repository.ProductRepository;
 import com.portfolio.backend.domain.product.repository.ProductStockHistoryRepository;
@@ -13,7 +11,6 @@ import com.portfolio.backend.service.product.dto.ProductServiceMapper;
 import com.portfolio.backend.service.product.dto.ProductServiceRequest;
 import com.portfolio.backend.service.product.dto.ProductServiceResponse;
 import com.portfolio.backend.service.product.dto.StockChangeReason;
-
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -31,7 +28,6 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 /**
