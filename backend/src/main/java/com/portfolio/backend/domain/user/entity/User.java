@@ -6,6 +6,7 @@ import com.portfolio.backend.domain.user.event.UserCreatedEvent;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
@@ -13,6 +14,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(name = "users")
+@EntityListeners(AuditingEntityListener.class)
 public class User extends AggregateRoot {
 
     @Id

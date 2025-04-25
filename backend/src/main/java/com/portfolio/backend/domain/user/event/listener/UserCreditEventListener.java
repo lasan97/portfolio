@@ -22,7 +22,7 @@ public class UserCreditEventListener {
 
         UserCreditHistory creditHistory = UserCreditHistory.builder()
                 .userCredit(event.getUserCredit())
-                .type(event.getType())
+                .transactionType(event.getType())
                 .amount(event.getAmount())
                 .balanceAfterTransaction(event.getBalanceAfterTransaction())
                 .description(event.getDescription())

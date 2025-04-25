@@ -76,6 +76,7 @@ class ProductCartServiceTest {
                 product.getName(),
                 BigDecimal.valueOf(8000),
                 BigDecimal.valueOf(10000),
+                null,
                 ProductStatus.ACTIVE
         );
 

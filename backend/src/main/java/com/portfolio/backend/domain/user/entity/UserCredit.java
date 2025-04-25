@@ -1,7 +1,6 @@
 package com.portfolio.backend.domain.user.entity;
 
 import com.portfolio.backend.common.config.converter.MoneyConverter;
-import com.portfolio.backend.common.exception.DomainException;
 import com.portfolio.backend.common.exception.UnprocessableEntityException;
 import com.portfolio.backend.domain.common.entity.AggregateRoot;
 import com.portfolio.backend.domain.common.value.Money;
@@ -12,6 +11,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -20,6 +20,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(name = "user_credits")
+@EntityListeners(AuditingEntityListener.class)
 public class UserCredit extends AggregateRoot {
 
     @Id
@@ -51,7 +52,7 @@ public class UserCredit extends AggregateRoot {
     }
     
     public void add(Money amount) {
-        if (Money.zero().isLessThanOrEqual(amount)) {
+        if (amount.isLessThanOrEqual(Money.zero())) {
             throw new UnprocessableEntityException("충전금액은 0과 같거나 작을 수 없습니다.");
         }
 
@@ -67,8 +68,12 @@ public class UserCredit extends AggregateRoot {
     }
 
     public void subtract(Money amount) {
-        if (Money.zero().isLessThanOrEqual(amount)) {
+        if (amount.isLessThanOrEqual(Money.zero())) {
             throw new UnprocessableEntityException("차감금액은 0과 같거나 작을 수 없습니다.");
+        }
+
+        if (this.amount.isLessThan(amount)) {
+            throw new UnprocessableEntityException("잔액이 부족합니다.");
         }
 
         this.amount = this.amount.subtract(amount);

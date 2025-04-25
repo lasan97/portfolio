@@ -90,13 +90,15 @@ class ProductCartControllerTest {
         // 장바구니 응답 항목 설정
         ServiceBaseResponse.SimpleProduct simpleProduct1 = new ServiceBaseResponse.SimpleProduct(
                 TestFixtures.PRODUCT_ID_1, "맥북 프로", 
-                BigDecimal.valueOf(1800000), BigDecimal.valueOf(2000000), 
+                BigDecimal.valueOf(1800000), BigDecimal.valueOf(2000000),
+                null,
                 ProductStatus.ACTIVE
         );
         
         ServiceBaseResponse.SimpleProduct simpleProduct2 = new ServiceBaseResponse.SimpleProduct(
                 TestFixtures.PRODUCT_ID_2, "아이폰 15", 
-                BigDecimal.valueOf(1500000), BigDecimal.valueOf(1700000), 
+                BigDecimal.valueOf(1500000), BigDecimal.valueOf(1700000),
+                null,
                 ProductStatus.ACTIVE
         );
         

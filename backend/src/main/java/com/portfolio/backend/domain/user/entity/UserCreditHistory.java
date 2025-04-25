@@ -29,7 +29,7 @@ public class UserCreditHistory {
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    private CreditTransactionType type;
+    private CreditTransactionType transactionType;
 
     @Column(nullable = false)
     @Convert(converter = MoneyConverter.class)
@@ -42,11 +42,11 @@ public class UserCreditHistory {
     private String description;
 
     @Builder
-    public UserCreditHistory(UserCredit userCredit, LocalDateTime transactionDateTime, CreditTransactionType type,
+    public UserCreditHistory(UserCredit userCredit, LocalDateTime transactionDateTime, CreditTransactionType transactionType,
                              Money amount, Money balanceAfterTransaction, String description) {
         this.userCredit = userCredit;
         this.transactionDateTime = transactionDateTime;
-        this.type = type;
+        this.transactionType = transactionType;
         this.amount = amount;
         this.balanceAfterTransaction = balanceAfterTransaction;
         this.description = description;
