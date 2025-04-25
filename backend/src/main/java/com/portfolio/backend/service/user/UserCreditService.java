@@ -7,6 +7,7 @@ import com.portfolio.backend.domain.common.value.Money;
 import com.portfolio.backend.domain.user.entity.UserCredit;
 import com.portfolio.backend.domain.user.repository.UserCreditRepository;
 import com.portfolio.backend.domain.user.repository.UserRepository;
+import com.portfolio.backend.service.user.dto.UserCreditServiceRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -32,13 +33,13 @@ public class UserCreditService {
     }
 
     @Transactional
-    public void increase(Long userId, Money amount) {
+    public void increase(Long userId, UserCreditServiceRequest.Increase request) {
         userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("해당 사용자가 존재하지 않습니다."));
         UserCredit credit = userCreditRepository.findByUserId(userId)
                 .orElseThrow(() -> new DomainException("지갑이 존재하지 않습니다."));
 
-        credit.add(amount);
+        credit.add(request.amount());
 
         eventPublisher.publishEventsFrom(credit);
     }

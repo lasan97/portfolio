@@ -8,6 +8,7 @@ import com.portfolio.backend.domain.user.entity.User;
 import com.portfolio.backend.domain.user.entity.UserCredit;
 import com.portfolio.backend.domain.user.repository.UserCreditRepository;
 import com.portfolio.backend.domain.user.repository.UserRepository;
+import com.portfolio.backend.service.user.dto.UserCreditServiceRequest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,7 +48,7 @@ class UserCreditServiceIntegrationTest {
         Money increaseAmount = new Money(BigDecimal.valueOf(10000));
 
         // When
-        userCreditService.increase(user.getId(), increaseAmount);
+        userCreditService.increase(user.getId(), new UserCreditServiceRequest.Increase(increaseAmount));
 
         // Then
         UserCredit updatedCredit = userCreditRepository.findByUserId(user.getId()).get();

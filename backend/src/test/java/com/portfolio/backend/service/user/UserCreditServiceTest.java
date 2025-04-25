@@ -9,6 +9,7 @@ import com.portfolio.backend.domain.user.entity.User;
 import com.portfolio.backend.domain.user.entity.UserCredit;
 import com.portfolio.backend.domain.user.repository.UserCreditRepository;
 import com.portfolio.backend.domain.user.repository.UserRepository;
+import com.portfolio.backend.service.user.dto.UserCreditServiceRequest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -56,7 +57,7 @@ class UserCreditServiceTest {
             when(userCreditRepository.findByUserId(userId)).thenReturn(Optional.of(userCredit));
 
             // When
-            userCreditService.increase(userId, amount);
+            userCreditService.increase(userId, new UserCreditServiceRequest.Increase(amount));
 
             // Then
             verify(userRepository).findById(userId);
@@ -74,7 +75,7 @@ class UserCreditServiceTest {
             when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
             // When, Then
-            assertThatThrownBy(() -> userCreditService.increase(userId, amount))
+            assertThatThrownBy(() -> userCreditService.increase(userId, new UserCreditServiceRequest.Increase(amount)))
                     .isInstanceOf(ResourceNotFoundException.class)
                     .hasMessageContaining("해당 사용자가 존재하지 않습니다");
 
@@ -95,7 +96,7 @@ class UserCreditServiceTest {
             when(userCreditRepository.findByUserId(userId)).thenReturn(Optional.empty());
 
             // When, Then
-            assertThatThrownBy(() -> userCreditService.increase(userId, amount))
+            assertThatThrownBy(() -> userCreditService.increase(userId, new UserCreditServiceRequest.Increase(amount)))
                     .isInstanceOf(DomainException.class)
                     .hasMessageContaining("지갑이 존재하지 않습니다");
 
