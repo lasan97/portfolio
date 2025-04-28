@@ -1,7 +1,7 @@
 package com.portfolio.backend.domain.user.entity;
 
-import com.portfolio.backend.common.TestFixtures;
 import com.portfolio.backend.domain.common.value.Money;
+import com.portfolio.backend.domain.user.fixture.UserTestFixtures;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -16,7 +16,7 @@ class UserCreditHistoryTest {
     @DisplayName("UserCreditHistory를 생성할 수 있다")
     void shouldCreateUserCreditHistory() {
         // Given
-        User user = TestFixtures.createRegularUser();
+        User user = UserTestFixtures.createUser();
         UserCredit userCredit = new UserCredit(user);
         LocalDateTime transactionDateTime = LocalDateTime.now();
         CreditTransactionType transactionType = CreditTransactionType.INCREASE;
@@ -47,7 +47,7 @@ class UserCreditHistoryTest {
     @DisplayName("설명(description)이 없는 UserCreditHistory를 생성할 수 있다")
     void shouldCreateUserCreditHistoryWithoutDescription() {
         // Given
-        User user = TestFixtures.createRegularUser();
+        User user = UserTestFixtures.createUser();
         UserCredit userCredit = new UserCredit(user);
         LocalDateTime transactionDateTime = LocalDateTime.now();
         CreditTransactionType transactionType = CreditTransactionType.INCREASE;

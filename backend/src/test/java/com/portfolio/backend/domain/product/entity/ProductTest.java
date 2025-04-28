@@ -1,8 +1,8 @@
 package com.portfolio.backend.domain.product.entity;
 
-import com.portfolio.backend.common.TestFixtures;
 import com.portfolio.backend.common.exception.DomainException;
 import com.portfolio.backend.domain.common.value.Money;
+import com.portfolio.backend.domain.product.fixture.ProductTestFixtures;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -16,10 +16,6 @@ import java.math.BigDecimal;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-/**
- * Product 엔티티에 대한 단위 테스트
- */
-@DisplayName("Product 엔티티 테스트")
 class ProductTest {
 
     @Nested
@@ -195,7 +191,7 @@ class ProductTest {
         @DisplayName("재고를 증가시키면 수량이 증가해야 한다")
         void shouldIncreaseStockQuantityWhenIncreaseCalled() {
             // Given
-            Product product = TestFixtures.createDefaultProduct();
+            Product product = ProductTestFixtures.createDefaultProduct(0);
             int initialStock = product.getStock().getQuantity();
             int increaseAmount = 50;
 
@@ -210,7 +206,7 @@ class ProductTest {
         @DisplayName("재고를 감소시키면 수량이 감소해야 한다")
         void shouldDecreaseStockQuantityWhenDecreaseCalled() {
             // Given
-            Product product = TestFixtures.createDefaultProduct();
+            Product product = ProductTestFixtures.createDefaultProduct(60);
             int initialStock = product.getStock().getQuantity();
             int decreaseAmount = 50;
 
@@ -225,7 +221,7 @@ class ProductTest {
         @DisplayName("품절 상태에서 재고 증가 시 ACTIVE 상태로 변경되어야 한다")
         void shouldChangeToActiveStatusWhenIncreaseStockFromSoldOut() {
             // Given
-            Product product = TestFixtures.createProductWithZeroStock();
+            Product product = ProductTestFixtures.createDefaultProduct(0);
             assertThat(product.getStatus()).isEqualTo(ProductStatus.SOLD_OUT);
 
             // When
@@ -240,7 +236,7 @@ class ProductTest {
         @DisplayName("재고가 0이 되면 SOLD_OUT 상태로 변경되어야 한다")
         void shouldChangeToSoldOutStatusWhenStockBecomesZero() {
             // Given
-            Product product = TestFixtures.createDefaultProduct();
+            Product product = ProductTestFixtures.createDefaultProduct(10);
             int currentStock = product.getStock().getQuantity();
             
             // When
@@ -265,7 +261,7 @@ class ProductTest {
         @DisplayName("상품 상태에 따라 isAvailable이 올바른 값을 반환해야 한다")
         void shouldReturnCorrectAvailabilityBasedOnStatus(ProductStatus status, boolean expected) {
             // Given
-            Product product = TestFixtures.createProductWithStatus(status);
+            Product product = ProductTestFixtures.createProductWithStatus(status);
             
             // When & Then
             assertThat(product.isAvailable()).isEqualTo(expected);
@@ -275,7 +271,7 @@ class ProductTest {
         @DisplayName("상태가 ACTIVE이고 재고가 있을 때만 isAvailable이 true를 반환해야 한다")
         void shouldReturnTrueForIsAvailableOnlyWhenActiveAndInStock() {
             // Given
-            Product product = TestFixtures.createDefaultProduct();
+            Product product = ProductTestFixtures.createDefaultProduct(1);
             
             // 먼저 ACTIVE 상태와 재고가 있는 상태 확인
             assertThat(product.getStatus()).isEqualTo(ProductStatus.ACTIVE);

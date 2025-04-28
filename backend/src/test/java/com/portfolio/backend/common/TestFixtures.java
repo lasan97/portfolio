@@ -29,114 +29,6 @@ public class TestFixtures {
     public static final Long USER_ID_1 = 1L;
     public static final Long USER_ID_2 = 2L;
 
-    // 제품 관련 픽스처
-    public static Product createProduct(Long id, String name, int originalPrice, int price, String description,
-                                     String thumbnailImageUrl, ProductCategory category, int stock) {
-        Product product = Product.builder()
-                .name(name)
-                .originalPrice(new Money(BigDecimal.valueOf(originalPrice)))
-                .price(new Money(BigDecimal.valueOf(price)))
-                .description(description)
-                .thumbnailImageUrl(thumbnailImageUrl)
-                .category(category)
-                .stock(stock)
-                .build();
-
-        // 리플렉션을 사용하여 ID 설정
-        try {
-            java.lang.reflect.Field idField = Product.class.getDeclaredField("id");
-            idField.setAccessible(true);
-            idField.set(product, id);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to set product ID", e);
-        }
-
-        return product;
-    }
-
-    public static Product createDefaultProduct() {
-        return createProduct(
-                PRODUCT_ID_1, 
-                "맥북 프로 M2", 
-                2000000, 
-                1800000, 
-                "2023년형 맥북 프로 M2 모델", 
-                "https://example.com/macbook.jpg", 
-                ProductCategory.ELECTRONICS, 
-                100
-        );
-    }
-
-    public static Product createProductWithZeroStock() {
-        return createProduct(
-                PRODUCT_ID_1, 
-                "맥북 프로 M2", 
-                2000000, 
-                1800000, 
-                "2023년형 맥북 프로 M2 모델", 
-                "https://example.com/macbook.jpg", 
-                ProductCategory.ELECTRONICS, 
-                0
-        );
-    }
-
-    public static Product createProductWithStatus(ProductStatus status) {
-        Product product = createDefaultProduct();
-        try {
-            java.lang.reflect.Field statusField = Product.class.getDeclaredField("status");
-            statusField.setAccessible(true);
-            statusField.set(product, status);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to set product status", e);
-        }
-        return product;
-    }
-
-    public static Product createSecondProduct() {
-        return createProduct(
-                PRODUCT_ID_2, 
-                "아이폰 15", 
-                1500000, 
-                1200000, 
-                "2023년형 아이폰 15", 
-                "https://example.com/iphone15.jpg", 
-                ProductCategory.ELECTRONICS, 
-                50
-        );
-    }
-
-    public static List<Product> createProductList() {
-        return Arrays.asList(createDefaultProduct(), createSecondProduct());
-    }
-
-    // ProductService DTO 관련 픽스처
-    public static ProductServiceRequest.Create createProductCreateRequest() {
-        return new ProductServiceRequest.Create(
-                "맥북 프로", 
-                new Money(BigDecimal.valueOf(2000000)), 
-                new Money(BigDecimal.valueOf(1800000)),
-                "Apple 맥북 프로 M3 칩", 
-                "macbook-pro.jpg", 
-                ProductCategory.ELECTRONICS, 
-                10
-        );
-    }
-
-    public static ProductServiceRequest.Update createProductUpdateRequest() {
-        return new ProductServiceRequest.Update(
-                "맥북 프로 M3", 
-                new Money(BigDecimal.valueOf(2100000)), 
-                new Money(BigDecimal.valueOf(1900000)),
-                "Apple 맥북 프로 M3 칩 업데이트", 
-                "macbook-pro-m3.jpg", 
-                ProductCategory.ELECTRONICS
-        );
-    }
-
-    public static ProductServiceRequest.AdjustStock createStockAdjustRequest(int quantity, StockChangeReason reason, String description) {
-        return new ProductServiceRequest.AdjustStock(quantity, reason, description);
-    }
-
     public static ProductServiceResponse.Get createProductGetResponse() {
         return new ProductServiceResponse.Get(
                 PRODUCT_ID_1, 
@@ -184,14 +76,5 @@ public class TestFixtures {
 
     public static List<ProductServiceResponse.GetList> createProductGetListResponseList() {
         return Arrays.asList(createProductGetListResponse1(), createProductGetListResponse2());
-    }
-
-    // 사용자 관련 픽스처
-    public static User createAdminUser() {
-        return new User("admin@email.com", "tester", Oauth2ProviderType.GITHUB, "1", null, RoleType.ADMIN);
-    }
-
-    public static User createRegularUser() {
-        return new User("user@email.com", "tester", Oauth2ProviderType.GITHUB, "1", null, RoleType.USER);
     }
 }

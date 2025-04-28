@@ -1,5 +1,6 @@
 package com.portfolio.backend.domain.cart.entity;
 
+import com.portfolio.backend.domain.product.entity.Product;
 import com.portfolio.backend.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -18,7 +19,7 @@ public class ProductCart {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "product_cart_items", joinColumns = @JoinColumn(name = "product_cart_id"))
     private List<ProductCartItem> items = new ArrayList<>();
 
@@ -34,15 +35,14 @@ public class ProductCart {
         return Collections.unmodifiableList(items);
     }
 
-    public void addItem(ProductCartItem item) {
-        int index = items.indexOf(item);
-        if (index != -1) {
-            items.remove(index);
-        }
+    public void addItem(Product product, int quantity) {
+        ProductCartItem item = new ProductCartItem(product, quantity);
+        items.remove(item);
         items.add(item);
     }
 
-    public void removeItem(ProductCartItem item) {
+    public void removeItem(Product product) {
+        ProductCartItem item = new ProductCartItem(product);
         items.remove(item);
     }
 }

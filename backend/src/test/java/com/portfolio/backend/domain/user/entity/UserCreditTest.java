@@ -1,8 +1,8 @@
 package com.portfolio.backend.domain.user.entity;
 
-import com.portfolio.backend.common.TestFixtures;
 import com.portfolio.backend.common.exception.UnprocessableEntityException;
 import com.portfolio.backend.domain.common.value.Money;
+import com.portfolio.backend.domain.user.fixture.UserTestFixtures;
 import com.portfolio.backend.domain.user.event.UserCreditAmountChangedEvent;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -23,7 +23,7 @@ class UserCreditTest {
         @DisplayName("사용자 정보로 UserCredit을 생성할 수 있다")
         void shouldCreateUserCreditWithUser() {
             // Given
-            User user = TestFixtures.createRegularUser();
+            User user = UserTestFixtures.createUser();
 
             // When
             UserCredit userCredit = new UserCredit(user);
@@ -42,7 +42,7 @@ class UserCreditTest {
         @DisplayName("양수 금액을 추가할 수 있다")
         void shouldAddPositiveAmount() {
             // Given
-            User user = TestFixtures.createRegularUser();
+            User user = UserTestFixtures.createUser();
             UserCredit userCredit = new UserCredit(user);
             Money amountToAdd = new Money(BigDecimal.valueOf(10000));
 
@@ -66,7 +66,7 @@ class UserCreditTest {
         @DisplayName("0 금액을 추가하면 예외가 발생한다")
         void shouldThrowExceptionWhenAddingZeroAmount() {
             // Given
-            User user = TestFixtures.createRegularUser();
+            User user = UserTestFixtures.createUser();
             UserCredit userCredit = new UserCredit(user);
             Money zeroAmount = Money.zero();
 
@@ -85,7 +85,7 @@ class UserCreditTest {
         @DisplayName("양수 금액을 차감할 수 있다")
         void shouldSubtractPositiveAmount() {
             // Given
-            User user = TestFixtures.createRegularUser();
+            User user = UserTestFixtures.createUser();
             UserCredit userCredit = new UserCredit(user);
             Money initialAmount = new Money(BigDecimal.valueOf(20000));
             Money amountToSubtract = new Money(BigDecimal.valueOf(10000));
@@ -115,7 +115,7 @@ class UserCreditTest {
         @DisplayName("0 금액을 차감하면 예외가 발생한다")
         void shouldThrowExceptionWhenSubtractingZeroAmount() {
             // Given
-            User user = TestFixtures.createRegularUser();
+            User user = UserTestFixtures.createUser();
             UserCredit userCredit = new UserCredit(user);
             Money zeroAmount = Money.zero();
 
@@ -129,7 +129,7 @@ class UserCreditTest {
         @DisplayName("잔액보다 큰 금액은 차감할 수 없다.")
         void shouldAllowNegativeBalanceWhenSubtractingMoreThanBalance() {
             // Given
-            User user = TestFixtures.createRegularUser();
+            User user = UserTestFixtures.createUser();
             UserCredit userCredit = new UserCredit(user);
             Money initialAmount = new Money(BigDecimal.valueOf(5000));
             Money amountToSubtract = new Money(BigDecimal.valueOf(10000));

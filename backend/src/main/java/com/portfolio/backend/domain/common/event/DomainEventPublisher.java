@@ -17,9 +17,4 @@ public class DomainEventPublisher {
             aggregate.clearDomainEvents();
         }
     }
-
-    private void publishEvents(AggregateRoot aggregate) {
-        aggregate.getDomainEvents().forEach(eventPublisher::publishEvent);
-        aggregate.clearDomainEvents();
-    }
 }

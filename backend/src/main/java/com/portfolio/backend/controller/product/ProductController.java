@@ -26,9 +26,9 @@ public class ProductController {
         return productService.getProducts();
     }
 
-    @GetMapping("/{id}")
-    public ProductServiceResponse.Get getProduct(@PathVariable Long id) {
-        return productService.getProduct(id);
+    @GetMapping("/{productId}")
+    public ProductServiceResponse.Get getProduct(@PathVariable Long productId) {
+        return productService.getProduct(productId);
     }
 
     @PostMapping
@@ -38,26 +38,26 @@ public class ProductController {
         return productService.createProduct(request);
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/{productId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public Long updateProduct(@PathVariable Long id,
+    public Long updateProduct(@PathVariable Long productId,
                            @Valid @RequestBody ProductServiceRequest.Update request,
                            @AuthenticationPrincipal UserDetailsImpl userDetails) {
-        return productService.updateProduct(id, request);
+        return productService.updateProduct(productId, request);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{productId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public void deleteProduct(@PathVariable Long id,
+    public void deleteProduct(@PathVariable Long productId,
                            @AuthenticationPrincipal UserDetailsImpl userDetails) {
-        productService.deleteProduct(id);
+        productService.deleteProduct(productId);
     }
 
-    @PatchMapping("/{id}/stock")
+    @PatchMapping("/{productId}/stock")
     @PreAuthorize("isAuthenticated()") // 인증된 사용자라면 누구나 재고 조정 가능
-    public void adjustStock(@PathVariable Long id,
+    public void adjustStock(@PathVariable Long productId,
                          @Valid @RequestBody ProductServiceRequest.AdjustStock request,
                          @AuthenticationPrincipal UserDetailsImpl userDetails) {
-        productService.adjustStock(id, request);
+        productService.adjustStock(productId, request);
     }
 }

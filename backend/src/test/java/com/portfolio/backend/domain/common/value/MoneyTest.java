@@ -7,6 +7,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -27,7 +28,7 @@ class MoneyTest {
             Money money = new Money(amount);
 
             // Then
-            assertThat(money.getAmount()).isEqualTo(amount);
+            assertThat(money.getAmount()).isEqualTo(amount.setScale(2, RoundingMode.HALF_UP));
         }
 
         @Test
@@ -40,7 +41,7 @@ class MoneyTest {
             Money money = new Money(amount);
 
             // Then
-            assertThat(money.getAmount()).isEqualTo(amount);
+            assertThat(money.getAmount()).isEqualTo(amount.setScale(2, RoundingMode.HALF_UP));
             assertThat(money.isZero()).isTrue();
         }
 
@@ -80,7 +81,7 @@ class MoneyTest {
             Money result = money1.add(money2);
 
             // Then
-            assertThat(result.getAmount()).isEqualTo(BigDecimal.valueOf(15000));
+            assertThat(result.getAmount()).isEqualTo(BigDecimal.valueOf(15000).setScale(2, RoundingMode.HALF_UP));
         }
 
         @Test
@@ -94,7 +95,7 @@ class MoneyTest {
             Money result = money1.subtract(money2);
 
             // Then
-            assertThat(result.getAmount()).isEqualTo(BigDecimal.valueOf(5000));
+            assertThat(result.getAmount()).isEqualTo(BigDecimal.valueOf(5000).setScale(2, RoundingMode.HALF_UP));
         }
 
         @Test
@@ -108,7 +109,7 @@ class MoneyTest {
             Money result = larger.subtract(smaller);
 
             // Then
-            assertThat(result.getAmount()).isEqualTo(BigDecimal.valueOf(5000));
+            assertThat(result.getAmount()).isEqualTo(BigDecimal.valueOf(5000).setScale(2, RoundingMode.HALF_UP));
         }
 
         @Test
@@ -180,7 +181,7 @@ class MoneyTest {
             Money zeroMoney = Money.zero();
 
             // Then
-            assertThat(zeroMoney.getAmount()).isEqualTo(BigDecimal.ZERO);
+            assertThat(zeroMoney.getAmount()).isEqualTo(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP));
             assertThat(zeroMoney.isZero()).isTrue();
         }
     }

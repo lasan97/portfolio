@@ -1,11 +1,11 @@
 package com.portfolio.backend.service.file;
 
 import com.portfolio.backend.common.integration.storage.S3StorageService;
+import com.portfolio.backend.service.ServiceTest;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -13,32 +13,33 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
-class FileServiceTest {
+@DisplayName("FileService 테스트")
+class FileServiceTest extends ServiceTest {
 
-    @Mock
+    @MockBean
     private S3StorageService s3StorageService;
 
-    @InjectMocks
+    @Autowired
     private FileService fileService;
 
     @Test
+    @DisplayName("파일 업로드 시 S3 스토리지 서비스를 호출하고 파일 URL을 반환한다")
     void uploadFile_shouldCallS3StorageServiceAndReturnFileUrl() throws IOException {
         // Given
         MockMultipartFile file = new MockMultipartFile(
-                "file", 
-                "test.jpg", 
-                "image/jpeg", 
+                "file",
+                "test.jpg",
+                "image/jpeg",
                 "test image content".getBytes()
         );
-        String directory = "images";
-        String expectedUrl = "https://test-bucket.s3.ap-northeast-2.amazonaws.com/images/test-uuid.jpg";
-        
+
+        String expectedUrl = "https://test-bucket.s3.ap-northeast-2.amazonaws.com/images/test.jpg";
         when(s3StorageService.putObject(eq(file), eq(null))).thenReturn(expectedUrl);
 
         // When
@@ -46,10 +47,11 @@ class FileServiceTest {
 
         // Then
         verify(s3StorageService, times(1)).putObject(eq(file), eq(null));
-        assertEquals(expectedUrl, result);
+        assertThat(result).isEqualTo(expectedUrl);
     }
 
     @Test
+    @DisplayName("여러 파일 업로드 시 각 파일마다 S3 스토리지 서비스를 호출한다")
     void uploadFiles_shouldCallS3StorageServiceForEachFile() throws IOException {
         // Given
         MockMultipartFile file1 = new MockMultipartFile(
@@ -67,7 +69,6 @@ class FileServiceTest {
         );
         
         List<MultipartFile> files = Arrays.asList(file1, file2);
-        String directory = "images";
         
         when(s3StorageService.putObject(eq(file1), eq(null))).thenReturn("url1");
         when(s3StorageService.putObject(eq(file2), eq(null))).thenReturn("url2");
@@ -84,6 +85,7 @@ class FileServiceTest {
     }
 
     @Test
+    @DisplayName("파일 삭제 시 S3 스토리지 서비스에 위임한다")
     void deleteFile_shouldDelegateToS3StorageService() {
         // Given
         String fileUrl = "https://test-bucket.s3.ap-northeast-2.amazonaws.com/images/test.jpg";

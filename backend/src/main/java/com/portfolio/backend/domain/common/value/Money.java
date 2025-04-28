@@ -12,7 +12,8 @@ public class Money {
 
     @JsonCreator
     public Money(BigDecimal amount) {
-        this.amount = Objects.requireNonNull(amount);
+        this.amount = Objects.requireNonNull(amount)
+                .setScale(2, RoundingMode.HALF_UP);
         if (amount.compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalArgumentException("금액은 음수가 될 수 없습니다");
         }
@@ -32,6 +33,10 @@ public class Money {
     }
 
     public boolean isLessThan(Money other) {
+        return this.amount.compareTo(other.amount) < 0;
+    }
+
+    public boolean isGreaterThan(Money other) {
         return this.amount.compareTo(other.amount) < 0;
     }
 

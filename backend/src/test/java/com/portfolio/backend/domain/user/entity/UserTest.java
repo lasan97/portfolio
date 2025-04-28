@@ -1,8 +1,8 @@
 package com.portfolio.backend.domain.user.entity;
 
-import com.portfolio.backend.common.TestFixtures;
 import com.portfolio.backend.common.exception.DomainException;
 import com.portfolio.backend.domain.user.event.UserCreatedEvent;
+import com.portfolio.backend.domain.user.fixture.UserTestFixtures;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -123,7 +123,7 @@ class UserTest {
         @DisplayName("닉네임과 프로필 이미지를 업데이트할 수 있다")
         void shouldUpdateNicknameAndProfileImage() {
             // Given
-            User user = TestFixtures.createRegularUser();
+            User user = UserTestFixtures.createUser();
             String newNickname = "newTester";
             String newProfileImageUrl = "https://example.com/new-profile.jpg";
 

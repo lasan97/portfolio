@@ -74,7 +74,7 @@ public class ProductService {
 
     @Transactional
     public void deleteProduct(Long id) {
-        Product product = productRepository.findById(id)
+        Product product = productRepository.findByIdAndStatusNot(id, ProductStatus.DELETED)
                 .orElseThrow(() -> new ResourceNotFoundException("상품을 찾을 수 없습니다. ID: " + id));
         product.delete();
     }

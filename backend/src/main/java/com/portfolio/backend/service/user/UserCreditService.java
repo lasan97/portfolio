@@ -21,10 +21,10 @@ public class UserCreditService {
     private final DomainEventPublisher eventPublisher;
 
     @Transactional
-    public void decrease(Long userId, Money amount) {
+    public void pay(Long userId, Money amount) {
         userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("해당 사용자가 존재하지 않습니다."));
-        UserCredit credit = userCreditRepository.findByUserId(userId)
+        UserCredit credit = userCreditRepository.findLockedByUserId(userId)
                 .orElseThrow(() -> new DomainException("지갑이 존재하지 않습니다."));
 
         credit.subtract(amount);
@@ -36,7 +36,7 @@ public class UserCreditService {
     public void increase(Long userId, UserCreditServiceRequest.Increase request) {
         userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("해당 사용자가 존재하지 않습니다."));
-        UserCredit credit = userCreditRepository.findByUserId(userId)
+        UserCredit credit = userCreditRepository.findLockedByUserId(userId)
                 .orElseThrow(() -> new DomainException("지갑이 존재하지 않습니다."));
 
         credit.add(request.amount());

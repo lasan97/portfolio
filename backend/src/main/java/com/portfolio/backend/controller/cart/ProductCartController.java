@@ -26,7 +26,7 @@ public class ProductCartController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<ProductCartServiceResponse.Get>> getCartItems(
             @AuthenticationPrincipal UserDetailsImpl userDetails) {
-        return ResponseEntity.ok(productCartService.getCartItems(userDetails.getUser()));
+        return ResponseEntity.ok(productCartService.getCartItems(userDetails.getId()));
     }
 
     @PostMapping
@@ -34,7 +34,7 @@ public class ProductCartController {
     public ResponseEntity<Void> addCartItem(
             @Valid @RequestBody ProductCartServiceRequest.AddItem request,
             @AuthenticationPrincipal UserDetailsImpl userDetails) {
-        productCartService.addCartItem(request, userDetails.getUser());
+        productCartService.addCartItem(request, userDetails.getId());
         return ResponseEntity.ok().build();
     }
 
@@ -43,7 +43,7 @@ public class ProductCartController {
     public ResponseEntity<Void> removeCartItem(
             @Valid @RequestBody ProductCartServiceRequest.RemoveItem request,
             @AuthenticationPrincipal UserDetailsImpl userDetails) {
-        productCartService.removeCartItem(request, userDetails.getUser());
+        productCartService.removeCartItem(request, userDetails.getId());
         return ResponseEntity.ok().build();
     }
 }

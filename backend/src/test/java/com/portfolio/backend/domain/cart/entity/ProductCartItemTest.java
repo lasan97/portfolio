@@ -1,7 +1,7 @@
 package com.portfolio.backend.domain.cart.entity;
 
-import com.portfolio.backend.common.TestFixtures;
 import com.portfolio.backend.domain.product.entity.Product;
+import com.portfolio.backend.domain.product.fixture.ProductTestFixtures;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -9,10 +9,6 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * ProductCartItem 엔티티에 대한 단위 테스트
- */
-@DisplayName("ProductCartItem 엔티티 테스트")
 class ProductCartItemTest {
 
     private Product product1;
@@ -24,8 +20,8 @@ class ProductCartItemTest {
     @BeforeEach
     void setUp() {
         // 테스트에 필요한 상품 및 장바구니 아이템 준비
-        product1 = TestFixtures.createDefaultProduct();
-        product2 = TestFixtures.createSecondProduct();
+        product1 = ProductTestFixtures.createDefaultProduct(10);
+        product2 = ProductTestFixtures.createDefaultProduct(10);
 
         // 장바구니 아이템 생성
         cartItem1 = new ProductCartItem(product1, 2);

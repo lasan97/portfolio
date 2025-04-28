@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
@@ -15,6 +16,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(name = "product_stocks")
+@EntityListeners(AuditingEntityListener.class)
 public class ProductStock {
 
 	@Id
@@ -68,7 +70,7 @@ public class ProductStock {
 
 	protected void adjustStock(int amount) {
 		if (amount < 0) {
-			throw new DomainException("quantity는 0보다 작을 수 없습니다.");
+			throw new DomainException("재고는 0보다 작을 수 없습니다.");
 		}
 		this.quantity = amount;
 	}

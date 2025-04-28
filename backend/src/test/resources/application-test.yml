@@ -1,0 +1,8 @@
+spring:
+  cloud:
+    aws:
+      s3:
+       enabled: false
+  sql:
+    init:
+      mode: never

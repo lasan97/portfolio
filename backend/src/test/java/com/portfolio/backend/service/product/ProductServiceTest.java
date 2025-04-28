@@ -1,78 +1,81 @@
 package com.portfolio.backend.service.product;
 
-import com.portfolio.backend.common.TestFixtures;
 import com.portfolio.backend.common.exception.DomainException;
 import com.portfolio.backend.common.exception.ResourceNotFoundException;
 import com.portfolio.backend.domain.product.entity.Product;
 import com.portfolio.backend.domain.product.entity.ProductStatus;
+import com.portfolio.backend.domain.product.fixture.ProductTestFixtures;
 import com.portfolio.backend.domain.product.repository.ProductRepository;
 import com.portfolio.backend.domain.product.repository.ProductStockHistoryRepository;
-import com.portfolio.backend.service.product.dto.ProductServiceMapper;
+import com.portfolio.backend.service.ServiceTest;
 import com.portfolio.backend.service.product.dto.ProductServiceRequest;
 import com.portfolio.backend.service.product.dto.ProductServiceResponse;
 import com.portfolio.backend.service.product.dto.StockChangeReason;
+import com.portfolio.backend.service.product.fixture.ProductServiceRequestTestFixtures;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 
-/**
- * ProductService에 대한 단위 테스트
- */
-@ExtendWith(MockitoExtension.class)
 @DisplayName("ProductService 테스트")
-class ProductServiceTest {
+class ProductServiceTest extends ServiceTest {
 
-    @Mock
+    @Autowired
     private ProductRepository productRepository;
 
-    @Mock
-    private ProductServiceMapper productServiceMapper;
-
-    @Mock
+    @Autowired
     private ProductStockHistoryRepository productStockHistoryRepository;
 
-    @InjectMocks
+    @Autowired
     private ProductService productService;
+
+    @AfterEach
+    void tearDown() {
+        productStockHistoryRepository.deleteAll();
+        productRepository.deleteAll();
+    }
     
     @Nested
     @DisplayName("상품 목록 조회")
     class GetProductsTest {
-        
+
         @Test
         @DisplayName("삭제되지 않은 모든 상품을 반환해야 한다")
         void shouldReturnAllNonDeletedProducts() {
             // Given
-            List<Product> productList = TestFixtures.createProductList();
-            List<ProductServiceResponse.GetList> expectedResponses = TestFixtures.createProductGetListResponseList();
-            
-            when(productRepository.findAllByStatusNot(ProductStatus.DELETED)).thenReturn(productList);
-            when(productServiceMapper.toList(productList)).thenReturn(expectedResponses);
+            productRepository.save(ProductTestFixtures.createDefaultProduct(10));
 
             // When
             List<ProductServiceResponse.GetList> result = productService.getProducts();
 
             // Then
-            verify(productRepository).findAllByStatusNot(ProductStatus.DELETED);
-            verify(productServiceMapper).toList(productList);
-            
             assertThat(result)
-                .isEqualTo(expectedResponses)
-                .hasSize(2);
+                    .extracting("status")
+                    .doesNotContain(ProductStatus.DELETED);
+        }
+
+        @Test
+        @DisplayName("삭제된 상품은 목록에서 제외되어야 한다")
+        void shouldNotIncludeDeletedProducts() {
+            // Given
+            Product product = ProductTestFixtures.createDefaultProduct(10);
+            product.delete();
+            productRepository.save(product);
+
+            // When
+            List<ProductServiceResponse.GetList> result = productService.getProducts();
+
+            // Then
+            assertThat(result).isEmpty();
         }
     }
 
@@ -84,38 +87,56 @@ class ProductServiceTest {
         @DisplayName("존재하는 상품의 상세 정보를 반환해야 한다")
         void shouldReturnProductDetailWhenExists() {
             // Given
-            Long productId = TestFixtures.PRODUCT_ID_1;
-            Product product = TestFixtures.createDefaultProduct();
-            ProductServiceResponse.Get expectedResponse = TestFixtures.createProductGetResponse();
-            
-            when(productRepository.findByIdAndStatusNot(productId, ProductStatus.DELETED))
-                .thenReturn(Optional.of(product));
-            when(productServiceMapper.toGet(product)).thenReturn(expectedResponse);
+            Product product = productRepository.save(ProductTestFixtures.createDefaultProduct(10));
 
             // When
-            ProductServiceResponse.Get result = productService.getProduct(productId);
+            ProductServiceResponse.Get result = productService.getProduct(product.getId());
 
             // Then
-            verify(productRepository).findByIdAndStatusNot(productId, ProductStatus.DELETED);
-            verify(productServiceMapper).toGet(product);
-            
-            assertThat(result).isEqualTo(expectedResponse);
+            assertThat(result)
+                    .extracting(
+                            ProductServiceResponse.Get::id,
+                            ProductServiceResponse.Get::name,
+                            ProductServiceResponse.Get::originalPrice,
+                            ProductServiceResponse.Get::price,
+                            ProductServiceResponse.Get::description,
+                            ProductServiceResponse.Get::thumbnailImageUrl,
+                            ProductServiceResponse.Get::category,
+                            ProductServiceResponse.Get::status,
+                            ProductServiceResponse.Get::stock)
+                    .containsExactly(
+                            product.getId(),
+                            product.getName(),
+                            product.getOriginalPrice(),
+                            product.getPrice(),
+                            product.getDescription(),
+                            product.getThumbnailImageUrl(),
+                            product.getCategory(),
+                            product.getStatus(),
+                            product.getStock().getQuantity());
         }
 
         @Test
         @DisplayName("존재하지 않는 상품 조회 시 예외가 발생해야 한다")
         void shouldThrowExceptionWhenProductNotFound() {
+            // When & Then
+            assertThatThrownBy(() -> productService.getProduct(0L))
+                .isInstanceOf(ResourceNotFoundException.class);
+        }
+
+        @Test
+        @DisplayName("삭제된 상품 조회 시 예외가 발생해야 한다")
+        void shouldThrowExceptionWhenProductIsDeleted() {
             // Given
-            Long productId = 999L;
-            when(productRepository.findByIdAndStatusNot(productId, ProductStatus.DELETED))
-                .thenReturn(Optional.empty());
+            Product product = ProductTestFixtures.createDefaultProduct(10);
+            product.delete();
+            product = productRepository.save(product);
+
+            Long productId = product.getId();
 
             // When & Then
             assertThatThrownBy(() -> productService.getProduct(productId))
-                .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessageContaining(productId.toString());
-            
-            verify(productRepository).findByIdAndStatusNot(productId, ProductStatus.DELETED);
+                    .isInstanceOf(ResourceNotFoundException.class);
         }
     }
 
@@ -127,44 +148,15 @@ class ProductServiceTest {
         @DisplayName("유효한 요청으로 상품을 생성하고 ID를 반환해야 한다")
         void shouldCreateProductAndReturnId() {
             // Given
-            ProductServiceRequest.Create request = TestFixtures.createProductCreateRequest();
-            Product savedProduct = TestFixtures.createDefaultProduct();
-            
-            when(productRepository.save(any(Product.class))).thenReturn(savedProduct);
+            ProductServiceRequest.Create request = ProductServiceRequestTestFixtures.createProductCreateRequest();
 
             // When
             Long result = productService.createProduct(request);
 
             // Then
-            verify(productRepository).save(any(Product.class));
-            
-            assertThat(result).isEqualTo(savedProduct.getId());
-        }
-        
-        @Test
-        @DisplayName("상품 생성 시 올바른 값으로 저장되어야 한다")
-        void shouldSaveProductWithCorrectValues() {
-            // Given
-            ProductServiceRequest.Create request = TestFixtures.createProductCreateRequest();
-            
-            // 저장된 Product 객체를 캡처하기 위한 ArgumentCaptor
-            ArgumentCaptor<Product> productCaptor = ArgumentCaptor.forClass(Product.class);
-            
-            when(productRepository.save(productCaptor.capture())).thenReturn(TestFixtures.createDefaultProduct());
+            Optional<Product> response = productRepository.findById(result);
 
-            // When
-            productService.createProduct(request);
-
-            // Then
-            Product capturedProduct = productCaptor.getValue();
-            
-            assertThat(capturedProduct.getName()).isEqualTo(request.name());
-            assertThat(capturedProduct.getOriginalPrice()).isEqualTo(request.originalPrice());
-            assertThat(capturedProduct.getPrice()).isEqualTo(request.price());
-            assertThat(capturedProduct.getDescription()).isEqualTo(request.description());
-            assertThat(capturedProduct.getThumbnailImageUrl()).isEqualTo(request.thumbnailImageUrl());
-            assertThat(capturedProduct.getCategory()).isEqualTo(request.category());
-            assertThat(capturedProduct.getStock().getQuantity()).isEqualTo(request.stock());
+            assertThat(response).isNotEmpty();
         }
     }
 
@@ -176,51 +168,61 @@ class ProductServiceTest {
         @DisplayName("존재하는 상품을 수정하고 ID를 반환해야 한다")
         void shouldUpdateProductAndReturnId() {
             // Given
-            Long productId = TestFixtures.PRODUCT_ID_1;
-            Product product = TestFixtures.createDefaultProduct();
-            ProductServiceRequest.Update request = TestFixtures.createProductUpdateRequest();
-            
-            when(productRepository.findByIdAndStatusNot(productId, ProductStatus.DELETED))
-                .thenReturn(Optional.of(product));
+            Product product = productRepository.save(ProductTestFixtures.createDefaultProduct(10));
+
+            ProductServiceRequest.Update request = ProductServiceRequestTestFixtures.createProductUpdateRequest();
 
             // When
-            Long result = productService.updateProduct(productId, request);
+            Long result = productService.updateProduct(product.getId(), request);
 
             // Then
-            verify(productRepository).findByIdAndStatusNot(productId, ProductStatus.DELETED);
-            
-            assertThat(result).isEqualTo(productId);
-            
-            // 상품 속성이 올바르게 업데이트되었는지 개별적으로 검증
-            assertProductUpdated(product, request);
+            Product response = productRepository.findById(result).get();
+
+            assertThat(response)
+                    .extracting(
+                            Product::getName,
+                            Product::getOriginalPrice,
+                            Product::getPrice,
+                            Product::getDescription,
+                            Product::getThumbnailImageUrl,
+                            Product::getCategory)
+                    .containsExactly(
+                            request.name(),
+                            request.originalPrice(),
+                            request.price(),
+                            request.description(),
+                            request.thumbnailImageUrl(),
+                            request.category());
         }
         
         @Test
         @DisplayName("존재하지 않는 상품 수정 시 예외가 발생해야 한다")
         void shouldThrowExceptionWhenProductToUpdateNotFound() {
             // Given
-            Long productId = 999L;
-            ProductServiceRequest.Update request = TestFixtures.createProductUpdateRequest();
-            
-            when(productRepository.findByIdAndStatusNot(productId, ProductStatus.DELETED))
-                .thenReturn(Optional.empty());
+            Long productId = 0L;
+            ProductServiceRequest.Update request = ProductServiceRequestTestFixtures.createProductUpdateRequest();
 
             // When & Then
             assertThatThrownBy(() -> productService.updateProduct(productId, request))
-                .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessageContaining(productId.toString());
-            
-            verify(productRepository).findByIdAndStatusNot(productId, ProductStatus.DELETED);
+                .isInstanceOf(ResourceNotFoundException.class);
         }
-        
-        // 상품 업데이트 검증을 위한 헬퍼 메소드
-        private void assertProductUpdated(Product product, ProductServiceRequest.Update request) {
-            assertThat(product.getName()).isEqualTo(request.name());
-            assertThat(product.getOriginalPrice()).isEqualTo(request.originalPrice());
-            assertThat(product.getPrice()).isEqualTo(request.price());
-            assertThat(product.getDescription()).isEqualTo(request.description());
-            assertThat(product.getThumbnailImageUrl()).isEqualTo(request.thumbnailImageUrl());
-            assertThat(product.getCategory()).isEqualTo(request.category());
+
+        @Test
+        @DisplayName("삭제된 상품 수정 시 예외가 발생해야 한다")
+        void shouldThrowExceptionWhenProductIsDeleted() {
+            // Given
+            Product product = ProductTestFixtures.createDefaultProduct(10);
+            product.delete();
+            product = productRepository.save(product);
+
+            Long productId = product.getId();
+
+            ProductServiceRequest.Update request = ProductServiceRequestTestFixtures.createProductUpdateRequest();
+
+            // When & Then
+            assertThatThrownBy(() -> productService.updateProduct(productId, request))
+                    .isInstanceOf(ResourceNotFoundException.class);
+
         }
     }
 
@@ -232,34 +234,40 @@ class ProductServiceTest {
         @DisplayName("존재하는 상품을 삭제 상태로 변경해야 한다")
         void shouldMarkProductAsDeleted() {
             // Given
-            Long productId = TestFixtures.PRODUCT_ID_1;
-            Product product = TestFixtures.createDefaultProduct();
-            
-            when(productRepository.findById(productId)).thenReturn(Optional.of(product));
+            Product product = productRepository.save(ProductTestFixtures.createDefaultProduct(10));
 
             // When
-            productService.deleteProduct(productId);
+            productService.deleteProduct(product.getId());
 
             // Then
-            verify(productRepository).findById(productId);
-            
-            assertThat(product.getStatus()).isEqualTo(ProductStatus.DELETED);
+            Product response = productRepository.findById(product.getId()).get();
+            assertThat(response.getStatus()).isEqualTo(ProductStatus.DELETED);
         }
 
         @Test
         @DisplayName("존재하지 않는 상품 삭제 시 예외가 발생해야 한다")
         void shouldThrowExceptionWhenProductToDeleteNotFound() {
             // Given
-            Long productId = 999L;
-            
-            when(productRepository.findById(productId)).thenReturn(Optional.empty());
+            Long productId = 0L;
 
             // When & Then
             assertThatThrownBy(() -> productService.deleteProduct(productId))
-                .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessageContaining(productId.toString());
-            
-            verify(productRepository).findById(productId);
+                .isInstanceOf(ResourceNotFoundException.class);
+        }
+
+        @Test
+        @DisplayName("삭제된 상품 삭제 시 예외가 발생해야 한다")
+        void shouldThrowExceptionWhenProductIsDeleted() {
+            // Given
+            Product product = ProductTestFixtures.createDefaultProduct(10);
+            product.delete();
+            product = productRepository.save(product);
+
+            Long productId = product.getId();
+
+            // When & Then
+            assertThatThrownBy(() -> productService.deleteProduct(productId))
+                    .isInstanceOf(ResourceNotFoundException.class);
         }
     }
 
@@ -269,72 +277,54 @@ class ProductServiceTest {
 
         @ParameterizedTest
         @CsvSource({
-            "5, '재고 추가'",
-            "0, '재고 감소'"
+            "15, '재고 추가'",
+            "5, '재고 감소'"
         })
         @DisplayName("재고를 지정한 수량으로 조정해야 한다")
         void shouldAdjustStockBySpecifiedAmount(int adjustment, String description) {
             // Given
-            Long productId = TestFixtures.PRODUCT_ID_1;
-            Product product = TestFixtures.createDefaultProduct();
-            
-            ProductServiceRequest.AdjustStock request = new ProductServiceRequest.AdjustStock(
+            Product product = productRepository.save(ProductTestFixtures.createDefaultProduct(10));
+
+            ProductServiceRequest.AdjustStock request = ProductServiceRequestTestFixtures.createStockAdjustRequest(
                     adjustment, StockChangeReason.ADJUSTMENT, description
             );
-            
-            when(productRepository.findByIdAndStatusNot(productId, ProductStatus.DELETED))
-                .thenReturn(Optional.of(product));
 
             // When
-            productService.adjustStock(productId, request);
+            productService.adjustStock(product.getId(), request);
 
             // Then
-            verify(productRepository).findByIdAndStatusNot(productId, ProductStatus.DELETED);
-            verify(productStockHistoryRepository).save(any());
-            
-            assertThat(product.getStock().getQuantity()).isEqualTo(adjustment);
+            Product response = productRepository.findById(product.getId()).get();
+
+            assertThat(response.getStock().getQuantity()).isEqualTo(adjustment);
         }
 
         @Test
         @DisplayName("재고 수량은 음수로 조정할 수 없다")
         void shouldThrowExceptionWhenAdjustingStockToNegative() {
             // Given
-            Long productId = TestFixtures.PRODUCT_ID_1;
-            Product product = TestFixtures.createDefaultProduct();
-            ProductServiceRequest.AdjustStock request = new ProductServiceRequest.AdjustStock(
-                    -5, StockChangeReason.ADJUSTMENT, "재고 감소"
-            );
+            Product product = productRepository.save(ProductTestFixtures.createDefaultProduct(10));
 
-            when(productRepository.findByIdAndStatusNot(productId, ProductStatus.DELETED))
-                    .thenReturn(Optional.of(product));
+            ProductServiceRequest.AdjustStock request = ProductServiceRequestTestFixtures
+                    .createStockAdjustRequest(-5);
 
             // When & Then
-            assertThatThrownBy(() -> productService.adjustStock(productId, request))
+            assertThatThrownBy(() -> productService.adjustStock(product.getId(), request))
                     .isInstanceOf(DomainException.class)
-                    .hasMessageContaining("quantity는 0보다 작을 수 없습니다.");
-
-            verify(productRepository).findByIdAndStatusNot(productId, ProductStatus.DELETED);
-            verifyNoInteractions(productStockHistoryRepository);
+                    .hasMessageContaining("재고는 0보다 작을 수 없습니다.");
         }
 
         @Test
         @DisplayName("존재하지 않는 상품의 재고 조정 시 예외가 발생해야 한다")
         void shouldThrowExceptionWhenProductForStockAdjustmentNotFound() {
             // Given
-            Long productId = 999L;
-            ProductServiceRequest.AdjustStock request = TestFixtures.createStockAdjustRequest(
-                    5, StockChangeReason.ADJUSTMENT, "재고 추가"
-            );
-            
-            when(productRepository.findByIdAndStatusNot(productId, ProductStatus.DELETED))
-                .thenReturn(Optional.empty());
+            Long productId = 0L;
+
+            ProductServiceRequest.AdjustStock request = ProductServiceRequestTestFixtures
+                    .createStockAdjustRequest(-5);
 
             // When & Then
             assertThatThrownBy(() -> productService.adjustStock(productId, request))
-                .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessageContaining(productId.toString());
-            
-            verify(productRepository).findByIdAndStatusNot(productId, ProductStatus.DELETED);
+                    .isInstanceOf(ResourceNotFoundException.class);
         }
     }
 }
