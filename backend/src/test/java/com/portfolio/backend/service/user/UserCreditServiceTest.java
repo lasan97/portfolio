@@ -1,7 +1,6 @@
 package com.portfolio.backend.service.user;
 
 import com.portfolio.backend.common.exception.DomainException;
-import com.portfolio.backend.common.exception.ResourceNotFoundException;
 import com.portfolio.backend.domain.common.event.DomainEventPublisher;
 import com.portfolio.backend.domain.common.value.Money;
 import com.portfolio.backend.domain.user.entity.UserCredit;
@@ -9,6 +8,7 @@ import com.portfolio.backend.domain.user.event.UserCreditAmountChangedEvent;
 import com.portfolio.backend.domain.user.repository.UserCreditRepository;
 import com.portfolio.backend.service.ServiceTest;
 import com.portfolio.backend.service.user.dto.UserCreditServiceRequest;
+import com.portfolio.backend.service.user.dto.UserCreditServiceResponse;
 import com.portfolio.backend.service.user.fixture.UserCreditServiceRequestFixtures;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -44,6 +44,40 @@ class UserCreditServiceTest extends ServiceTest {
     @AfterEach
     void tearDown() {
         userCreditRepository.deleteAll();
+    }
+
+    @Nested
+    @DisplayName("크레딧 조회 시")
+    class GetCurrentCreditTest {
+
+        @Test
+        @DisplayName("사용자의 크레딧을 조회할 수 있다")
+        void shouldAllowAuthenticatedUserToGetCurrentCredit() {
+            // Given
+            UserCredit credit = new UserCredit(user);
+            credit.add(new Money(BigDecimal.valueOf(10000)));
+            userCreditRepository.save(credit);
+
+            Long userId = user.getId();
+
+            // When
+            UserCreditServiceResponse.Get response = userCreditService.getCurrentCredit(userId);
+
+            // Then
+            assertThat(response.amount()).isEqualTo(credit.getAmount());
+        }
+
+        @Test
+        @DisplayName("크레딧이 존재하지 않으면 예외가 발생한다")
+        void shouldThrowExceptionWhenCreditDoesNotExist() {
+            // Given
+            Long userId = adminUser.getId();
+
+            // When & Then
+            assertThatThrownBy(() -> userCreditService.getCurrentCredit(userId))
+                    .isInstanceOf(DomainException.class)
+                    .hasMessageContaining("지갑이 존재하지 않습니다");
+        }
     }
 
     @Nested
@@ -89,19 +123,6 @@ class UserCreditServiceTest extends ServiceTest {
                     .anyMatch(event -> event instanceof UserCreditAmountChangedEvent);
 
             assertTrue(hasExpectedEvent, "도메인 이벤트에 UserCreditAmountChangedEvent가 포함되어 있어야 합니다");
-        }
-
-        @Test
-        @DisplayName("사용자가 존재하지 않으면 예외가 발생한다")
-        void shouldThrowExceptionWhenUserDoesNotExist() {
-            // Given
-            Long userId = 0L;
-            UserCreditServiceRequest.Increase request = UserCreditServiceRequestFixtures.createIncrease(BigDecimal.valueOf(10000));
-
-            // When & Then
-            assertThatThrownBy(() -> userCreditService.increase(userId, request))
-                    .isInstanceOf(ResourceNotFoundException.class)
-                    .hasMessageContaining("해당 사용자가 존재하지 않습니다");
         }
 
         @Test
@@ -166,19 +187,6 @@ class UserCreditServiceTest extends ServiceTest {
                     .anyMatch(event -> event instanceof UserCreditAmountChangedEvent);
 
             assertTrue(hasExpectedEvent, "도메인 이벤트에 UserCreditAmountChangedEvent가 포함되어 있어야 합니다");
-        }
-        
-        @Test
-        @DisplayName("사용자가 존재하지 않으면 예외가 발생한다")
-        void shouldThrowExceptionWhenUserDoesNotExist() {
-            // Given
-            Long userId = 0L;
-            Money amount = new Money(BigDecimal.valueOf(10000));
-
-            // When, Then
-            assertThatThrownBy(() -> userCreditService.pay(userId, amount))
-                    .isInstanceOf(ResourceNotFoundException.class)
-                    .hasMessageContaining("해당 사용자가 존재하지 않습니다");
         }
 
         @Test

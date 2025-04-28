@@ -6,6 +6,7 @@ import com.portfolio.backend.domain.user.entity.UserCredit;
 import com.portfolio.backend.domain.user.fixture.UserCreditTestFixtures;
 import com.portfolio.backend.domain.user.repository.UserCreditRepository;
 import com.portfolio.backend.service.user.dto.UserCreditServiceRequest;
+import com.portfolio.backend.service.user.dto.UserCreditServiceResponse;
 import com.portfolio.backend.service.user.fixture.UserCreditServiceRequestFixtures;
 import jakarta.transaction.Transactional;
 import lombok.SneakyThrows;
@@ -40,6 +41,43 @@ class UserCreditControllerTest extends ControllerTest {
     @BeforeEach
     void setUp() {
         userCreditRepository.save(UserCreditTestFixtures.createUserCredit(user));
+    }
+
+    @Nested
+    @DisplayName("크레딧 조회 API")
+    class GetCurrentCredit {
+
+        @SneakyThrows
+        ResultActions getCurrentCredit() {
+            return mockMvc.perform(get("/api/users/credits/me"))
+                    .andDo(print());
+        }
+
+        @Test
+        @DisplayName("인증된 사용자는 크레딧을 조회할 수 있다")
+        @WithUserDetails
+        void shouldGetCurrentCreditsForAuthenticatedUser() throws Exception {
+            // Given
+            Money currentAmount = new Money(BigDecimal.valueOf(10000));
+            userCreditRepository.findByUserId(user.getId())
+                    .ifPresent(userCredit -> {
+                        userCredit.add(currentAmount);
+                        userCreditRepository.save(userCredit);
+                    });
+
+            // When
+            ResultActions resultActions = getCurrentCredit();
+
+            // Then
+            resultActions
+                    .andExpect(status().isOk());
+
+            UserCreditServiceResponse.Get response = resultActionsTo(resultActions, UserCreditServiceResponse.Get.class);
+
+            assertThat(response)
+                    .extracting(UserCreditServiceResponse.Get::amount)
+                    .isEqualTo(currentAmount);
+        }
     }
 
     @Nested
