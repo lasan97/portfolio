@@ -17,7 +17,7 @@
     
     <div class="flex items-center justify-between mb-4">
       <div class="text-sm opacity-80">최근 업데이트</div>
-      <div class="text-sm font-medium">{{ formatDate(new Date()) }}</div>
+      <div class="text-sm font-medium">{{ formatDate(lastUpdated) }}</div>
     </div>
     
     <button 
@@ -69,9 +69,17 @@
           </button>
           <button 
             @click="handleCharge"
-            class="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 transition-all rounded-lg font-medium text-white"
+            :disabled="charging"
+            class="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 transition-all rounded-lg font-medium text-white disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            충전하기
+            <span v-if="charging" class="flex items-center justify-center">
+              <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              처리중...
+            </span>
+            <span v-else>충전하기</span>
           </button>
         </div>
       </div>
@@ -80,7 +88,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from 'vue';
+import { defineComponent, ref, PropType } from 'vue';
 
 export default defineComponent({
   name: 'CreditCard',
@@ -88,6 +96,10 @@ export default defineComponent({
     credit: {
       type: Number,
       required: true
+    },
+    lastUpdated: {
+      type: Date as PropType<Date>,
+      default: () => new Date()
     }
   },
   emits: ['charge'],
@@ -95,6 +107,7 @@ export default defineComponent({
     const isChargeModalOpen = ref(false);
     const chargeAmounts = [10000, 50000, 100000, 1000000];
     const selectedAmount = ref(chargeAmounts[0]);
+    const charging = ref(false);
     
     const formatNumber = (num: number): string => {
       return new Intl.NumberFormat('ko-KR').format(num);
@@ -108,15 +121,21 @@ export default defineComponent({
       }).format(date);
     };
     
-    const handleCharge = () => {
-      emit('charge', selectedAmount.value);
-      isChargeModalOpen.value = false;
+    const handleCharge = async () => {
+      charging.value = true;
+      try {
+        await emit('charge', selectedAmount.value);
+      } finally {
+        charging.value = false;
+        isChargeModalOpen.value = false;
+      }
     };
     
     return {
       isChargeModalOpen,
       chargeAmounts,
       selectedAmount,
+      charging,
       formatNumber,
       formatDate,
       handleCharge

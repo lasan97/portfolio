@@ -14,3 +14,17 @@ export interface UserState {
   loading: boolean;
   error: string | null;
 }
+
+// 크레딧 관련 인터페이스
+export interface CreditHistory {
+  id: number;
+  transactionType: string; // 'INCREASE' 또는 'DECREASE'
+  amount: number;
+  transactionDateTime: string;
+}
+
+export interface CreditInfo {
+  id: number;
+  amount: number;
+  updatedAt: string;
+}

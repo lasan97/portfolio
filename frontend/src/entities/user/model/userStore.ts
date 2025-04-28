@@ -1,13 +1,16 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import type { User } from './types';
+import type { User, CreditHistory, CreditInfo } from './types';
 import { getUserInfo, setUserInfo } from '@shared/lib';
+import { userRepository } from '../api/userRepository';
 
 export const useUserStore = defineStore('user', () => {
   // 상태(state) - 쿠키에서 초기값 가져오기
   const user = ref<User | null>(getUserInfo() || null);
   const loading = ref(false);
   const error = ref<string | null>(null);
+  const creditHistory = ref<CreditHistory[]>([]);
+  const creditHistoryLoading = ref(false);
   
   // 게터(getters)
   const isAuthenticated = computed(() => !!user.value);
@@ -43,9 +46,8 @@ export const useUserStore = defineStore('user', () => {
     setError(null);
     
     try {
-      const { apiInstance } = await import('@shared/api');
-      const response = await apiInstance.get(`/api/users/${userId}`);
-      setUser(response.data.data);
+      const userData = await userRepository.fetchUser(userId);
+      setUser(userData);
     } catch (err: any) {
       setError(err.response?.data?.message || '사용자 정보를 가져오는데 실패했습니다.');
     } finally {
@@ -53,18 +55,82 @@ export const useUserStore = defineStore('user', () => {
     }
   }
   
-  // 크레딧 충전 함수
-  function chargeCredit(amount: number) {
+  // 현재 사용자의 크레딧 정보를 가져오는 함수
+  async function fetchCurrentCredit() {
     if (!user.value) return false;
     
-    // 백엔드로 크레딧 충전 요청을 보내는 대신, 현재는 프론트엔드에서만 처리
-    const updatedUser = {
-      ...user.value,
-      credit: (user.value.credit || 0) + amount
-    };
+    setLoading(true);
+    setError(null);
     
-    setUser(updatedUser);
-    return true;
+    try {
+      // API 호출 
+      const creditInfo = await userRepository.credit.fetchCurrent();
+      
+      // 사용자 정보 업데이트
+      if (user.value) {
+        const updatedUser = {
+          ...user.value,
+          credit: creditInfo.amount
+        };
+        setUser(updatedUser);
+      }
+      
+      return creditInfo;
+    } catch (err: any) {
+      setError(err.response?.data?.message || '크레딧 정보를 가져오는데 실패했습니다.');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }
+  
+  // 크레딧 충전 함수 (백엔드 API 연결)
+  async function chargeCredit(amount: number) {
+    if (!user.value) return false;
+    
+    setLoading(true);
+    setError(null);
+    
+    try {
+      // 백엔드로 크레딧 충전 요청
+      await userRepository.credit.increase(amount);
+      
+      // 충전 후 최신 크레딧 정보 가져오기
+      await fetchCurrentCredit();
+      
+      return true;
+    } catch (err: any) {
+      setError(err.response?.data?.message || '크레딧 충전에 실패했습니다.');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }
+  
+  // 크레딧 히스토리 가져오기
+  async function fetchCreditHistory(page = 0, size = 10, append = false) {
+    if (!user.value) return false;
+    
+    creditHistoryLoading.value = true;
+    
+    try {
+      // API 호출
+      const historyData = await userRepository.credit.fetchHistory(page, size);
+      
+      // append가 true이면 기존 데이터에 추가, 아니면 교체
+      if (append && historyData.content.length > 0) {
+        creditHistory.value = [...creditHistory.value, ...historyData.content];
+      } else {
+        creditHistory.value = historyData.content;
+      }
+      
+      return historyData;
+    } catch (err: any) {
+      console.error('크레딧 히스토리를 가져오는데 실패했습니다:', err);
+      return false;
+    } finally {
+      creditHistoryLoading.value = false;
+    }
   }
   
   // 쿠키에서 사용자 정보를 업데이트
@@ -82,6 +148,8 @@ export const useUserStore = defineStore('user', () => {
     user.value = getUserInfo() || null;
     loading.value = false;
     error.value = null;
+    creditHistory.value = [];
+    creditHistoryLoading.value = false;
   }
   
   return {
@@ -89,6 +157,8 @@ export const useUserStore = defineStore('user', () => {
     user,
     loading,
     error,
+    creditHistory,
+    creditHistoryLoading,
     
     // 게터
     isAuthenticated,
@@ -101,8 +171,10 @@ export const useUserStore = defineStore('user', () => {
     setError,
     clearUser,
     fetchUser,
+    fetchCurrentCredit,
     chargeCredit,
+    fetchCreditHistory,
     refreshUserFromStorage,
-    reset  // reset 함수 추가
+    reset
   };
 });

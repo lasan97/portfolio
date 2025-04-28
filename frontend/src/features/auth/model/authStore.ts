@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { useUserStore } from '@entities/user';
-import { processOAuthCallback } from '../api';
+import { authRepository } from '../api';
 import { setAuthToken, getAuthToken, logout as logoutAuth, recoverAuthState, syncAuthState } from '@shared/lib';
 import { useRouter } from 'vue-router';
 
@@ -65,7 +65,7 @@ export const useAuthStore = defineStore('auth', () => {
 
     try {
       // 백엔드에 OAuth 콜백 코드 전송하여 로그인/회원가입 처리
-      const response = await processOAuthCallback(code);
+      const response = await authRepository.processOAuthCallback(code);
 
       // 토큰 저장
       setToken(response.token);
@@ -92,9 +92,10 @@ export const useAuthStore = defineStore('auth', () => {
     setError(null);
 
     try {
-      const { apiInstance } = await import('@shared/api');
-      const response = await apiInstance.get('/api/users/me');
-      userStore.setUser(response.data);
+      // repository 사용하여 현재 사용자 정보 가져오기
+      const userData = await authRepository.fetchCurrentUser();
+      userStore.setUser(userData);
+      
       // 사용자 정보를 성공적으로 가져왔으면 인증됨으로 표시
       authenticated.value = true;
     } catch (err: any) {

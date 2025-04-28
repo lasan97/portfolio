@@ -50,29 +50,74 @@
           </div>
         </div>
 
-        <!-- 크레딧 카드 -->
+        <!-- 크레딧 카드와 히스토리 섹션 -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <CreditCard :credit="userCredit" @charge="handleChargeCredit" />
+          <!-- 크레딧 카드 (고정 높이) -->
+          <div class="h-full">
+            <CreditCard :credit="userCredit" @charge="handleChargeCredit" :lastUpdated="creditLastUpdated" />
+          </div>
 
-          <!-- 최근 활동 카드 (예시) -->
+          <!-- 크레딧 히스토리 카드 (스크롤 가능) -->
           <div class="bg-white rounded-xl shadow-md overflow-hidden p-6">
-            <h3 class="text-xl font-bold text-gray-800 mb-4">최근 활동</h3>
+            <h3 class="text-xl font-bold text-gray-800 mb-4">크레딧 히스토리</h3>
 
             <div class="space-y-4">
-              <div v-if="recentActivities.length === 0" class="text-gray-500 text-center py-8">
-                최근 활동 내역이 없습니다.
+              <div v-if="creditHistoryLoading && creditHistory.length === 0" class="flex justify-center py-4">
+                <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-600"></div>
               </div>
 
-              <div v-for="(activity, index) in recentActivities" :key="index" class="flex items-start border-b border-gray-100 pb-3">
-                <div class="bg-blue-100 rounded-full p-2 mr-3">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+              <div v-else-if="creditHistory.length === 0" class="text-gray-500 text-center py-8">
+                크레딧 거래 내역이 없습니다.
+              </div>
+
+              <!-- 스크롤 가능한 히스토리 목록 영역 -->
+              <div v-else class="max-h-80 overflow-y-auto pr-2">
+                <div class="space-y-3">
+                  <div v-for="history in creditHistory" :key="history.id" class="flex items-start border-b border-gray-100 pb-3">
+                    <div :class="[
+                      'rounded-full p-2 mr-3 flex-shrink-0',
+                      history.transactionType === 'INCREASE' ? 'bg-green-100' : 'bg-red-100'
+                    ]">
+                      <svg v-if="history.transactionType === 'INCREASE'" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      </svg>
+                      <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
+                      </svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <div class="flex justify-between">
+                        <p class="text-gray-700 font-medium truncate">
+                          {{ history.transactionType === 'INCREASE' ? '크레딧 충전' : '크레딧 사용' }}
+                        </p>
+                        <p :class="[
+                          'font-semibold ml-2 flex-shrink-0',
+                          history.transactionType === 'INCREASE' ? 'text-green-600' : 'text-red-600'
+                        ]">
+                          {{ history.transactionType === 'INCREASE' ? '+' : '-' }}{{ formatNumber(history.amount) }}원
+                        </p>
+                      </div>
+                      <p class="text-gray-500 text-sm">{{ formatDateTime(history.transactionDateTime) }}</p>
+                    </div>
+                  </div>
                 </div>
-                <div class="flex-1">
-                  <p class="text-gray-700 font-medium">{{ activity.title }}</p>
-                  <p class="text-gray-500 text-sm">{{ activity.date }}</p>
-                </div>
+              </div>
+
+              <!-- 로딩 표시 (추가 로드 시) -->
+              <div v-if="creditHistoryLoading && creditHistory.length > 0" class="flex justify-center py-2">
+                <div class="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-indigo-600"></div>
+              </div>
+
+              <!-- 더보기 버튼 -->
+              <div v-if="hasMoreHistory" class="mt-4 text-center">
+                <button 
+                  @click="loadMoreHistory"
+                  :disabled="creditHistoryLoading" 
+                  class="text-indigo-600 hover:text-indigo-800 font-medium disabled:text-indigo-300 disabled:cursor-not-allowed"
+                >
+                  <span v-if="creditHistoryLoading">로딩 중...</span>
+                  <span v-else>더 보기</span>
+                </button>
               </div>
             </div>
           </div>
@@ -89,7 +134,7 @@ import { useUserStore, UserCard } from '@entities/user';
 import { useRouter } from 'vue-router';
 import { Button } from '@shared/ui';
 import { CreditCard } from '@features/credit';
-import {UserRole} from "@entities/user";
+import { UserRole } from "@entities/user";
 
 export default defineComponent({
   name: 'ProfilePage',
@@ -112,6 +157,13 @@ export default defineComponent({
     const loading = computed(() => userStore.loading);
     const error = computed(() => userStore.error);
     const userCredit = computed(() => userStore.userCredit);
+    const creditHistory = computed(() => userStore.creditHistory);
+    const creditHistoryLoading = computed(() => userStore.creditHistoryLoading);
+    const creditLastUpdated = ref<Date>(new Date());
+    
+    // 페이지네이션 관련 상태
+    const currentPage = ref(0);
+    const hasMoreHistory = ref(true); // 더 불러올 수 있는 데이터가 있는지 여부
 
     // 사용자 이니셜 계산
     const userInitials = computed(() => {
@@ -119,54 +171,82 @@ export default defineComponent({
       return user.value.nickname.charAt(0).toUpperCase();
     });
 
-    // 최근 활동 데이터 (예시)
-    const recentActivities = ref([
-      {
-        title: '크레딧 충전',
-        date: '2025년 4월 12일',
-      },
-      {
-        title: '프로필 정보 수정',
-        date: '2025년 4월 10일',
-      },
-      {
-        title: '계정 생성',
-        date: '2025년 4월 5일',
-      },
-    ]);
-
-    onMounted(() => {
-      authStore.fetchCurrentUser();
-
-      // 사용자 데이터에 credit 필드가 없으면 초기값 설정
-      if (user.value && !user.value.hasOwnProperty('credit')) {
-        const updatedUser = {
-          ...user.value,
-          credit: 0
-        };
-        userStore.setUser(updatedUser);
-      }
+    onMounted(async () => {
+      // 현재 로그인한 사용자 정보 가져오기
+      await authStore.fetchCurrentUser();
+      
+      // 현재 크레딧 정보 가져오기
+      await fetchCreditInfo();
+      
+      // 크레딧 히스토리 가져오기
+      await loadCreditHistory();
     });
+
+    // 크레딧 정보 가져오기
+    const fetchCreditInfo = async () => {
+      const creditData = await userStore.fetchCurrentCredit();
+      if (creditData) {
+        creditLastUpdated.value = new Date(creditData.updatedAt);
+      }
+    };
+
+    // 크레딧 히스토리 가져오기
+    const loadCreditHistory = async (append = false) => {
+      const response = await userStore.fetchCreditHistory(currentPage.value, 10, append);
+      
+      // 응답에서 더 불러올 데이터가 있는지 확인
+      if (response && response.content) {
+        // 현재 페이지가 마지막 페이지인지, 또는 데이터가 없는지 확인
+        hasMoreHistory.value = 
+          !response.last && 
+          response.content.length > 0 && 
+          response.totalElements > 0;
+      } else {
+        hasMoreHistory.value = false;
+      }
+    };
+
+    // 더 많은 히스토리 로드
+    const loadMoreHistory = async () => {
+      if (creditHistoryLoading.value || !hasMoreHistory.value) return;
+      
+      currentPage.value += 1;
+      await loadCreditHistory(true); // append 파라미터를 true로 설정
+    };
 
     const handleLogout = () => {
       authStore.logout();
       router.push('/');
     };
 
-    const handleChargeCredit = (amount: number) => {
-      const success = userStore.chargeCredit(amount);
+    const handleChargeCredit = async (amount: number) => {
+      const success = await userStore.chargeCredit(amount);
 
       if (success) {
-        // 충전 성공 시 최근 활동에 추가
-        recentActivities.value.unshift({
-          title: `크레딧 충전: ${new Intl.NumberFormat('ko-KR').format(amount)}원`,
-          date: new Intl.DateTimeFormat('ko-KR', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-          }).format(new Date())
-        });
+        // 크레딧 정보 업데이트
+        await fetchCreditInfo();
+        
+        // 히스토리 새로고침 (첫 페이지부터)
+        currentPage.value = 0;
+        await loadCreditHistory();
       }
+    };
+
+    // 숫자 포맷팅 함수
+    const formatNumber = (num: number): string => {
+      return new Intl.NumberFormat('ko-KR').format(num);
+    };
+
+    // 날짜 포맷팅 함수
+    const formatDateTime = (dateTimeStr: string): string => {
+      const date = new Date(dateTimeStr);
+      return new Intl.DateTimeFormat('ko-KR', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }).format(date);
     };
 
     return {
@@ -175,9 +255,15 @@ export default defineComponent({
       error,
       userCredit,
       userInitials,
-      recentActivities,
+      creditHistory,
+      creditHistoryLoading,
+      creditLastUpdated,
+      hasMoreHistory,
       handleLogout,
-      handleChargeCredit
+      handleChargeCredit,
+      loadMoreHistory,
+      formatNumber,
+      formatDateTime
     };
   }
 });
