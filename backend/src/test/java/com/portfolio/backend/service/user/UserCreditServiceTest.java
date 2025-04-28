@@ -3,8 +3,12 @@ package com.portfolio.backend.service.user;
 import com.portfolio.backend.common.exception.DomainException;
 import com.portfolio.backend.domain.common.event.DomainEventPublisher;
 import com.portfolio.backend.domain.common.value.Money;
+import com.portfolio.backend.domain.user.entity.CreditTransactionType;
 import com.portfolio.backend.domain.user.entity.UserCredit;
+import com.portfolio.backend.domain.user.entity.UserCreditHistory;
 import com.portfolio.backend.domain.user.event.UserCreditAmountChangedEvent;
+import com.portfolio.backend.domain.user.fixture.UserCreditHistoryTestFixtures;
+import com.portfolio.backend.domain.user.repository.UserCreditHistoryRepository;
 import com.portfolio.backend.domain.user.repository.UserCreditRepository;
 import com.portfolio.backend.service.ServiceTest;
 import com.portfolio.backend.service.user.dto.UserCreditServiceRequest;
@@ -17,15 +21,17 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.verify;
 
@@ -34,6 +40,8 @@ class UserCreditServiceTest extends ServiceTest {
 
     @Autowired
     private UserCreditRepository userCreditRepository;
+    @Autowired
+    private UserCreditHistoryRepository userCreditHistoryRepository;
 
     @Autowired
     private UserCreditService userCreditService;
@@ -43,6 +51,7 @@ class UserCreditServiceTest extends ServiceTest {
 
     @AfterEach
     void tearDown() {
+        userCreditHistoryRepository.deleteAll();
         userCreditRepository.deleteAll();
     }
 
@@ -77,6 +86,46 @@ class UserCreditServiceTest extends ServiceTest {
             assertThatThrownBy(() -> userCreditService.getCurrentCredit(userId))
                     .isInstanceOf(DomainException.class)
                     .hasMessageContaining("지갑이 존재하지 않습니다");
+        }
+    }
+
+    @Nested
+    @DisplayName("크레딧 이력 페이지 조회 시")
+    class GetHistoryPageTest {
+
+        @Test
+        @DisplayName("사용자의 크레딧을 조회할 수 있다")
+        void shouldAllowAuthenticatedUserToGetCurrentCredit() {
+            // Given
+            Money currentMoney = new Money(BigDecimal.valueOf(10000));
+            UserCredit credit = new UserCredit(user);
+            credit.add(currentMoney);
+            credit = userCreditRepository.save(credit);
+
+            userCreditHistoryRepository.save(UserCreditHistoryTestFixtures.createUserCreditHistoryIncreaseInAfterZero(credit, currentMoney));
+
+            Long userId = user.getId();
+
+            // When
+            Page<UserCreditServiceResponse.GetHistoryPage> response = userCreditService.getHistoryPage(userId, Pageable.ofSize(10));
+
+            // Then
+            assertThat(response)
+                    .hasSize(1)
+                    .extracting(
+                            UserCreditServiceResponse.GetHistoryPage::transactionType,
+                            UserCreditServiceResponse.GetHistoryPage::amount)
+                    .containsExactly(tuple(CreditTransactionType.INCREASE, currentMoney));
+        }
+
+        @Test
+        @DisplayName("크레딧이 존재하지 않으면 예외가 발생한다")
+        void shouldThrowExceptionWhenCreditDoesNotExist() {
+            // When & Then
+            assertThatThrownBy(() -> userCreditService.getHistoryPage(user.getId(), Pageable.ofSize(10)))
+                    .isInstanceOf(DomainException.class)
+                    .hasMessageContaining("지갑이 존재하지 않습니다");
+
         }
     }
 

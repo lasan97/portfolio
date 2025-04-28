@@ -13,17 +13,17 @@ import java.time.LocalDateTime;
 public class UserCreditAmountChangedEvent extends DomainEvent {
 
     private final UserCredit userCredit;
-    private final CreditTransactionType type;
+    private final CreditTransactionType transactionType;
     private final Money amount;
     private final Money balanceAfterTransaction;
     private final String description;
 
     @Builder
-    public UserCreditAmountChangedEvent(UserCredit userCredit, LocalDateTime transactionDateTime, CreditTransactionType type,
+    public UserCreditAmountChangedEvent(UserCredit userCredit, LocalDateTime transactionDateTime, CreditTransactionType transactionType,
                              Money amount, Money balanceAfterTransaction, String description) {
         super(transactionDateTime);
         this.userCredit = userCredit;
-        this.type = type;
+        this.transactionType = transactionType;
         this.amount = amount;
         this.balanceAfterTransaction = balanceAfterTransaction;
         this.description = description;

@@ -57,7 +57,7 @@ class UserCreditTest {
             assertThat(userCredit.getDomainEvents().get(0)).isInstanceOf(UserCreditAmountChangedEvent.class);
             
             UserCreditAmountChangedEvent event = (UserCreditAmountChangedEvent) userCredit.getDomainEvents().get(0);
-            assertThat(event.getType()).isEqualTo(CreditTransactionType.INCREASE);
+            assertThat(event.getTransactionType()).isEqualTo(CreditTransactionType.INCREASE);
             assertThat(event.getAmount()).isEqualTo(amountToAdd);
             assertThat(event.getBalanceAfterTransaction()).isEqualTo(amountToAdd);
         }
@@ -106,7 +106,7 @@ class UserCreditTest {
             assertThat(userCredit.getDomainEvents().get(0)).isInstanceOf(UserCreditAmountChangedEvent.class);
             
             UserCreditAmountChangedEvent event = (UserCreditAmountChangedEvent) userCredit.getDomainEvents().get(0);
-            assertThat(event.getType()).isEqualTo(CreditTransactionType.DECREASE);
+            assertThat(event.getTransactionType()).isEqualTo(CreditTransactionType.DECREASE);
             assertThat(event.getAmount()).isEqualTo(amountToSubtract);
             assertThat(event.getBalanceAfterTransaction()).isEqualTo(expectedAmount);
         }

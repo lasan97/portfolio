@@ -60,7 +60,7 @@ public class UserCredit extends AggregateRoot {
 
         registerEvent(UserCreditAmountChangedEvent.builder()
                 .userCredit(this)
-                .type(CreditTransactionType.INCREASE)
+                .transactionType(CreditTransactionType.INCREASE)
                 .amount(amount)
                 .balanceAfterTransaction(this.amount)
                 .transactionDateTime(LocalDateTime.now())
@@ -80,7 +80,7 @@ public class UserCredit extends AggregateRoot {
 
         registerEvent(UserCreditAmountChangedEvent.builder()
                 .userCredit(this)
-                .type(CreditTransactionType.DECREASE)
+                .transactionType(CreditTransactionType.DECREASE)
                 .amount(amount)
                 .balanceAfterTransaction(this.amount)
                 .transactionDateTime(LocalDateTime.now())
