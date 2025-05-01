@@ -2,7 +2,6 @@ package com.portfolio.backend.common.security;
 
 import com.portfolio.backend.common.security.jwt.JwtAuthenticationFilter;
 import com.portfolio.backend.common.security.jwt.JwtTokenProvider;
-import com.portfolio.backend.service.auth.OAuth2Service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,7 +25,6 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtTokenProvider jwtTokenProvider;
-    private final OAuth2Service oAuth2Service;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {

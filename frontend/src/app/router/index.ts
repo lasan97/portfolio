@@ -4,7 +4,6 @@ import { ProfilePage } from '@pages/profile'
 import { IntroductionPage } from '@pages/introduction'
 
 import { authRouteConfig, errorRouteConfig, sampleRouteConfig, orderRouteConfig } from './routeConfig';
-import { cartRouteConfig } from './cartRouteConfig';
 
 // 인증 관련 유틸리티 import (통합된 auth-utils 사용)
 import {storeToRefs} from 'pinia';
@@ -31,8 +30,7 @@ const routes: Array<RouteRecordRaw> = [
   ...authRouteConfig,
   ...errorRouteConfig,
   ...sampleRouteConfig,
-  ...orderRouteConfig,
-  ...cartRouteConfig
+  ...orderRouteConfig
 ]
 
 // SSR을 위한 라우터 히스토리 분기 처리
