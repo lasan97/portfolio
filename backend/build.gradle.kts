@@ -30,7 +30,10 @@ dependencies {
 
     // AWS SDK
     implementation("io.awspring.cloud:spring-cloud-aws-starter-s3:3.1.0")
-    
+
+    // ULID
+    implementation("com.github.f4b6a3:ulid-creator:5.2.3")
+
     implementation("io.jsonwebtoken:jjwt-api:0.12.3")
     runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.3")
     runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.3")
