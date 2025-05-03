@@ -1,12 +1,10 @@
 package com.portfolio.backend.service.product;
 
 import com.portfolio.backend.common.exception.ResourceNotFoundException;
+import com.portfolio.backend.domain.common.event.DomainEventPublisher;
 import com.portfolio.backend.domain.product.entity.Product;
 import com.portfolio.backend.domain.product.entity.ProductStatus;
-import com.portfolio.backend.domain.product.entity.ProductStockHistory;
-import com.portfolio.backend.domain.product.entity.StockChangeReason;
 import com.portfolio.backend.domain.product.repository.ProductRepository;
-import com.portfolio.backend.domain.product.repository.ProductStockHistoryRepository;
 import com.portfolio.backend.service.product.dto.ProductServiceMapper;
 import com.portfolio.backend.service.product.dto.ProductServiceRequest;
 import com.portfolio.backend.service.product.dto.ProductServiceResponse;
@@ -24,7 +22,7 @@ public class ProductService {
 
     private final ProductRepository productRepository;
     private final ProductServiceMapper productServiceMapper;
-    private final ProductStockHistoryRepository productStockHistoryRepository;
+    private final DomainEventPublisher eventPublisher;
 
     @Transactional(readOnly = true)
     public List<ProductServiceResponse.GetList> getProducts() {
@@ -52,6 +50,9 @@ public class ProductService {
                 .build();
 
         Product savedProduct = productRepository.save(product);
+
+        eventPublisher.publishEventsFrom(savedProduct);
+
         return savedProduct.getId();
     }
 
@@ -77,6 +78,8 @@ public class ProductService {
         Product product = productRepository.findByIdAndStatusNot(id, ProductStatus.DELETED)
                 .orElseThrow(() -> new ResourceNotFoundException("상품을 찾을 수 없습니다. ID: " + id));
         product.delete();
+
+        eventPublisher.publishEventsFrom(product);
     }
 
     @Transactional
@@ -84,18 +87,8 @@ public class ProductService {
         Product product = productRepository.findByIdAndStatusNot(id, ProductStatus.DELETED)
                 .orElseThrow(() -> new ResourceNotFoundException("상품을 찾을 수 없습니다. ID: " + id));
 
-        int previousQuantity = product.getStock().getQuantity();
+        product.adjustStock(request.quantity(), "재고 조정");
 
-        product.adjustStock(request.quantity());
-
-        ProductStockHistory history = new ProductStockHistory(
-                product, 
-                previousQuantity, 
-                request.quantity(),
-                StockChangeReason.valueOf(request.reason().name()),
-                request.memo()
-        );
-
-        productStockHistoryRepository.save(history);
+        eventPublisher.publishEventsFrom(product);
     }
 }

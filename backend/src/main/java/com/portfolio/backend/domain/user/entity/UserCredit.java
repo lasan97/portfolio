@@ -32,14 +32,14 @@ public class UserCredit extends AggregateRoot {
     private Money amount;
 
     @Version
-    private Long version;
+    private int version;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(updatable = false, nullable = false)
     @CreatedDate
+    @Column(updatable = false, nullable = false)
     private LocalDateTime createdAt;
 
     @Column(nullable = false)

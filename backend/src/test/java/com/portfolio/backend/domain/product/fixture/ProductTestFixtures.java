@@ -10,17 +10,12 @@ import java.util.Arrays;
 import java.util.List;
 
 public class ProductTestFixtures {
-
-    // 테스트용 상수
-    public static final Long PRODUCT_ID_1 = 1L;
-    public static final Long PRODUCT_ID_2 = 2L;
-
-    public static Product createProduct(Long id, String name, int originalPrice, int price, String description,
+    public static Product createProduct(Long id, String name, Money originalPrice, Money price, String description,
                                         String thumbnailImageUrl, ProductCategory category, int stock) {
         Product product = Product.builder()
                 .name(name)
-                .originalPrice(new Money(BigDecimal.valueOf(originalPrice)))
-                .price(new Money(BigDecimal.valueOf(price)))
+                .originalPrice(originalPrice)
+                .price(price)
                 .description(description)
                 .thumbnailImageUrl(thumbnailImageUrl)
                 .category(category)
@@ -40,12 +35,12 @@ public class ProductTestFixtures {
         return product;
     }
 
-    public static Product createDefaultProduct(Long productId, int stock) {
+    public static Product createDefaultProduct(Long productId, Money originalPrice, Money price, int stock) {
         return createProduct(
                 productId,
                 "맥북 프로 M2",
-                2000000,
-                1800000,
+                originalPrice,
+                price,
                 "2023년형 맥북 프로 M2 모델",
                 "https://example.com/macbook.jpg",
                 ProductCategory.ELECTRONICS,
@@ -53,8 +48,12 @@ public class ProductTestFixtures {
         );
     }
 
+    public static Product createDefaultProduct(Money originalPrice, Money price) {
+        return createDefaultProduct(null, originalPrice, price, 100);
+    }
+
     public static Product createDefaultProduct(int stock) {
-        return createDefaultProduct(null, stock);
+        return createDefaultProduct(null, new Money(BigDecimal.valueOf(200000)), new Money(BigDecimal.valueOf(180000)), stock);
     }
 
     public static Product createProductWithStatus(ProductStatus status) {

@@ -31,9 +31,10 @@ public class ProductStock {
 	private Integer quantity;
 
 	@Version
-	private Long version;
+	private int version;
 
 	@CreatedDate
+	@Column(nullable = false, updatable = false)
 	private LocalDateTime createdAt;
 
 	@LastModifiedDate

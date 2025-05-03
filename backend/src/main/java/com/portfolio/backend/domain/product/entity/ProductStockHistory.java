@@ -25,21 +25,26 @@ public class ProductStockHistory {
 	@JoinColumn(name = "product_id")
 	private Product product;
 
+	@Column(nullable = false)
 	private Integer previousQuantity;
 
+	@Column(nullable = false)
 	private Integer changedQuantity;
 
+	@Column(nullable = false)
 	private Integer currentQuantity;
 
 	@Enumerated(EnumType.STRING)
 	private StockChangeReason reason;
 
 	@CreatedDate
+	@Column(nullable = false, updatable = false)
 	private LocalDateTime createdAt;
 
 	@Column(length = 500)
 	private String memo;
 
+	@Builder
 	public ProductStockHistory(Product product, int previous, int changed, StockChangeReason reason, String memo) {
 		this.product = product;
 		this.previousQuantity = previous;

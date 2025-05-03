@@ -80,8 +80,8 @@ export namespace ProductCategory {
 
 // 재고 변경 사유 Enum
 export enum StockChangeReason {
-  ADJUSTMENT = 'ADJUSTMENT', // 판매
-  LOSS = 'LOSS'              // 구매
+  ADJUSTMENT = 'ADJUSTMENT', // 재고조정
+  LOSS = 'LOSS'              // 손실
 }
 
 // 재고 변경 사유에 대한 설명을 제공하는 네임스페이스

@@ -2,29 +2,40 @@ package com.portfolio.backend.service.product;
 
 import com.portfolio.backend.common.exception.DomainException;
 import com.portfolio.backend.common.exception.ResourceNotFoundException;
+import com.portfolio.backend.domain.common.event.DomainEventPublisher;
 import com.portfolio.backend.domain.product.entity.Product;
 import com.portfolio.backend.domain.product.entity.ProductStatus;
+import com.portfolio.backend.domain.product.event.ProductStockChangedEvent;
 import com.portfolio.backend.domain.product.fixture.ProductTestFixtures;
 import com.portfolio.backend.domain.product.repository.ProductRepository;
 import com.portfolio.backend.domain.product.repository.ProductStockHistoryRepository;
+import com.portfolio.backend.domain.user.entity.UserCredit;
+import com.portfolio.backend.domain.user.event.UserCreditAmountChangedEvent;
 import com.portfolio.backend.service.ServiceTest;
 import com.portfolio.backend.service.product.dto.ProductServiceRequest;
 import com.portfolio.backend.service.product.dto.ProductServiceResponse;
 import com.portfolio.backend.service.product.dto.StockChangeReason;
 import com.portfolio.backend.service.product.fixture.ProductServiceRequestTestFixtures;
+import com.portfolio.backend.service.user.dto.UserCreditServiceRequest;
+import com.portfolio.backend.service.user.fixture.UserCreditServiceRequestFixtures;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.mock.mockito.MockBean;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.verify;
 
 @DisplayName("ProductService 테스트")
 class ProductServiceTest extends ServiceTest {
@@ -37,6 +48,9 @@ class ProductServiceTest extends ServiceTest {
 
     @Autowired
     private ProductService productService;
+
+    @MockBean
+    protected DomainEventPublisher eventPublisher;
 
     @AfterEach
     void tearDown() {
@@ -158,6 +172,26 @@ class ProductServiceTest extends ServiceTest {
 
             assertThat(response).isNotEmpty();
         }
+
+        @Test
+        @DisplayName("상품 생성시 재고변경이벤트가 발생한다.")
+        void shouldPublishProductStockChangedEventWhenProductCreated() {
+            // Given
+            ProductServiceRequest.Create request = ProductServiceRequestTestFixtures.createProductCreateRequest();
+
+            // When
+            productService.createProduct(request);
+
+            // Then
+            ArgumentCaptor<Product> productCaptor = ArgumentCaptor.forClass(Product.class);
+            verify(eventPublisher).publishEventsFrom(productCaptor.capture());
+            Product capturedProduct = productCaptor.getValue();
+
+            boolean hasExpectedEvent = capturedProduct.getDomainEvents().stream()
+                    .anyMatch(event -> event instanceof ProductStockChangedEvent);
+
+            assertTrue(hasExpectedEvent, "도메인 이벤트에 ProductStockChangedEvent가 포함되어 있어야 합니다");
+        }
     }
 
     @Nested
@@ -231,7 +265,7 @@ class ProductServiceTest extends ServiceTest {
     class DeleteProductTest {
         
         @Test
-        @DisplayName("존재하는 상품을 삭제 상태로 변경해야 한다")
+        @DisplayName("존재하는 상품을 DELETED 상태로 변경해야 한다")
         void shouldMarkProductAsDeleted() {
             // Given
             Product product = productRepository.save(ProductTestFixtures.createDefaultProduct(10));
@@ -242,6 +276,26 @@ class ProductServiceTest extends ServiceTest {
             // Then
             Product response = productRepository.findById(product.getId()).get();
             assertThat(response.getStatus()).isEqualTo(ProductStatus.DELETED);
+        }
+
+        @Test
+        @DisplayName("상품 삭제시 재고변경이벤트가 발생한다.")
+        void shouldPublishProductStockChangedEventWhenProductDeleted() {
+            // Given
+            Product product = productRepository.save(ProductTestFixtures.createDefaultProduct(10));
+
+            // When
+            productService.deleteProduct(product.getId());
+
+            // Then
+            ArgumentCaptor<Product> productCaptor = ArgumentCaptor.forClass(Product.class);
+            verify(eventPublisher).publishEventsFrom(productCaptor.capture());
+            Product capturedProduct = productCaptor.getValue();
+
+            boolean hasExpectedEvent = capturedProduct.getDomainEvents().stream()
+                    .anyMatch(event -> event instanceof ProductStockChangedEvent);
+
+            assertTrue(hasExpectedEvent, "도메인 이벤트에 ProductStockChangedEvent가 포함되어 있어야 합니다");
         }
 
         @Test
@@ -296,6 +350,33 @@ class ProductServiceTest extends ServiceTest {
             Product response = productRepository.findById(product.getId()).get();
 
             assertThat(response.getStock().getQuantity()).isEqualTo(adjustment);
+        }
+
+        @Test
+        @DisplayName("상품 재고 조정시 재고변경이벤트가 발생한다.")
+        void shouldPublishProductStockChangedEventWhenProductDeleted() {
+            // Given
+            int adjustment = 5;
+            String description = "재고 조정";
+
+            Product product = productRepository.save(ProductTestFixtures.createDefaultProduct(10));
+
+            ProductServiceRequest.AdjustStock request = ProductServiceRequestTestFixtures.createStockAdjustRequest(
+                    adjustment, StockChangeReason.ADJUSTMENT, description
+            );
+
+            // When
+            productService.adjustStock(product.getId(), request);
+
+            // Then
+            ArgumentCaptor<Product> productCaptor = ArgumentCaptor.forClass(Product.class);
+            verify(eventPublisher).publishEventsFrom(productCaptor.capture());
+            Product capturedProduct = productCaptor.getValue();
+
+            boolean hasExpectedEvent = capturedProduct.getDomainEvents().stream()
+                    .anyMatch(event -> event instanceof ProductStockChangedEvent);
+
+            assertTrue(hasExpectedEvent, "도메인 이벤트에 ProductStockChangedEvent가 포함되어 있어야 합니다");
         }
 
         @Test

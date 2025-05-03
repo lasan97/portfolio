@@ -41,7 +41,7 @@ public class User extends AggregateRoot {
     private RoleType role;
 
     @CreatedDate
-    @Column(updatable = false)
+    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @Builder

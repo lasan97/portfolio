@@ -2,14 +2,12 @@ package com.portfolio.backend.domain.product.entity;
 
 import com.portfolio.backend.common.exception.DomainException;
 import com.portfolio.backend.common.exception.UnprocessableEntityException;
-import com.portfolio.backend.domain.common.value.Money;
+import com.portfolio.backend.domain.product.fixture.ProductTestFixtures;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-
-import java.math.BigDecimal;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -24,8 +22,8 @@ class ProductStockTest {
         @DisplayName("유효한 파라미터로 재고 생성 시 성공해야 한다")
         void createProductStockWithValidParameters() {
             // given
-            Product product = createValidProduct();
             int quantity = 100;
+            Product product = ProductTestFixtures.createDefaultProduct(quantity);
 
             // when
             ProductStock stock = new ProductStock(product, quantity);
@@ -53,7 +51,7 @@ class ProductStockTest {
         @DisplayName("수량이 0보다 작으면 예외가 발생해야 한다")
         void shouldThrowExceptionWhenQuantityIsNegative(int quantity) {
             // given
-            Product product = createValidProduct();
+            Product product = ProductTestFixtures.createDefaultProduct(10);
 
             // when & then
             assertThatThrownBy(() -> new ProductStock(product, quantity))
@@ -65,7 +63,7 @@ class ProductStockTest {
         @DisplayName("수량이 null이면 예외가 발생해야 한다")
         void shouldThrowExceptionWhenQuantityIsNull() {
             // given
-            Product product = createValidProduct();
+            Product product = ProductTestFixtures.createDefaultProduct(10);
             Integer quantity = null;
 
             // when & then
@@ -83,7 +81,7 @@ class ProductStockTest {
         @DisplayName("재고가 0보다 크면 isAvailable이 true를 반환해야 한다")
         void isAvailableReturnsTrueWhenQuantityIsGreaterThanZero() {
             // given
-            Product product = createValidProduct();
+            Product product = ProductTestFixtures.createDefaultProduct(10);
             ProductStock stock = new ProductStock(product, 10);
 
             // when & then
@@ -94,7 +92,7 @@ class ProductStockTest {
         @DisplayName("재고가 0이면 isAvailable이 false를 반환해야 한다")
         void isAvailableReturnsFalseWhenQuantityIsZero() {
             // given
-            Product product = createValidProduct();
+            Product product = ProductTestFixtures.createDefaultProduct(10);
             ProductStock stock = new ProductStock(product, 0);
 
             // when & then
@@ -110,7 +108,7 @@ class ProductStockTest {
         @DisplayName("재고를 증가시키면 수량이 증가해야 한다")
         void increaseStock() {
             // given
-            Product product = createValidProduct();
+            Product product = ProductTestFixtures.createDefaultProduct(10);
             ProductStock stock = new ProductStock(product, 10);
             int initialQuantity = stock.getQuantity();
             int increaseAmount = 5;
@@ -127,7 +125,7 @@ class ProductStockTest {
         @DisplayName("증가량이 음수이면 예외가 발생해야 한다")
         void shouldThrowExceptionWhenIncreaseAmountIsNegative(int increaseAmount) {
             // given
-            Product product = createValidProduct();
+            Product product = ProductTestFixtures.createDefaultProduct(10);
             ProductStock stock = new ProductStock(product, 10);
 
             // when & then
@@ -145,7 +143,7 @@ class ProductStockTest {
         @DisplayName("재고를 감소시키면 수량이 감소해야 한다")
         void decreaseStock() {
             // given
-            Product product = createValidProduct();
+            Product product = ProductTestFixtures.createDefaultProduct(10);
             ProductStock stock = new ProductStock(product, 10);
             int initialQuantity = stock.getQuantity();
             int decreaseAmount = 5;
@@ -161,7 +159,7 @@ class ProductStockTest {
         @DisplayName("재고보다 많은 수량을 감소시키려 하면 예외가 발생해야 한다")
         void shouldThrowExceptionWhenDecreaseAmountIsGreaterThanQuantity() {
             // given
-            Product product = createValidProduct();
+            Product product = ProductTestFixtures.createDefaultProduct(10);
             ProductStock stock = new ProductStock(product, 10);
             int decreaseAmount = 15; // 현재 재고보다 많은 양
 
@@ -175,7 +173,7 @@ class ProductStockTest {
         @DisplayName("재고와 같은 수량을 감소시키면 수량이 0이 되어야 한다")
         void decreaseStockToZero() {
             // given
-            Product product = createValidProduct();
+            Product product = ProductTestFixtures.createDefaultProduct(10);
             ProductStock stock = new ProductStock(product, 10);
             int decreaseAmount = 10; // 현재 재고와 같은 양
 
@@ -185,18 +183,5 @@ class ProductStockTest {
             // then
             assertThat(stock.getQuantity()).isEqualTo(0);
         }
-    }
-
-    // 테스트 헬퍼 메서드
-    private Product createValidProduct() {
-        return Product.builder()
-                .name("맥북 프로 M2")
-                .originalPrice(new Money(new BigDecimal("2000000")))
-                .price(new Money(new BigDecimal("1800000")))
-                .description("2023년형 맥북 프로 M2 모델")
-                .thumbnailImageUrl("https://example.com/macbook.jpg")
-                .category(ProductCategory.ELECTRONICS)
-                .stock(100)
-                .build();
     }
 }

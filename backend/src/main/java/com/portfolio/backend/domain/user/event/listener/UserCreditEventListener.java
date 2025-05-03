@@ -16,7 +16,7 @@ public class UserCreditEventListener {
 
     private final UserCreditHistoryRepository userCreditHistoryRepository;
 
-    @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleProductStockChangedEvent(UserCreditAmountChangedEvent event) {
         log.debug("UserCreditAmountChangedEvent received userCreditId : {}", event.getUserCredit().getId());
 

@@ -2,7 +2,9 @@ package com.portfolio.backend.domain.product.entity;
 
 import com.portfolio.backend.common.config.converter.MoneyConverter;
 import com.portfolio.backend.common.exception.DomainException;
+import com.portfolio.backend.domain.common.entity.AggregateRoot;
 import com.portfolio.backend.domain.common.value.Money;
+import com.portfolio.backend.domain.product.event.ProductStockChangedEvent;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -20,7 +22,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "products")
 @EntityListeners(AuditingEntityListener.class)
-public class Product {
+public class Product extends AggregateRoot {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -51,6 +53,7 @@ public class Product {
 	private ProductStatus status;
 
 	@CreatedDate
+	@Column(nullable = false, updatable = false)
 	private LocalDateTime createdAt;
 
 	@LastModifiedDate
@@ -74,7 +77,13 @@ public class Product {
 		} else {
 			this.status = ProductStatus.SOLD_OUT;
 		}
+
 		validation();
+
+		registerStockChangedEvent(0,
+				this.stock.getQuantity(),
+				StockChangeReason.ADJUSTMENT,
+				"상품등록");
 	}
 
 	private void validation() {
@@ -89,12 +98,6 @@ public class Product {
 		}
 		if (originalPrice.isLessThan(price)) {
 			throw new DomainException("원가는 판매가 보다 작을 수 없습니다.");
-		}
-		if(description == null || description.isBlank()) {
-			throw new DomainException("상품설명은 비어있을 수 없습니다.");
-		}
-		if(thumbnailImageUrl == null || thumbnailImageUrl.isBlank()) {
-			throw new DomainException("썸네일이미지주소는 비어있을 수 없습니다.");
 		}
 		if(category == null){
 			throw new DomainException("카테고리는 null일 수 없습니다.");
@@ -114,20 +117,36 @@ public class Product {
 	}
 
 	public void increaseStock(int quantity) {
+		int previousQuantity = stock.getQuantity();
+
 		stock.increaseStock(quantity);
 		if (status == ProductStatus.SOLD_OUT && stock.isAvailable()) {
 			active();
 		}
+
+		registerStockChangedEvent(previousQuantity,
+				this.stock.getQuantity(),
+				StockChangeReason.RETURN,
+				"상품 환불");
 	}
 
 	public void decreaseStock(int quantity) {
+		int previousQuantity = stock.getQuantity();
+
 		stock.decreaseStock(quantity);
 		if (status == ProductStatus.ACTIVE && !stock.isAvailable()) {
 			soldOut();
 		}
+
+		registerStockChangedEvent(previousQuantity,
+				this.stock.getQuantity(),
+				StockChangeReason.SALE,
+				"상품 판매");
 	}
 
-	public void adjustStock(int quantity) {
+	public void adjustStock(int quantity, String memo) {
+		int previousQuantity = stock.getQuantity();
+
 		stock.adjustStock(quantity);
 		if (status != ProductStatus.DELETED) {
 			if (stock.isAvailable()) {
@@ -136,6 +155,11 @@ public class Product {
 				soldOut();
 			}
 		}
+
+		registerStockChangedEvent(previousQuantity,
+				this.stock.getQuantity(),
+				StockChangeReason.ADJUSTMENT,
+				memo);
 	}
 
 	public boolean isAvailable() {
@@ -152,6 +176,15 @@ public class Product {
 
 	public void delete() {
 		this.status = ProductStatus.DELETED;
+
+		int previousQuantity = stock.getQuantity();
+
+		stock.adjustStock(0);
+
+		registerStockChangedEvent(previousQuantity,
+				this.stock.getQuantity(),
+				StockChangeReason.STOP_SALE,
+				"판매 중지");
 	}
 
 	public int getDiscountRate() {
@@ -161,5 +194,16 @@ public class Product {
 				.multiply(100).getAmount()
 				.divide(originalPrice.getAmount(), 0, RoundingMode.FLOOR)
 				.intValue();
+	}
+
+	private void registerStockChangedEvent(int previousQuantity, int changedQuantity, StockChangeReason reason, String memo) {
+		registerEvent(ProductStockChangedEvent.builder()
+				.product(this)
+				.previousQuantity(previousQuantity)
+				.changedQuantity(changedQuantity)
+				.memo(memo)
+				.reason(reason)
+				.transactionDateTime(LocalDateTime.now())
+				.build());
 	}
 }

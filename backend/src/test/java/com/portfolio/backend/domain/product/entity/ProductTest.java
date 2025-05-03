@@ -2,7 +2,9 @@ package com.portfolio.backend.domain.product.entity;
 
 import com.portfolio.backend.common.exception.DomainException;
 import com.portfolio.backend.domain.common.value.Money;
+import com.portfolio.backend.domain.product.event.ProductStockChangedEvent;
 import com.portfolio.backend.domain.product.fixture.ProductTestFixtures;
+import com.portfolio.backend.domain.user.event.UserCreatedEvent;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -35,7 +37,15 @@ class ProductTest {
             Integer stock = 100;
 
             // When
-            Product product = buildProduct(name, originalPrice, price, description, thumbnailImageUrl, category, stock);
+            Product product = Product.builder()
+                    .name(name)
+                    .originalPrice(originalPrice)
+                    .price(price)
+                    .description(description)
+                    .thumbnailImageUrl(thumbnailImageUrl)
+                    .category(category)
+                    .stock(stock)
+                    .build();
 
             // Then
             assertThat(product)
@@ -49,22 +59,24 @@ class ProductTest {
                     assertThat(p.getStock().getQuantity()).isEqualTo(stock);
                     assertThat(p.getStatus()).isEqualTo(ProductStatus.ACTIVE);
                 });
+
+            assertThat(product.getDomainEvents()).hasSize(1);
+            assertThat(product.getDomainEvents().get(0)).isInstanceOf(ProductStockChangedEvent.class);
         }
 
         @Test
         @DisplayName("재고가 0인 상품 생성 시 SOLD_OUT 상태여야 한다")
         void shouldBeInSoldOutStatusWhenStockIsZero() {
-            // Given
-            String name = "맥북 프로 M2";
-            Money originalPrice = new Money(new BigDecimal("2000000"));
-            Money price = new Money(new BigDecimal("1800000"));
-            String description = "2023년형 맥북 프로 M2 모델";
-            String thumbnailImageUrl = "https://example.com/macbook.jpg";
-            ProductCategory category = ProductCategory.ELECTRONICS;
-            Integer stock = 0;
-
             // When
-            Product product = buildProduct(name, originalPrice, price, description, thumbnailImageUrl, category, stock);
+            Product product = Product.builder()
+                    .name("맥북 프로 M2")
+                    .originalPrice(new Money(new BigDecimal("2000000")))
+                    .price(new Money(new BigDecimal("1800000")))
+                    .description("2023년형 맥북 프로 M2 모델")
+                    .thumbnailImageUrl("https://example.com/macbook.jpg")
+                    .category(ProductCategory.ELECTRONICS)
+                    .stock(0)
+                    .build();
 
             // Then
             assertThat(product.getStock().getQuantity()).isZero();
@@ -76,34 +88,33 @@ class ProductTest {
         @ValueSource(strings = {" ", "  "})
         @DisplayName("상품명이 null이거나 빈 문자열이면 예외가 발생해야 한다")
         void shouldThrowExceptionWhenNameIsNullOrEmpty(String name) {
-            // Given - 필요한 모든 파라미터 준비
-            Money originalPrice = new Money(new BigDecimal("2000000"));
-            Money price = new Money(new BigDecimal("1800000"));
-            String description = "2023년형 맥북 프로 M2 모델";
-            String thumbnailImageUrl = "https://example.com/macbook.jpg";
-            ProductCategory category = ProductCategory.ELECTRONICS;
-            Integer stock = 100;
-
-            // When & Then - 예외가 발생하는지 확인
-            assertThatThrownBy(() -> buildProduct(name, originalPrice, price, description, thumbnailImageUrl, category, stock))
+            // When & Then
+            assertThatThrownBy(() -> Product.builder()
+                    .name(name)
+                    .originalPrice(new Money(new BigDecimal("1800000")))
+                    .price(new Money(new BigDecimal("1800000")))
+                    .description("2023년형 맥북 프로 M2 모델")
+                    .thumbnailImageUrl("https://example.com/macbook.jpg")
+                    .category(ProductCategory.ELECTRONICS)
+                    .stock(100)
+                    .build())
                 .isInstanceOf(DomainException.class)
                 .hasMessageContaining("상품명은 비어있을 수 없습니다");
         }
 
         @Test
-        @DisplayName("원가가 null이면 예외가 발생해야 한다")
+        @DisplayName("originalPrice가 null이면 예외가 발생해야 한다")
         void shouldThrowExceptionWhenOriginalPriceIsNull() {
-            // Given
-            String name = "맥북 프로 M2";
-            Money originalPrice = null;
-            Money price = new Money(new BigDecimal("1800000"));
-            String description = "2023년형 맥북 프로 M2 모델";
-            String thumbnailImageUrl = "https://example.com/macbook.jpg";
-            ProductCategory category = ProductCategory.ELECTRONICS;
-            Integer stock = 100;
-
             // When & Then
-            assertThatThrownBy(() -> buildProduct(name, originalPrice, price, description, thumbnailImageUrl, category, stock))
+            assertThatThrownBy(() -> Product.builder()
+                            .name("맥북 프로 M2")
+                            .originalPrice(null)
+                            .price(new Money(new BigDecimal("1800000")))
+                            .description("2023년형 맥북 프로 M2 모델")
+                            .thumbnailImageUrl("https://example.com/macbook.jpg")
+                            .category(ProductCategory.ELECTRONICS)
+                            .stock(100)
+                            .build())
                 .isInstanceOf(DomainException.class)
                 .hasMessageContaining("원가는 null일 수 없습니다");
         }
@@ -111,81 +122,41 @@ class ProductTest {
         @Test
         @DisplayName("판매가가 null이면 예외가 발생해야 한다")
         void shouldThrowExceptionWhenPriceIsNull() {
-            // Given
-            String name = "맥북 프로 M2";
-            Money originalPrice = new Money(new BigDecimal("2000000"));
-            Money price = null;
-            String description = "2023년형 맥북 프로 M2 모델";
-            String thumbnailImageUrl = "https://example.com/macbook.jpg";
-            ProductCategory category = ProductCategory.ELECTRONICS;
-            Integer stock = 100;
-
             // When & Then
-            assertThatThrownBy(() -> buildProduct(name, originalPrice, price, description, thumbnailImageUrl, category, stock))
+            assertThatThrownBy(() -> Product.builder()
+                    .name("맥북 프로 M2")
+                    .originalPrice(new Money(new BigDecimal("2000000")))
+                    .price(null)
+                    .description("2023년형 맥북 프로 M2 모델")
+                    .thumbnailImageUrl("https://example.com/macbook.jpg")
+                    .category(ProductCategory.ELECTRONICS)
+                    .stock(100)
+                    .build())
                 .isInstanceOf(DomainException.class)
                 .hasMessageContaining("판매가는 null일 수 없습니다");
-        }
-
-        @ParameterizedTest
-        @NullAndEmptySource
-        @ValueSource(strings = {" ", "  "})
-        @DisplayName("상품 설명이 null이거나 빈 문자열이면 예외가 발생해야 한다")
-        void shouldThrowExceptionWhenDescriptionIsNullOrEmpty(String description) {
-            // Given
-            String name = "맥북 프로 M2";
-            Money originalPrice = new Money(new BigDecimal("2000000"));
-            Money price = new Money(new BigDecimal("1800000"));
-            String thumbnailImageUrl = "https://example.com/macbook.jpg";
-            ProductCategory category = ProductCategory.ELECTRONICS;
-            Integer stock = 100;
-
-            // When & Then
-            assertThatThrownBy(() -> buildProduct(name, originalPrice, price, description, thumbnailImageUrl, category, stock))
-                .isInstanceOf(DomainException.class)
-                .hasMessageContaining("상품설명은 비어있을 수 없습니다");
-        }
-
-        @ParameterizedTest
-        @NullAndEmptySource
-        @ValueSource(strings = {" ", "  "})
-        @DisplayName("썸네일 이미지 URL이 null이거나 빈 문자열이면 예외가 발생해야 한다")
-        void shouldThrowExceptionWhenThumbnailImageUrlIsNullOrEmpty(String thumbnailImageUrl) {
-            // Given
-            String name = "맥북 프로 M2";
-            Money originalPrice = new Money(new BigDecimal("2000000"));
-            Money price = new Money(new BigDecimal("1800000"));
-            String description = "2023년형 맥북 프로 M2 모델";
-            ProductCategory category = ProductCategory.ELECTRONICS;
-            Integer stock = 100;
-
-            // When & Then
-            assertThatThrownBy(() -> buildProduct(name, originalPrice, price, description, thumbnailImageUrl, category, stock))
-                .isInstanceOf(DomainException.class)
-                .hasMessageContaining("썸네일이미지주소는 비어있을 수 없습니다");
         }
 
         @Test
         @DisplayName("카테고리가 null이면 예외가 발생해야 한다")
         void shouldThrowExceptionWhenCategoryIsNull() {
-            // Given
-            String name = "맥북 프로 M2";
-            Money originalPrice = new Money(new BigDecimal("2000000"));
-            Money price = new Money(new BigDecimal("1800000"));
-            String description = "2023년형 맥북 프로 M2 모델";
-            String thumbnailImageUrl = "https://example.com/macbook.jpg";
-            ProductCategory category = null;
-            Integer stock = 100;
-
             // When & Then
-            assertThatThrownBy(() -> buildProduct(name, originalPrice, price, description, thumbnailImageUrl, category, stock))
+            assertThatThrownBy(() -> Product.builder()
+                    .name("맥북 프로 M2")
+                    .originalPrice(new Money(new BigDecimal("2000000")))
+                    .price(new Money(new BigDecimal("1800000")))
+                    .description("2023년형 맥북 프로 M2 모델")
+                    .thumbnailImageUrl("https://example.com/macbook.jpg")
+                    .category(null)
+                    .stock(100)
+                    .build())
                 .isInstanceOf(DomainException.class)
                 .hasMessageContaining("카테고리는 null일 수 없습니다");
         }
     }
 
     @Nested
-    @DisplayName("재고 관리")
-    class StockManagement {
+    @DisplayName("재고 증가")
+    class IncreaseStock {
 
         @Test
         @DisplayName("재고를 증가시키면 수량이 증가해야 한다")
@@ -194,27 +165,16 @@ class ProductTest {
             Product product = ProductTestFixtures.createDefaultProduct(0);
             int initialStock = product.getStock().getQuantity();
             int increaseAmount = 50;
+            product.clearDomainEvents();
 
             // When
             product.increaseStock(increaseAmount);
 
             // Then
             assertThat(product.getStock().getQuantity()).isEqualTo(initialStock + increaseAmount);
-        }
 
-        @Test
-        @DisplayName("재고를 감소시키면 수량이 감소해야 한다")
-        void shouldDecreaseStockQuantityWhenDecreaseCalled() {
-            // Given
-            Product product = ProductTestFixtures.createDefaultProduct(60);
-            int initialStock = product.getStock().getQuantity();
-            int decreaseAmount = 50;
-
-            // When
-            product.decreaseStock(decreaseAmount);
-
-            // Then
-            assertThat(product.getStock().getQuantity()).isEqualTo(initialStock - decreaseAmount);
+            assertThat(product.getDomainEvents()).hasSize(1);
+            assertThat(product.getDomainEvents().get(0)).isInstanceOf(ProductStockChangedEvent.class);
         }
 
         @Test
@@ -231,6 +191,30 @@ class ProductTest {
             assertThat(product.getStatus()).isEqualTo(ProductStatus.ACTIVE);
             assertThat(product.getStock().getQuantity()).isEqualTo(10);
         }
+    }
+
+    @Nested
+    @DisplayName("재고 차감")
+    class DecreaseStock {
+
+        @Test
+        @DisplayName("재고를 감소시키면 수량이 감소해야 한다")
+        void shouldDecreaseStockQuantityWhenDecreaseCalled() {
+            // Given
+            Product product = ProductTestFixtures.createDefaultProduct(60);
+            int initialStock = product.getStock().getQuantity();
+            int decreaseAmount = 50;
+            product.clearDomainEvents();
+
+            // When
+            product.decreaseStock(decreaseAmount);
+
+            // Then
+            assertThat(product.getStock().getQuantity()).isEqualTo(initialStock - decreaseAmount);
+
+            assertThat(product.getDomainEvents()).hasSize(1);
+            assertThat(product.getDomainEvents().get(0)).isInstanceOf(ProductStockChangedEvent.class);
+        }
 
         @Test
         @DisplayName("재고가 0이 되면 SOLD_OUT 상태로 변경되어야 한다")
@@ -238,13 +222,109 @@ class ProductTest {
             // Given
             Product product = ProductTestFixtures.createDefaultProduct(10);
             int currentStock = product.getStock().getQuantity();
-            
+
             // When
-            product.decreaseStock(currentStock); // 재고를 0으로 만듦
+            product.decreaseStock(currentStock);
 
             // Then
             assertThat(product.getStock().getQuantity()).isZero();
             assertThat(product.getStatus()).isEqualTo(ProductStatus.SOLD_OUT);
+        }
+    }
+
+    @Nested
+    @DisplayName("재고 차감")
+    class AdjustStock {
+
+        @Test
+        @DisplayName("재고를 조정하면 수량이 변경되어야 한다")
+        void shouldUpdateStockQuantityWhenAdjustStockCalled() {
+            // Given
+            int initialStock = 60;
+            Product product = ProductTestFixtures.createDefaultProduct(initialStock);
+            int adjustAmount = 50;
+            String memo = "수량 조정 테스트";
+            product.clearDomainEvents();
+
+            // When
+            product.adjustStock(adjustAmount, memo);
+
+            // Then
+            assertThat(product.getStock().getQuantity()).isEqualTo(adjustAmount);
+
+            assertThat(product.getDomainEvents()).hasSize(1);
+            assertThat(product.getDomainEvents().get(0)).isInstanceOf(ProductStockChangedEvent.class);
+        }
+
+        @Test
+        @DisplayName("재고가 0이 되면 SOLD_OUT 상태로 변경되어야 한다")
+        void shouldChangeToSoldOutStatusWhenStockBecomesZero() {
+            // Given
+            int initialStock = 60;
+            Product product = ProductTestFixtures.createDefaultProduct(initialStock);
+            int adjustAmount = 0;
+            String memo = "수량 조정 테스트";
+            product.clearDomainEvents();
+
+            // When
+            product.adjustStock(adjustAmount, memo);
+
+            // Then
+            assertThat(product.getStock().getQuantity()).isZero();
+            assertThat(product.getStatus()).isEqualTo(ProductStatus.SOLD_OUT);
+        }
+
+        @Test
+        @DisplayName("품절 상태에서 재고 증가 시 ACTIVE 상태로 변경되어야 한다")
+        void shouldChangeToActiveStatusWhenIncreaseStockFromSoldOut() {
+            // Given
+            int initialStock = 0;
+            Product product = ProductTestFixtures.createDefaultProduct(initialStock);
+            int adjustAmount = 60;
+            String memo = "수량 조정 테스트";
+            product.clearDomainEvents();
+
+            // When
+            product.adjustStock(adjustAmount, memo);
+
+            // Then
+            assertThat(product.getStatus()).isEqualTo(ProductStatus.ACTIVE);
+            assertThat(product.getStock().getQuantity()).isEqualTo(adjustAmount);
+        }
+    }
+
+    @Nested
+    @DisplayName("재고 차감")
+    class Delete {
+
+        @Test
+        @DisplayName("상품을 삭제하면 상태가 DELETED로 변경 되어야한다.")
+        void shouldUpdateStockQuantityWhenAdjustStockCalled() {
+            // Given
+            Product product = ProductTestFixtures.createDefaultProduct(10);
+            product.clearDomainEvents();
+
+            // When
+            product.delete();
+
+            // Then
+            assertThat(product.getStatus()).isEqualTo(ProductStatus.DELETED);
+
+            assertThat(product.getDomainEvents()).hasSize(1);
+            assertThat(product.getDomainEvents().get(0)).isInstanceOf(ProductStockChangedEvent.class);
+        }
+
+        @Test
+        @DisplayName("상품을 삭제하면 재고가 0이 되어야한다.")
+        void shouldChangeToSoldOutStatusWhenStockBecomesZero() {
+            // Given
+            Product product = ProductTestFixtures.createDefaultProduct(10);
+
+            // When
+            product.delete();
+
+            // Then
+            assertThat(product.getStock().getQuantity()).isZero();
         }
     }
 
@@ -312,15 +392,9 @@ class ProductTest {
         @DisplayName("원가와 판매가에 따라 할인율이 올바르게 계산되어야 한다")
         void shouldCalculateCorrectDiscountRate(String originalPrice, String price, int expectedDiscountRate) {
             // Given
-            Product product = buildProduct(
-                    "상품명",
+            Product product = ProductTestFixtures.createDefaultProduct(
                     new Money(new BigDecimal(originalPrice)),
-                    new Money(new BigDecimal(price)),
-                    "상품 설명",
-                    "https://example.com/image.jpg",
-                    ProductCategory.ELECTRONICS,
-                    100
-            );
+                    new Money(new BigDecimal(price)));
             
             // When
             int discountRate = product.getDiscountRate();
@@ -333,15 +407,9 @@ class ProductTest {
         @DisplayName("원가가 0일 때 할인율은 0이어야 한다")
         void shouldReturnZeroDiscountRateWhenOriginalPriceIsZero() {
             // Given
-            Product product = buildProduct(
-                    "상품명",
+            Product product = ProductTestFixtures.createDefaultProduct(
                     new Money(BigDecimal.ZERO),
-                    new Money(BigDecimal.ZERO),
-                    "상품 설명",
-                    "https://example.com/image.jpg",
-                    ProductCategory.ELECTRONICS,
-                    100
-            );
+                    new Money(BigDecimal.ZERO));
             
             // When
             int discountRate = product.getDiscountRate();
@@ -349,20 +417,5 @@ class ProductTest {
             // Then
             assertThat(discountRate).isZero();
         }
-    }
-
-    // 테스트 헬퍼 메서드
-    private Product buildProduct(String name, Money originalPrice, Money price, 
-                                String description, String thumbnailImageUrl, 
-                                ProductCategory category, Integer stock) {
-        return Product.builder()
-                .name(name)
-                .originalPrice(originalPrice)
-                .price(price)
-                .description(description)
-                .thumbnailImageUrl(thumbnailImageUrl)
-                .category(category)
-                .stock(stock)
-                .build();
     }
 }

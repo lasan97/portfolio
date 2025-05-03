@@ -1,6 +1,7 @@
 package com.portfolio.backend.domain.product.entity;
 
 import com.portfolio.backend.domain.common.value.Money;
+import com.portfolio.backend.domain.product.fixture.ProductTestFixtures;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -14,7 +15,7 @@ class ProductStockHistoryTest {
     @DisplayName("재고 변경 히스토리를 생성할 수 있어야 한다")
     void createStockHistory() {
         // given
-        Product product = createValidProduct();
+        Product product = ProductTestFixtures.createDefaultProduct(10);
         int previousQuantity = 100;
         int changedQuantity = -10;
         StockChangeReason reason = StockChangeReason.SALE;
@@ -33,13 +34,13 @@ class ProductStockHistoryTest {
     }
 
     @Test
-    @DisplayName("증가 재고 히스토리를 생성할 수 있어야 한다")
+    @DisplayName("재고증가 히스토리를 생성할 수 있어야 한다")
     void createIncreaseStockHistory() {
         // given
-        Product product = createValidProduct();
+        Product product = ProductTestFixtures.createDefaultProduct(10);
         int previousQuantity = 100;
         int changedQuantity = 50;
-        StockChangeReason reason = StockChangeReason.PURCHASE;
+        StockChangeReason reason = StockChangeReason.SALE;
         String memo = "재입고";
 
         // when
@@ -55,10 +56,10 @@ class ProductStockHistoryTest {
     }
 
     @Test
-    @DisplayName("감소 재고 히스토리를 생성할 수 있어야 한다")
+    @DisplayName("재고감소 히스토리를 생성할 수 있어야 한다")
     void createDecreaseStockHistory() {
         // given
-        Product product = createValidProduct();
+        Product product = ProductTestFixtures.createDefaultProduct(10);
         int previousQuantity = 100;
         int changedQuantity = -20;
         StockChangeReason reason = StockChangeReason.SALE;
@@ -80,7 +81,7 @@ class ProductStockHistoryTest {
     @DisplayName("메모 없이 재고 히스토리를 생성할 수 있어야 한다")
     void createStockHistoryWithoutMemo() {
         // given
-        Product product = createValidProduct();
+        Product product = ProductTestFixtures.createDefaultProduct(10);
         int previousQuantity = 100;
         int changedQuantity = -10;
         StockChangeReason reason = StockChangeReason.ADJUSTMENT;
@@ -96,18 +97,5 @@ class ProductStockHistoryTest {
         assertThat(history.getCurrentQuantity()).isEqualTo(previousQuantity + changedQuantity);
         assertThat(history.getReason()).isEqualTo(reason);
         assertThat(history.getMemo()).isEqualTo(memo);
-    }
-
-    // 테스트 헬퍼 메서드
-    private Product createValidProduct() {
-        return Product.builder()
-                .name("맥북 프로 M2")
-                .originalPrice(new Money(new BigDecimal("2000000")))
-                .price(new Money(new BigDecimal("1800000")))
-                .description("2023년형 맥북 프로 M2 모델")
-                .thumbnailImageUrl("https://example.com/macbook.jpg")
-                .category(ProductCategory.ELECTRONICS)
-                .stock(100)
-                .build();
     }
 }
