@@ -18,7 +18,7 @@ public class ProductServiceMapper {
                 product.getThumbnailImageUrl(),
                 product.getCategory(),
                 product.getStatus(),
-                product.getStock().getQuantity(),
+                product.getStockQuantity(),
                 product.getDiscountRate(),
                 product.getCreatedAt(),
                 product.getUpdatedAt()
@@ -34,7 +34,7 @@ public class ProductServiceMapper {
                 product.getThumbnailImageUrl(),
                 product.getCategory(),
                 product.getStatus(),
-                product.getStock().getQuantity(),
+                product.getStockQuantity(),
                 product.getDiscountRate()
         );
     }

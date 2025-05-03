@@ -2,6 +2,7 @@ package com.portfolio.backend.domain.product.entity;
 
 import com.portfolio.backend.common.exception.DomainException;
 import com.portfolio.backend.common.exception.UnprocessableEntityException;
+import com.portfolio.backend.domain.product.event.ProductStockChangedEvent;
 import com.portfolio.backend.domain.product.fixture.ProductTestFixtures;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -75,13 +76,13 @@ class ProductStockTest {
 
     @Nested
     @DisplayName("재고 가용성")
-    class StockAvailability {
+    class IsAvailable {
 
         @Test
         @DisplayName("재고가 0보다 크면 isAvailable이 true를 반환해야 한다")
         void isAvailableReturnsTrueWhenQuantityIsGreaterThanZero() {
             // given
-            Product product = ProductTestFixtures.createDefaultProduct(10);
+            Product product = ProductTestFixtures.createDefaultProduct();
             ProductStock stock = new ProductStock(product, 10);
 
             // when & then
@@ -92,7 +93,7 @@ class ProductStockTest {
         @DisplayName("재고가 0이면 isAvailable이 false를 반환해야 한다")
         void isAvailableReturnsFalseWhenQuantityIsZero() {
             // given
-            Product product = ProductTestFixtures.createDefaultProduct(10);
+            Product product = ProductTestFixtures.createDefaultProduct();
             ProductStock stock = new ProductStock(product, 0);
 
             // when & then
@@ -102,11 +103,11 @@ class ProductStockTest {
 
     @Nested
     @DisplayName("재고 증가")
-    class IncreaseStock {
+    class Increase {
 
         @Test
         @DisplayName("재고를 증가시키면 수량이 증가해야 한다")
-        void increaseStock() {
+        void shouldIncreaseQuantityWhenStockIncreased() {
             // given
             Product product = ProductTestFixtures.createDefaultProduct(10);
             ProductStock stock = new ProductStock(product, 10);
@@ -114,10 +115,13 @@ class ProductStockTest {
             int increaseAmount = 5;
 
             // when
-            stock.increaseStock(increaseAmount);
+            stock.increase(increaseAmount, StockChangeReason.RETURN);
 
             // then
             assertThat(stock.getQuantity()).isEqualTo(initialQuantity + increaseAmount);
+
+            assertThat(product.getDomainEvents()).hasSize(1);
+            assertThat(product.getDomainEvents().get(0)).isInstanceOf(ProductStockChangedEvent.class);
         }
 
         @ParameterizedTest
@@ -129,7 +133,7 @@ class ProductStockTest {
             ProductStock stock = new ProductStock(product, 10);
 
             // when & then
-            assertThatThrownBy(() -> stock.increaseStock(increaseAmount))
+            assertThatThrownBy(() -> stock.increase(increaseAmount, StockChangeReason.RETURN))
                     .isInstanceOf(UnprocessableEntityException.class)
                     .hasMessageContaining("증가시킬 수량은 음수일 수 없습니다");
         }
@@ -141,7 +145,7 @@ class ProductStockTest {
 
         @Test
         @DisplayName("재고를 감소시키면 수량이 감소해야 한다")
-        void decreaseStock() {
+        void shouldDecreaseQuantityWhenStockDecreased() {
             // given
             Product product = ProductTestFixtures.createDefaultProduct(10);
             ProductStock stock = new ProductStock(product, 10);
@@ -149,10 +153,13 @@ class ProductStockTest {
             int decreaseAmount = 5;
 
             // when
-            stock.decreaseStock(decreaseAmount);
+            stock.decrease(decreaseAmount, StockChangeReason.SALE);
 
             // then
             assertThat(stock.getQuantity()).isEqualTo(initialQuantity - decreaseAmount);
+
+            assertThat(product.getDomainEvents()).hasSize(1);
+            assertThat(product.getDomainEvents().get(0)).isInstanceOf(ProductStockChangedEvent.class);
         }
 
         @Test
@@ -164,7 +171,7 @@ class ProductStockTest {
             int decreaseAmount = 15; // 현재 재고보다 많은 양
 
             // when & then
-            assertThatThrownBy(() -> stock.decreaseStock(decreaseAmount))
+            assertThatThrownBy(() -> stock.decrease(decreaseAmount, StockChangeReason.SALE))
                     .isInstanceOf(UnprocessableEntityException.class)
                     .hasMessageContaining("재고가 부족합니다");
         }
@@ -178,10 +185,47 @@ class ProductStockTest {
             int decreaseAmount = 10; // 현재 재고와 같은 양
 
             // when
-            stock.decreaseStock(decreaseAmount);
+            stock.decrease(decreaseAmount, StockChangeReason.SALE);
 
             // then
             assertThat(stock.getQuantity()).isEqualTo(0);
+        }
+    }
+
+    @Nested
+    @DisplayName("재고 조정")
+    class Adjust {
+
+        @Test
+        @DisplayName("재고를 조정하면 수량이 변경되어야 한다.")
+        void shouldAdjustStockQuantityWithReason() {
+            // given
+            Product product = ProductTestFixtures.createDefaultProduct(10);
+            ProductStock stock = new ProductStock(product, 10);
+            int adjustAmount = 5;
+
+            // when
+            stock.adjust(adjustAmount, "수량이 안맞아 재고 조정");
+
+            // then
+            assertThat(stock.getQuantity()).isEqualTo(adjustAmount);
+
+            assertThat(product.getDomainEvents()).hasSize(1);
+            assertThat(product.getDomainEvents().get(0)).isInstanceOf(ProductStockChangedEvent.class);
+        }
+
+        @ParameterizedTest
+        @ValueSource(ints = {-1, -5, -10})
+        @DisplayName("증가량이 음수이면 예외가 발생해야 한다")
+        void shouldThrowExceptionWhenAdjustingToNegativeQuantity(int increaseAmount) {
+            // given
+            Product product = ProductTestFixtures.createDefaultProduct(10);
+            ProductStock stock = new ProductStock(product, 10);
+
+            // when & then
+            assertThatThrownBy(() -> stock.adjust(increaseAmount, "재고 조정"))
+                    .isInstanceOf(UnprocessableEntityException.class)
+                    .hasMessageContaining("재고는 0보다 작을 수 없습니다.");
         }
     }
 }

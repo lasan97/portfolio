@@ -52,12 +52,4 @@ public class ProductController {
                            @AuthenticationPrincipal UserDetailsImpl userDetails) {
         productService.deleteProduct(productId);
     }
-
-    @PatchMapping("/{productId}/stock")
-    @PreAuthorize("isAuthenticated()") // 인증된 사용자라면 누구나 재고 조정 가능
-    public void adjustStock(@PathVariable Long productId,
-                         @Valid @RequestBody ProductServiceRequest.AdjustStock request,
-                         @AuthenticationPrincipal UserDetailsImpl userDetails) {
-        productService.adjustStock(productId, request);
-    }
 }

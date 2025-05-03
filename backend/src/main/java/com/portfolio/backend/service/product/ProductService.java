@@ -5,6 +5,7 @@ import com.portfolio.backend.domain.common.event.DomainEventPublisher;
 import com.portfolio.backend.domain.product.entity.Product;
 import com.portfolio.backend.domain.product.entity.ProductStatus;
 import com.portfolio.backend.domain.product.repository.ProductRepository;
+import com.portfolio.backend.domain.product.service.ProductStockManager;
 import com.portfolio.backend.service.product.dto.ProductServiceMapper;
 import com.portfolio.backend.service.product.dto.ProductServiceRequest;
 import com.portfolio.backend.service.product.dto.ProductServiceResponse;
@@ -21,8 +22,9 @@ import java.util.List;
 public class ProductService {
 
     private final ProductRepository productRepository;
-    private final ProductServiceMapper productServiceMapper;
+    private final ProductStockManager productStockManager;
     private final DomainEventPublisher eventPublisher;
+    private final ProductServiceMapper productServiceMapper;
 
     @Transactional(readOnly = true)
     public List<ProductServiceResponse.SimpleGet> getProducts() {
@@ -77,18 +79,9 @@ public class ProductService {
     public void deleteProduct(Long id) {
         Product product = productRepository.findByIdAndStatusNot(id, ProductStatus.DELETED)
                 .orElseThrow(() -> new ResourceNotFoundException("상품을 찾을 수 없습니다. ID: " + id));
+
         product.delete();
 
-        eventPublisher.publishEventsFrom(product);
-    }
-
-    @Transactional
-    public void adjustStock(Long id, ProductServiceRequest.AdjustStock request) {
-        Product product = productRepository.findByIdAndStatusNot(id, ProductStatus.DELETED)
-                .orElseThrow(() -> new ResourceNotFoundException("상품을 찾을 수 없습니다. ID: " + id));
-
-        product.adjustStock(request.quantity(), "재고 조정");
-
-        eventPublisher.publishEventsFrom(product);
+        productStockManager.deleted(product);
     }
 }

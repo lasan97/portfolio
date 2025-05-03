@@ -56,7 +56,7 @@ class ProductTest {
                     assertThat(p.getDescription()).isEqualTo(description);
                     assertThat(p.getThumbnailImageUrl()).isEqualTo(thumbnailImageUrl);
                     assertThat(p.getCategory()).isEqualTo(category);
-                    assertThat(p.getStock().getQuantity()).isEqualTo(stock);
+                    assertThat(p.getStockQuantity()).isEqualTo(stock);
                     assertThat(p.getStatus()).isEqualTo(ProductStatus.ACTIVE);
                 });
 
@@ -79,7 +79,7 @@ class ProductTest {
                     .build();
 
             // Then
-            assertThat(product.getStock().getQuantity()).isZero();
+            assertThat(product.getStockQuantity()).isZero();
             assertThat(product.getStatus()).isEqualTo(ProductStatus.SOLD_OUT);
         }
 
@@ -155,183 +155,119 @@ class ProductTest {
     }
 
     @Nested
-    @DisplayName("재고 증가")
-    class IncreaseStock {
+    @DisplayName("상품 수정")
+    class UpdateProduct {
 
         @Test
-        @DisplayName("재고를 증가시키면 수량이 증가해야 한다")
-        void shouldIncreaseStockQuantityWhenIncreaseCalled() {
+        @DisplayName("유효한 파라미터로 상품 수정 시 성공해야 한다")
+        void shouldUpdateProductWithValidParameters() {
             // Given
-            Product product = ProductTestFixtures.createDefaultProduct(0);
-            int initialStock = product.getStock().getQuantity();
-            int increaseAmount = 50;
-            product.clearDomainEvents();
+            Product product = ProductTestFixtures.createDefaultProduct();
+            String newName = "LG 그램";
+            Money newOriginalPrice = new Money(new BigDecimal("2100000"));
+            Money newPrice = new Money(new BigDecimal("1900000"));
+            String newDescription = "2024년형 LG 그램 신모델";
+            String newThumbnailImageUrl = "https://example.com/gram.jpg";
+            ProductCategory newCategory = ProductCategory.ELECTRONICS;
 
             // When
-            product.increaseStock(increaseAmount);
+            product.update(newName, newOriginalPrice, newPrice, newDescription, newThumbnailImageUrl, newCategory);
 
             // Then
-            assertThat(product.getStock().getQuantity()).isEqualTo(initialStock + increaseAmount);
+            assertThat(product)
+                    .satisfies(p -> {
+                        assertThat(p.getName()).isEqualTo(newName);
+                        assertThat(p.getOriginalPrice()).isEqualTo(newOriginalPrice);
+                        assertThat(p.getPrice()).isEqualTo(newPrice);
+                        assertThat(p.getDescription()).isEqualTo(newDescription);
+                        assertThat(p.getThumbnailImageUrl()).isEqualTo(newThumbnailImageUrl);
+                        assertThat(p.getCategory()).isEqualTo(newCategory);
+                    });
+        }
 
-            assertThat(product.getDomainEvents()).hasSize(1);
-            assertThat(product.getDomainEvents().get(0)).isInstanceOf(ProductStockChangedEvent.class);
+        @ParameterizedTest
+        @NullAndEmptySource
+        @ValueSource(strings = {" ", "  "})
+        @DisplayName("상품명이 null이거나 빈 문자열이면 예외가 발생해야 한다")
+        void shouldThrowExceptionWhenNameIsNullOrEmpty(String name) {
+            // Given
+            Product product = ProductTestFixtures.createDefaultProduct();
+
+            // When & Then
+            assertThatThrownBy(() -> product.update(
+                    name,
+                    new Money(new BigDecimal("2100000")),
+                    new Money(new BigDecimal("1900000")),
+                    "설명",
+                    "이미지URL",
+                    ProductCategory.ELECTRONICS
+            ))
+                    .isInstanceOf(DomainException.class)
+                    .hasMessageContaining("상품명은 비어있을 수 없습니다");
         }
 
         @Test
-        @DisplayName("품절 상태에서 재고 증가 시 ACTIVE 상태로 변경되어야 한다")
-        void shouldChangeToActiveStatusWhenIncreaseStockFromSoldOut() {
+        @DisplayName("originalPrice가 null이면 예외가 발생해야 한다")
+        void shouldThrowExceptionWhenOriginalPriceIsNull() {
             // Given
-            Product product = ProductTestFixtures.createDefaultProduct(0);
-            assertThat(product.getStatus()).isEqualTo(ProductStatus.SOLD_OUT);
+            Product product = ProductTestFixtures.createDefaultProduct();
 
-            // When
-            product.increaseStock(10);
-
-            // Then
-            assertThat(product.getStatus()).isEqualTo(ProductStatus.ACTIVE);
-            assertThat(product.getStock().getQuantity()).isEqualTo(10);
-        }
-    }
-
-    @Nested
-    @DisplayName("재고 차감")
-    class DecreaseStock {
-
-        @Test
-        @DisplayName("재고를 감소시키면 수량이 감소해야 한다")
-        void shouldDecreaseStockQuantityWhenDecreaseCalled() {
-            // Given
-            Product product = ProductTestFixtures.createDefaultProduct(60);
-            int initialStock = product.getStock().getQuantity();
-            int decreaseAmount = 50;
-            product.clearDomainEvents();
-
-            // When
-            product.decreaseStock(decreaseAmount);
-
-            // Then
-            assertThat(product.getStock().getQuantity()).isEqualTo(initialStock - decreaseAmount);
-
-            assertThat(product.getDomainEvents()).hasSize(1);
-            assertThat(product.getDomainEvents().get(0)).isInstanceOf(ProductStockChangedEvent.class);
+            // When & Then
+            assertThatThrownBy(() -> product.update(
+                    "상품명",
+                    null,
+                    new Money(new BigDecimal("1900000")),
+                    "설명",
+                    "이미지URL",
+                    ProductCategory.ELECTRONICS
+            ))
+                    .isInstanceOf(DomainException.class)
+                    .hasMessageContaining("원가는 null일 수 없습니다");
         }
 
         @Test
-        @DisplayName("재고가 0이 되면 SOLD_OUT 상태로 변경되어야 한다")
-        void shouldChangeToSoldOutStatusWhenStockBecomesZero() {
+        @DisplayName("price가 null이면 예외가 발생해야 한다")
+        void shouldThrowExceptionWhenPriceIsNull() {
             // Given
-            Product product = ProductTestFixtures.createDefaultProduct(10);
-            int currentStock = product.getStock().getQuantity();
+            Product product = ProductTestFixtures.createDefaultProduct();
 
-            // When
-            product.decreaseStock(currentStock);
-
-            // Then
-            assertThat(product.getStock().getQuantity()).isZero();
-            assertThat(product.getStatus()).isEqualTo(ProductStatus.SOLD_OUT);
-        }
-    }
-
-    @Nested
-    @DisplayName("재고 차감")
-    class AdjustStock {
-
-        @Test
-        @DisplayName("재고를 조정하면 수량이 변경되어야 한다")
-        void shouldUpdateStockQuantityWhenAdjustStockCalled() {
-            // Given
-            int initialStock = 60;
-            Product product = ProductTestFixtures.createDefaultProduct(initialStock);
-            int adjustAmount = 50;
-            String memo = "수량 조정 테스트";
-            product.clearDomainEvents();
-
-            // When
-            product.adjustStock(adjustAmount, memo);
-
-            // Then
-            assertThat(product.getStock().getQuantity()).isEqualTo(adjustAmount);
-
-            assertThat(product.getDomainEvents()).hasSize(1);
-            assertThat(product.getDomainEvents().get(0)).isInstanceOf(ProductStockChangedEvent.class);
+            // When & Then
+            assertThatThrownBy(() -> product.update(
+                    "상품명",
+                    new Money(new BigDecimal("2100000")),
+                    null,
+                    "설명",
+                    "이미지URL",
+                    ProductCategory.ELECTRONICS
+            ))
+                    .isInstanceOf(DomainException.class)
+                    .hasMessageContaining("판매가는 null일 수 없습니다");
         }
 
         @Test
-        @DisplayName("재고가 0이 되면 SOLD_OUT 상태로 변경되어야 한다")
-        void shouldChangeToSoldOutStatusWhenStockBecomesZero() {
+        @DisplayName("category가 null이면 예외가 발생해야 한다")
+        void shouldThrowExceptionWhenCategoryIsNull() {
             // Given
-            int initialStock = 60;
-            Product product = ProductTestFixtures.createDefaultProduct(initialStock);
-            int adjustAmount = 0;
-            String memo = "수량 조정 테스트";
-            product.clearDomainEvents();
+            Product product = ProductTestFixtures.createDefaultProduct();
 
-            // When
-            product.adjustStock(adjustAmount, memo);
-
-            // Then
-            assertThat(product.getStock().getQuantity()).isZero();
-            assertThat(product.getStatus()).isEqualTo(ProductStatus.SOLD_OUT);
-        }
-
-        @Test
-        @DisplayName("품절 상태에서 재고 증가 시 ACTIVE 상태로 변경되어야 한다")
-        void shouldChangeToActiveStatusWhenIncreaseStockFromSoldOut() {
-            // Given
-            int initialStock = 0;
-            Product product = ProductTestFixtures.createDefaultProduct(initialStock);
-            int adjustAmount = 60;
-            String memo = "수량 조정 테스트";
-            product.clearDomainEvents();
-
-            // When
-            product.adjustStock(adjustAmount, memo);
-
-            // Then
-            assertThat(product.getStatus()).isEqualTo(ProductStatus.ACTIVE);
-            assertThat(product.getStock().getQuantity()).isEqualTo(adjustAmount);
-        }
-    }
-
-    @Nested
-    @DisplayName("재고 차감")
-    class Delete {
-
-        @Test
-        @DisplayName("상품을 삭제하면 상태가 DELETED로 변경 되어야한다.")
-        void shouldUpdateStockQuantityWhenAdjustStockCalled() {
-            // Given
-            Product product = ProductTestFixtures.createDefaultProduct(10);
-            product.clearDomainEvents();
-
-            // When
-            product.delete();
-
-            // Then
-            assertThat(product.getStatus()).isEqualTo(ProductStatus.DELETED);
-
-            assertThat(product.getDomainEvents()).hasSize(1);
-            assertThat(product.getDomainEvents().get(0)).isInstanceOf(ProductStockChangedEvent.class);
-        }
-
-        @Test
-        @DisplayName("상품을 삭제하면 재고가 0이 되어야한다.")
-        void shouldChangeToSoldOutStatusWhenStockBecomesZero() {
-            // Given
-            Product product = ProductTestFixtures.createDefaultProduct(10);
-
-            // When
-            product.delete();
-
-            // Then
-            assertThat(product.getStock().getQuantity()).isZero();
+            // When & Then
+            assertThatThrownBy(() -> product.update(
+                    "상품명",
+                    new Money(new BigDecimal("2100000")),
+                    new Money(new BigDecimal("1900000")),
+                    "설명",
+                    "이미지URL",
+                    null
+            ))
+                    .isInstanceOf(DomainException.class)
+                    .hasMessageContaining("카테고리는 null일 수 없습니다");
         }
     }
 
     @Nested
     @DisplayName("상품 상태")
-    class ProductStatusTest {
-        
+    class IsAvailable {
+
         @ParameterizedTest
         @CsvSource({
             "ACTIVE, true",
@@ -342,43 +278,96 @@ class ProductTest {
         void shouldReturnCorrectAvailabilityBasedOnStatus(ProductStatus status, boolean expected) {
             // Given
             Product product = ProductTestFixtures.createProductWithStatus(status);
-            
+
             // When & Then
             assertThat(product.isAvailable()).isEqualTo(expected);
         }
-        
+    }
+
+    @Nested
+    @DisplayName("상품 활성화")
+    class Active {
+
         @Test
-        @DisplayName("상태가 ACTIVE이고 재고가 있을 때만 isAvailable이 true를 반환해야 한다")
-        void shouldReturnTrueForIsAvailableOnlyWhenActiveAndInStock() {
+        @DisplayName("상품을 활성화하면 상태가 ACTIVE로 변경 되어야한다.")
+        void shouldChangeStatusToActiveWhenActivated() {
+            // Given
+            Product product = ProductTestFixtures.createDefaultProduct(0);
+
+            // When
+            product.active();
+
+            // Then
+            assertThat(product.getStatus()).isEqualTo(ProductStatus.ACTIVE);
+        }
+
+        @Test
+        @DisplayName("DELETED 상태의 경우 에러가 발생한다.")
+        void shouldThrowExceptionWhenChangingStatusOfDeletedProduct() {
             // Given
             Product product = ProductTestFixtures.createDefaultProduct(1);
-            
-            // 먼저 ACTIVE 상태와 재고가 있는 상태 확인
-            assertThat(product.getStatus()).isEqualTo(ProductStatus.ACTIVE);
-            assertThat(product.getStock().getQuantity()).isPositive();
-            
-            // When & Then - ACTIVE 상태에서는 true
-            assertThat(product.isAvailable()).isTrue();
-            
-            // 재고를 0으로 만들어 SOLD_OUT 상태로 변경
-            product.decreaseStock(product.getStock().getQuantity());
-            
-            // When & Then - SOLD_OUT 상태에서는 false
-            assertThat(product.isAvailable()).isFalse();
-            
-            // 재고를 늘려 ACTIVE 상태로 변경 후 삭제
-            product.increaseStock(10);
             product.delete();
-            
-            // When & Then - DELETED 상태에서는 false
-            assertThat(product.isAvailable()).isFalse();
+
+            // When & Then
+            assertThatThrownBy(() -> product.active())
+                    .isInstanceOf(DomainException.class)
+                    .hasMessageContaining("삭제된 상품의 상태를 변경할 수 없습니다.");
         }
     }
-    
+
     @Nested
-    @DisplayName("할인율 계산")
-    class DiscountRateTest {
-        
+    @DisplayName("상품 활성화")
+    class SoldOut {
+
+        @Test
+        @DisplayName("상품을 매진처리하면 상태가 SOLDOUT으로 변경 되어야한다.")
+        void shouldChangeStatusToSoldOutWhenSoldOut() {
+            // Given
+            Product product = ProductTestFixtures.createDefaultProduct(1);
+
+            // When
+            product.soldOut();
+
+            // Then
+            assertThat(product.getStatus()).isEqualTo(ProductStatus.SOLD_OUT);
+        }
+
+        @Test
+        @DisplayName("DELETED 상태의 경우 에러가 발생한다.")
+        void shouldThrowExceptionWhenChangingStatusOfDeletedProduct() {
+            // Given
+            Product product = ProductTestFixtures.createDefaultProduct(1);
+            product.delete();
+
+            // When & Then
+            assertThatThrownBy(() -> product.soldOut())
+                    .isInstanceOf(DomainException.class)
+                    .hasMessageContaining("삭제된 상품의 상태를 변경할 수 없습니다.");
+        }
+    }
+
+    @Nested
+    @DisplayName("삭제")
+    class Delete {
+
+        @Test
+        @DisplayName("상품을 삭제하면 상태가 DELETED로 변경 되어야한다.")
+        void shouldChangeStatusToDeletedWhenDeleted() {
+            // Given
+            Product product = ProductTestFixtures.createDefaultProduct(10);
+
+            // When
+            product.delete();
+
+            // Then
+            assertThat(product.getStatus()).isEqualTo(ProductStatus.DELETED);
+        }
+    }
+
+    @Nested
+    @DisplayName("할인율")
+    class GetDiscountRate {
+
         @ParameterizedTest
         @CsvSource({
             "2000000, 1800000, 10",  // 10% 할인

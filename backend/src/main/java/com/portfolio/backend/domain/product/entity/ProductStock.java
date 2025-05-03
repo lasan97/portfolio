@@ -2,6 +2,8 @@ package com.portfolio.backend.domain.product.entity;
 
 import com.portfolio.backend.common.exception.DomainException;
 import com.portfolio.backend.common.exception.UnprocessableEntityException;
+import com.portfolio.backend.domain.common.entity.AggregateRoot;
+import com.portfolio.backend.domain.product.event.ProductStockChangedEvent;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -17,7 +19,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "product_stocks")
 @EntityListeners(AuditingEntityListener.class)
-public class ProductStock {
+public class ProductStock extends AggregateRoot {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -55,24 +57,51 @@ public class ProductStock {
 		return quantity > 0;
 	}
 
-	protected void decreaseStock(int amount) {
-		if (this.quantity < amount) {
-			throw new UnprocessableEntityException("재고가 부족합니다.");
-		}
-		this.quantity -= amount;
-	}
+	public void increase(int amount, StockChangeReason reason) {
+		int previousQuantity = this.quantity;
 
-	protected void increaseStock(int amount) {
 		if (amount < 0) {
 			throw new UnprocessableEntityException("증가시킬 수량은 음수일 수 없습니다: " + amount);
 		}
 		this.quantity += amount;
+
+		registerStockChangedEvent(previousQuantity, amount, reason);
 	}
 
-	protected void adjustStock(int amount) {
+	public void decrease(int amount, StockChangeReason reason) {
+		int previousQuantity = this.quantity;
+
+		if (this.quantity < amount) {
+			throw new UnprocessableEntityException("재고가 부족합니다.");
+		}
+		this.quantity -= amount;
+
+		registerStockChangedEvent(previousQuantity, -amount, reason);
+	}
+
+	public void adjust(int amount, String memo) {
+		int previousQuantity = this.quantity;
+
 		if (amount < 0) {
-			throw new DomainException("재고는 0보다 작을 수 없습니다.");
+			throw new UnprocessableEntityException("재고는 0보다 작을 수 없습니다.");
 		}
 		this.quantity = amount;
+
+		registerStockChangedEvent(previousQuantity, amount - previousQuantity, StockChangeReason.ADJUSTMENT, memo);
+	}
+
+	private void registerStockChangedEvent(int previousQuantity, int changedQuantity, StockChangeReason reason) {
+		registerStockChangedEvent(previousQuantity, changedQuantity, reason, null);
+	}
+
+	private void registerStockChangedEvent(int previousQuantity, int changedQuantity, StockChangeReason reason, String memo) {
+		registerEvent(ProductStockChangedEvent.builder()
+				.product(product)
+				.previousQuantity(previousQuantity)
+				.changedQuantity(changedQuantity)
+				.memo(memo)
+				.reason(reason)
+				.transactionDateTime(LocalDateTime.now())
+				.build());
 	}
 }

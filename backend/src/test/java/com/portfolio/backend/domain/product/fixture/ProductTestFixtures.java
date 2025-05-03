@@ -48,6 +48,10 @@ public class ProductTestFixtures {
         );
     }
 
+    public static Product createDefaultProduct() {
+        return createDefaultProduct(null, new Money(BigDecimal.valueOf(200000)), new Money(BigDecimal.valueOf(180000)), 10);
+    }
+
     public static Product createDefaultProduct(Money originalPrice, Money price) {
         return createDefaultProduct(null, originalPrice, price, 100);
     }
@@ -58,13 +62,12 @@ public class ProductTestFixtures {
 
     public static Product createProductWithStatus(ProductStatus status) {
         Product product = createDefaultProduct(1);
-        try {
-            java.lang.reflect.Field statusField = Product.class.getDeclaredField("status");
-            statusField.setAccessible(true);
-            statusField.set(product, status);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to set product status", e);
+
+        switch (status) {
+            case SOLD_OUT -> product.soldOut();
+            case DELETED -> product.delete();
         }
+
         return product;
     }
 

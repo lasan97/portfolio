@@ -59,6 +59,7 @@ public class Product extends AggregateRoot {
 	@LastModifiedDate
 	private LocalDateTime updatedAt;
 
+	@Getter(AccessLevel.NONE)
 	@OneToOne(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
 	private ProductStock stock;
 
@@ -80,10 +81,14 @@ public class Product extends AggregateRoot {
 
 		validation();
 
-		registerStockChangedEvent(0,
-				this.stock.getQuantity(),
-				StockChangeReason.ADJUSTMENT,
-				"상품등록");
+		registerEvent(ProductStockChangedEvent.builder()
+				.product(this)
+				.previousQuantity(0)
+				.changedQuantity(getStockQuantity())
+				.memo("상품 등록")
+				.reason(StockChangeReason.ADJUSTMENT)
+				.transactionDateTime(LocalDateTime.now())
+				.build());
 	}
 
 	private void validation() {
@@ -116,75 +121,30 @@ public class Product extends AggregateRoot {
 		validation();
 	}
 
-	public void increaseStock(int quantity) {
-		int previousQuantity = stock.getQuantity();
-
-		stock.increaseStock(quantity);
-		if (status == ProductStatus.SOLD_OUT && stock.isAvailable()) {
-			active();
-		}
-
-		registerStockChangedEvent(previousQuantity,
-				this.stock.getQuantity(),
-				StockChangeReason.RETURN,
-				"상품 환불");
-	}
-
-	public void decreaseStock(int quantity) {
-		int previousQuantity = stock.getQuantity();
-
-		stock.decreaseStock(quantity);
-		if (status == ProductStatus.ACTIVE && !stock.isAvailable()) {
-			soldOut();
-		}
-
-		registerStockChangedEvent(previousQuantity,
-				this.stock.getQuantity(),
-				StockChangeReason.SALE,
-				"상품 판매");
-	}
-
-	public void adjustStock(int quantity, String memo) {
-		int previousQuantity = stock.getQuantity();
-
-		stock.adjustStock(quantity);
-		if (status != ProductStatus.DELETED) {
-			if (stock.isAvailable()) {
-				active();
-			} else {
-				soldOut();
-			}
-		}
-
-		registerStockChangedEvent(previousQuantity,
-				this.stock.getQuantity(),
-				StockChangeReason.ADJUSTMENT,
-				memo);
+	public Integer getStockQuantity() {
+		return this.stock.getQuantity();
 	}
 
 	public boolean isAvailable() {
-		return status == ProductStatus.ACTIVE && (stock != null && stock.isAvailable());
+		return status == ProductStatus.ACTIVE && stock.isAvailable();
 	}
 
-	private void active() {
+	public void active() {
+		if (this.status == ProductStatus.DELETED) {
+			throw new DomainException("삭제된 상품의 상태를 변경할 수 없습니다.");
+		}
 		this.status = ProductStatus.ACTIVE;
 	}
 
-	private void soldOut() {
+	public void soldOut() {
+		if (this.status == ProductStatus.DELETED) {
+			throw new DomainException("삭제된 상품의 상태를 변경할 수 없습니다.");
+		}
 		this.status = ProductStatus.SOLD_OUT;
 	}
 
 	public void delete() {
 		this.status = ProductStatus.DELETED;
-
-		int previousQuantity = stock.getQuantity();
-
-		stock.adjustStock(0);
-
-		registerStockChangedEvent(previousQuantity,
-				this.stock.getQuantity(),
-				StockChangeReason.STOP_SALE,
-				"판매 중지");
 	}
 
 	public int getDiscountRate() {
@@ -194,16 +154,5 @@ public class Product extends AggregateRoot {
 				.multiply(100).getAmount()
 				.divide(originalPrice.getAmount(), 0, RoundingMode.FLOOR)
 				.intValue();
-	}
-
-	private void registerStockChangedEvent(int previousQuantity, int changedQuantity, StockChangeReason reason, String memo) {
-		registerEvent(ProductStockChangedEvent.builder()
-				.product(this)
-				.previousQuantity(previousQuantity)
-				.changedQuantity(changedQuantity)
-				.memo(memo)
-				.reason(reason)
-				.transactionDateTime(LocalDateTime.now())
-				.build());
 	}
 }

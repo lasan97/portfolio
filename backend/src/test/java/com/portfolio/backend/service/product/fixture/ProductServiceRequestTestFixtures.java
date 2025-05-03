@@ -3,7 +3,6 @@ package com.portfolio.backend.service.product.fixture;
 import com.portfolio.backend.domain.common.value.Money;
 import com.portfolio.backend.domain.product.entity.ProductCategory;
 import com.portfolio.backend.service.product.dto.ProductServiceRequest;
-import com.portfolio.backend.service.product.dto.StockChangeReason;
 
 import java.math.BigDecimal;
 
@@ -30,17 +29,5 @@ public class ProductServiceRequestTestFixtures {
                 "macbook-pro-m3.jpg",
                 ProductCategory.ELECTRONICS
         );
-    }
-
-    public static ProductServiceRequest.AdjustStock createStockAdjustRequest(int quantity, StockChangeReason reason, String description) {
-        return new ProductServiceRequest.AdjustStock(quantity, reason, description);
-    }
-
-    public static ProductServiceRequest.AdjustStock createStockAdjustRequest() {
-        return createStockAdjustRequest(10, StockChangeReason.ADJUSTMENT, "재고 조정 테스트");
-    }
-
-    public static ProductServiceRequest.AdjustStock createStockAdjustRequest(int quantity) {
-        return createStockAdjustRequest(quantity, StockChangeReason.ADJUSTMENT, "재고 조정 테스트");
     }
 }

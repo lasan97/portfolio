@@ -1,10 +1,10 @@
 package com.portfolio.backend.service.product;
 
-import com.portfolio.backend.common.exception.DomainException;
 import com.portfolio.backend.common.exception.ResourceNotFoundException;
 import com.portfolio.backend.domain.common.event.DomainEventPublisher;
 import com.portfolio.backend.domain.product.entity.Product;
 import com.portfolio.backend.domain.product.entity.ProductStatus;
+import com.portfolio.backend.domain.product.entity.ProductStock;
 import com.portfolio.backend.domain.product.event.ProductStockChangedEvent;
 import com.portfolio.backend.domain.product.fixture.ProductTestFixtures;
 import com.portfolio.backend.domain.product.repository.ProductRepository;
@@ -12,14 +12,11 @@ import com.portfolio.backend.domain.product.repository.ProductStockHistoryReposi
 import com.portfolio.backend.service.ServiceTest;
 import com.portfolio.backend.service.product.dto.ProductServiceRequest;
 import com.portfolio.backend.service.product.dto.ProductServiceResponse;
-import com.portfolio.backend.service.product.dto.StockChangeReason;
 import com.portfolio.backend.service.product.fixture.ProductServiceRequestTestFixtures;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -122,7 +119,7 @@ class ProductServiceTest extends ServiceTest {
                             product.getThumbnailImageUrl(),
                             product.getCategory(),
                             product.getStatus(),
-                            product.getStock().getQuantity());
+                            product.getStockQuantity());
         }
 
         @Test
@@ -283,11 +280,11 @@ class ProductServiceTest extends ServiceTest {
             productService.deleteProduct(product.getId());
 
             // Then
-            ArgumentCaptor<Product> productCaptor = ArgumentCaptor.forClass(Product.class);
-            verify(eventPublisher).publishEventsFrom(productCaptor.capture());
-            Product capturedProduct = productCaptor.getValue();
+            ArgumentCaptor<ProductStock> productStockCaptor = ArgumentCaptor.forClass(ProductStock.class);
+            verify(eventPublisher).publishEventsFrom(productStockCaptor.capture());
+            ProductStock capturedProductStock = productStockCaptor.getValue();
 
-            boolean hasExpectedEvent = capturedProduct.getDomainEvents().stream()
+            boolean hasExpectedEvent = capturedProductStock.getDomainEvents().stream()
                     .anyMatch(event -> event instanceof ProductStockChangedEvent);
 
             assertTrue(hasExpectedEvent, "도메인 이벤트에 ProductStockChangedEvent가 포함되어 있어야 합니다");
@@ -316,90 +313,6 @@ class ProductServiceTest extends ServiceTest {
 
             // When & Then
             assertThatThrownBy(() -> productService.deleteProduct(productId))
-                    .isInstanceOf(ResourceNotFoundException.class);
-        }
-    }
-
-    @Nested
-    @DisplayName("재고 조정")
-    class AdjustStockTest {
-
-        @ParameterizedTest
-        @CsvSource({
-            "15, '재고 추가'",
-            "5, '재고 감소'"
-        })
-        @DisplayName("재고를 지정한 수량으로 조정해야 한다")
-        void shouldAdjustStockBySpecifiedAmount(int adjustment, String description) {
-            // Given
-            Product product = productRepository.save(ProductTestFixtures.createDefaultProduct(10));
-
-            ProductServiceRequest.AdjustStock request = ProductServiceRequestTestFixtures.createStockAdjustRequest(
-                    adjustment, StockChangeReason.ADJUSTMENT, description
-            );
-
-            // When
-            productService.adjustStock(product.getId(), request);
-
-            // Then
-            Product response = productRepository.findById(product.getId()).get();
-
-            assertThat(response.getStock().getQuantity()).isEqualTo(adjustment);
-        }
-
-        @Test
-        @DisplayName("상품 재고 조정시 재고변경이벤트가 발생한다.")
-        void shouldPublishProductStockChangedEventWhenProductDeleted() {
-            // Given
-            int adjustment = 5;
-            String description = "재고 조정";
-
-            Product product = productRepository.save(ProductTestFixtures.createDefaultProduct(10));
-
-            ProductServiceRequest.AdjustStock request = ProductServiceRequestTestFixtures.createStockAdjustRequest(
-                    adjustment, StockChangeReason.ADJUSTMENT, description
-            );
-
-            // When
-            productService.adjustStock(product.getId(), request);
-
-            // Then
-            ArgumentCaptor<Product> productCaptor = ArgumentCaptor.forClass(Product.class);
-            verify(eventPublisher).publishEventsFrom(productCaptor.capture());
-            Product capturedProduct = productCaptor.getValue();
-
-            boolean hasExpectedEvent = capturedProduct.getDomainEvents().stream()
-                    .anyMatch(event -> event instanceof ProductStockChangedEvent);
-
-            assertTrue(hasExpectedEvent, "도메인 이벤트에 ProductStockChangedEvent가 포함되어 있어야 합니다");
-        }
-
-        @Test
-        @DisplayName("재고 수량은 음수로 조정할 수 없다")
-        void shouldThrowExceptionWhenAdjustingStockToNegative() {
-            // Given
-            Product product = productRepository.save(ProductTestFixtures.createDefaultProduct(10));
-
-            ProductServiceRequest.AdjustStock request = ProductServiceRequestTestFixtures
-                    .createStockAdjustRequest(-5);
-
-            // When & Then
-            assertThatThrownBy(() -> productService.adjustStock(product.getId(), request))
-                    .isInstanceOf(DomainException.class)
-                    .hasMessageContaining("재고는 0보다 작을 수 없습니다.");
-        }
-
-        @Test
-        @DisplayName("존재하지 않는 상품의 재고 조정 시 예외가 발생해야 한다")
-        void shouldThrowExceptionWhenProductForStockAdjustmentNotFound() {
-            // Given
-            Long productId = 0L;
-
-            ProductServiceRequest.AdjustStock request = ProductServiceRequestTestFixtures
-                    .createStockAdjustRequest(-5);
-
-            // When & Then
-            assertThatThrownBy(() -> productService.adjustStock(productId, request))
                     .isInstanceOf(ResourceNotFoundException.class);
         }
     }

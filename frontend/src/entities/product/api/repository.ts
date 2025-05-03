@@ -36,7 +36,7 @@ export const productRepository = {
 
   // 관리자용 재고 조정
   async adjustStock(id: number, adjustData: ProductRequest.StockAdjustment): Promise<number> {
-    const response = await apiInstance.patch<number>(`/api/products/${id}/stock`, adjustData);
+    const response = await apiInstance.patch<number>(`/api/products/${id}/stocks`, adjustData);
     return response.data;
   }
 };
