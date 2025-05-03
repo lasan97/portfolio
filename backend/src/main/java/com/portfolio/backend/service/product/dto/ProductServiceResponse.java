@@ -24,7 +24,7 @@ public class ProductServiceResponse {
     ) {
     }
 
-    public record GetList(
+    public record SimpleGet(
             Long id,
             String name,
             Money originalPrice,

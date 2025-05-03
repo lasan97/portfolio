@@ -22,7 +22,7 @@ public class ProductController {
     private final ProductService productService;
 
     @GetMapping
-    public List<ProductServiceResponse.GetList> getProducts() {
+    public List<ProductServiceResponse.SimpleGet> getProducts() {
         return productService.getProducts();
     }
 

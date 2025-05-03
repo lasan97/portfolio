@@ -25,9 +25,9 @@ public class ProductService {
     private final DomainEventPublisher eventPublisher;
 
     @Transactional(readOnly = true)
-    public List<ProductServiceResponse.GetList> getProducts() {
+    public List<ProductServiceResponse.SimpleGet> getProducts() {
         List<Product> products = productRepository.findAllByStatusNot(ProductStatus.DELETED);
-        return productServiceMapper.toList(products);
+        return products.stream().map(productServiceMapper::toSimpleGet).toList();
     }
 
     @Transactional(readOnly = true)

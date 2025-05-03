@@ -9,15 +9,11 @@ import com.portfolio.backend.domain.product.event.ProductStockChangedEvent;
 import com.portfolio.backend.domain.product.fixture.ProductTestFixtures;
 import com.portfolio.backend.domain.product.repository.ProductRepository;
 import com.portfolio.backend.domain.product.repository.ProductStockHistoryRepository;
-import com.portfolio.backend.domain.user.entity.UserCredit;
-import com.portfolio.backend.domain.user.event.UserCreditAmountChangedEvent;
 import com.portfolio.backend.service.ServiceTest;
 import com.portfolio.backend.service.product.dto.ProductServiceRequest;
 import com.portfolio.backend.service.product.dto.ProductServiceResponse;
 import com.portfolio.backend.service.product.dto.StockChangeReason;
 import com.portfolio.backend.service.product.fixture.ProductServiceRequestTestFixtures;
-import com.portfolio.backend.service.user.dto.UserCreditServiceRequest;
-import com.portfolio.backend.service.user.fixture.UserCreditServiceRequestFixtures;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -28,7 +24,6 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -69,7 +64,7 @@ class ProductServiceTest extends ServiceTest {
             productRepository.save(ProductTestFixtures.createDefaultProduct(10));
 
             // When
-            List<ProductServiceResponse.GetList> result = productService.getProducts();
+            List<ProductServiceResponse.SimpleGet> result = productService.getProducts();
 
             // Then
             assertThat(result)
@@ -86,7 +81,7 @@ class ProductServiceTest extends ServiceTest {
             productRepository.save(product);
 
             // When
-            List<ProductServiceResponse.GetList> result = productService.getProducts();
+            List<ProductServiceResponse.SimpleGet> result = productService.getProducts();
 
             // Then
             assertThat(result).isEmpty();

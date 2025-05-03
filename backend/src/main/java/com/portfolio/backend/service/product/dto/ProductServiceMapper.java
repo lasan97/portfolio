@@ -25,8 +25,8 @@ public class ProductServiceMapper {
         );
     }
 
-    public ProductServiceResponse.GetList toList(Product product) {
-        return new ProductServiceResponse.GetList(
+    public ProductServiceResponse.SimpleGet toSimpleGet(Product product) {
+        return new ProductServiceResponse.SimpleGet(
                 product.getId(),
                 product.getName(),
                 product.getOriginalPrice(),
@@ -37,11 +37,5 @@ public class ProductServiceMapper {
                 product.getStock().getQuantity(),
                 product.getDiscountRate()
         );
-    }
-
-    public List<ProductServiceResponse.GetList> toList(List<Product> products) {
-        return products.stream()
-                .map(this::toList)
-                .toList();
     }
 }
