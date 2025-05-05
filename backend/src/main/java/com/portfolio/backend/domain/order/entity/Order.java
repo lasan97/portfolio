@@ -11,6 +11,7 @@ import com.portfolio.backend.domain.order.value.OrderItem;
 import com.portfolio.backend.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -53,6 +54,7 @@ public class Order extends AggregateRoot {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @Builder
     public Order(User user, Money totalPrice, List<OrderItem> orderItems, DeliveryInfo deliveryInfo) {
         Ulid ulid = UlidCreator.getUlid();
         this.id = ulid.toUuid();
