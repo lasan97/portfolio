@@ -6,10 +6,11 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum OrderStatus {
-    PENDING_STOCK_REDUCTION("재고 확인 중"),
-    PENDING_PAYMENT("결제 대기"),
+    PENDING("대기"),
+    PAID("결제완료"),
     FAILED("주문 실패"),
     CANCELLED("주문 취소"),
+    CANCELING("주문 취소 요청"),
     ORDERED("주문 완료");
 
     private final String description;

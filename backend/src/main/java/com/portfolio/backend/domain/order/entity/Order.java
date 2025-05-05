@@ -63,7 +63,7 @@ public class Order extends AggregateRoot {
         this.totalPrice = totalPrice;
         this.orderItems = orderItems;
         this.deliveryInfo = deliveryInfo;
-        this.orderStatus = OrderStatus.PENDING_STOCK_REDUCTION;
+        this.orderStatus = OrderStatus.PENDING;
         this.createdAt = LocalDateTime.ofInstant(ulid.getInstant(), ZoneId.of("Asia/Seoul"));
 
         validation();
@@ -92,15 +92,15 @@ public class Order extends AggregateRoot {
         }
     }
 
-    public void completedStockReduction() {
-        if (this.orderStatus != OrderStatus.PENDING_STOCK_REDUCTION) {
+    public void paymentCompleted() {
+        if (this.orderStatus != OrderStatus.PENDING) {
             throw new DomainException("주문 상태가 올바르지 않습니다.");
         }
-        this.orderStatus = OrderStatus.PENDING_PAYMENT;
+        this.orderStatus = OrderStatus.PAID;
     }
 
-    public void paymentCompleted() {
-        if (this.orderStatus != OrderStatus.PENDING_PAYMENT) {
+    public void completedStockReduction() {
+        if (this.orderStatus != OrderStatus.PAID) {
             throw new DomainException("주문 상태가 올바르지 않습니다.");
         }
         this.orderStatus = OrderStatus.ORDERED;
@@ -113,8 +113,15 @@ public class Order extends AggregateRoot {
         this.orderStatus = OrderStatus.FAILED;
     }
 
-    public void cancel() {
+    public void canceling() {
         if (this.orderStatus != OrderStatus.ORDERED) {
+            throw new DomainException("주문 상태가 올바르지 않습니다.");
+        }
+        this.orderStatus = OrderStatus.CANCELING;
+    }
+
+    public void cancel() {
+        if (this.orderStatus != OrderStatus.CANCELING) {
             throw new DomainException("주문 상태가 올바르지 않습니다.");
         }
         this.orderStatus = OrderStatus.CANCELLED;
