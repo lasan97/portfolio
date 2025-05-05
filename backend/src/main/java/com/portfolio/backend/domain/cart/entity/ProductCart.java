@@ -1,5 +1,6 @@
 package com.portfolio.backend.domain.cart.entity;
 
+import com.portfolio.backend.domain.cart.value.ProductCartItem;
 import com.portfolio.backend.domain.product.entity.Product;
 import com.portfolio.backend.domain.user.entity.User;
 import jakarta.persistence.*;

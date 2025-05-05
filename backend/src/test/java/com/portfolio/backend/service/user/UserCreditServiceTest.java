@@ -5,7 +5,6 @@ import com.portfolio.backend.domain.common.event.DomainEventPublisher;
 import com.portfolio.backend.domain.common.value.Money;
 import com.portfolio.backend.domain.user.entity.CreditTransactionType;
 import com.portfolio.backend.domain.user.entity.UserCredit;
-import com.portfolio.backend.domain.user.entity.UserCreditHistory;
 import com.portfolio.backend.domain.user.event.UserCreditAmountChangedEvent;
 import com.portfolio.backend.domain.user.fixture.UserCreditHistoryTestFixtures;
 import com.portfolio.backend.domain.user.repository.UserCreditHistoryRepository;
@@ -13,7 +12,7 @@ import com.portfolio.backend.domain.user.repository.UserCreditRepository;
 import com.portfolio.backend.service.ServiceTest;
 import com.portfolio.backend.service.user.dto.UserCreditServiceRequest;
 import com.portfolio.backend.service.user.dto.UserCreditServiceResponse;
-import com.portfolio.backend.service.user.fixture.UserCreditServiceRequestFixtures;
+import com.portfolio.backend.service.user.fixture.UserCreditServiceRequestTestFixtures;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -25,7 +24,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -141,7 +139,7 @@ class UserCreditServiceTest extends ServiceTest {
 
             Long userId = user.getId();
             BigDecimal amount = BigDecimal.valueOf(10000);
-            UserCreditServiceRequest.Increase request = UserCreditServiceRequestFixtures.createIncrease(amount);
+            UserCreditServiceRequest.Increase request = UserCreditServiceRequestTestFixtures.createIncrease(amount);
 
             // When
             userCreditService.increase(userId, request);
@@ -158,7 +156,7 @@ class UserCreditServiceTest extends ServiceTest {
             userCreditRepository.save(new UserCredit(user));
 
             Long userId = user.getId();
-            UserCreditServiceRequest.Increase request = UserCreditServiceRequestFixtures.createIncrease(BigDecimal.valueOf(10000));
+            UserCreditServiceRequest.Increase request = UserCreditServiceRequestTestFixtures.createIncrease(BigDecimal.valueOf(10000));
 
             // When
             userCreditService.increase(userId, request);
@@ -179,7 +177,7 @@ class UserCreditServiceTest extends ServiceTest {
         void shouldThrowExceptionWhenCreditDoesNotExist() {
             // Given
             Long userId = adminUser.getId();
-            UserCreditServiceRequest.Increase request = UserCreditServiceRequestFixtures.createIncrease(BigDecimal.valueOf(10000));
+            UserCreditServiceRequest.Increase request = UserCreditServiceRequestTestFixtures.createIncrease(BigDecimal.valueOf(10000));
 
             // When & Then
             assertThatThrownBy(() -> userCreditService.increase(userId, request))
@@ -268,7 +266,7 @@ class UserCreditServiceTest extends ServiceTest {
             Long userId = user.getId();
             Money increaseAmount = new Money(BigDecimal.valueOf(5000));
             Money decreaseAmount = new Money(BigDecimal.valueOf(3000));
-            UserCreditServiceRequest.Increase request = UserCreditServiceRequestFixtures.createIncrease(increaseAmount.getAmount());
+            UserCreditServiceRequest.Increase request = UserCreditServiceRequestTestFixtures.createIncrease(increaseAmount.getAmount());
 
             // When - 동시에 실행
             CountDownLatch latch = new CountDownLatch(2);
@@ -313,7 +311,7 @@ class UserCreditServiceTest extends ServiceTest {
             Long userId = user.getId();
             int retryCount = 3;
             Money increaseAmount = new Money(BigDecimal.valueOf(1000));
-            UserCreditServiceRequest.Increase request = UserCreditServiceRequestFixtures.createIncrease(increaseAmount.getAmount());
+            UserCreditServiceRequest.Increase request = UserCreditServiceRequestTestFixtures.createIncrease(increaseAmount.getAmount());
 
             // When
             for (int i = 0; i < retryCount; i++) {
@@ -345,7 +343,7 @@ class UserCreditServiceTest extends ServiceTest {
 
             Long userId = user.getId();
             int numberOfThreads = 10;
-            UserCreditServiceRequest.Increase request = UserCreditServiceRequestFixtures.createIncrease(BigDecimal.valueOf(1000));
+            UserCreditServiceRequest.Increase request = UserCreditServiceRequestTestFixtures.createIncrease(BigDecimal.valueOf(1000));
             AtomicInteger successCount = new AtomicInteger(0);
             CountDownLatch startLatch = new CountDownLatch(1);
             CountDownLatch endLatch = new CountDownLatch(numberOfThreads);

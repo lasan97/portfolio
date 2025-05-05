@@ -7,7 +7,7 @@ import com.portfolio.backend.domain.user.fixture.UserCreditTestFixtures;
 import com.portfolio.backend.domain.user.repository.UserCreditRepository;
 import com.portfolio.backend.service.user.dto.UserCreditServiceRequest;
 import com.portfolio.backend.service.user.dto.UserCreditServiceResponse;
-import com.portfolio.backend.service.user.fixture.UserCreditServiceRequestFixtures;
+import com.portfolio.backend.service.user.fixture.UserCreditServiceRequestTestFixtures;
 import jakarta.transaction.Transactional;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.BeforeEach;
@@ -94,7 +94,7 @@ class UserCreditControllerTest extends ControllerTest {
         @WithUserDetails
         void shouldIncreaseCreditsForAuthenticatedUser() throws Exception {
             // Given
-            UserCreditServiceRequest.Increase request = UserCreditServiceRequestFixtures.createIncrease(BigDecimal.valueOf(10000));
+            UserCreditServiceRequest.Increase request = UserCreditServiceRequestTestFixtures.createIncrease(BigDecimal.valueOf(10000));
 
             // When
             ResultActions resultActions = increase(request);
@@ -112,7 +112,7 @@ class UserCreditControllerTest extends ControllerTest {
         @WithAnonymousUser
         void shouldReturnForbiddenWhenUnauthorizedUserIncreasesCredit() throws Exception {
             // Given
-            UserCreditServiceRequest.Increase request = UserCreditServiceRequestFixtures.createIncrease(BigDecimal.valueOf(10000));
+            UserCreditServiceRequest.Increase request = UserCreditServiceRequestTestFixtures.createIncrease(BigDecimal.valueOf(10000));
 
             // When & Then
             increase(request)

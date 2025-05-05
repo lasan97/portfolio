@@ -8,6 +8,7 @@ import com.portfolio.backend.domain.common.entity.AggregateRoot;
 import com.portfolio.backend.domain.common.value.Money;
 import com.portfolio.backend.domain.order.value.DeliveryInfo;
 import com.portfolio.backend.domain.order.value.OrderItem;
+import com.portfolio.backend.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -15,6 +16,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -47,14 +49,44 @@ public class Order extends AggregateRoot {
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    public Order(Money totalPrice, List<OrderItem> orderItems, DeliveryInfo deliveryInfo) {
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+    public Order(User user, Money totalPrice, List<OrderItem> orderItems, DeliveryInfo deliveryInfo) {
         Ulid ulid = UlidCreator.getUlid();
         this.id = ulid.toUuid();
+        this.user = user;
         this.totalPrice = totalPrice;
-        this.deliveryInfo = deliveryInfo;
         this.orderItems = orderItems;
+        this.deliveryInfo = deliveryInfo;
         this.orderStatus = OrderStatus.PENDING_STOCK_REDUCTION;
         this.createdAt = LocalDateTime.ofInstant(ulid.getInstant(), ZoneId.of("Asia/Seoul"));
+
+        validation();
+    }
+
+    private void validation() {
+        if (user == null) {
+            throw new DomainException("주문자는 비어있을 수 없습니다.");
+        }
+        if (totalPrice == null) {
+            throw new DomainException("주문 금액은 비어있을 수 없습니다.");
+        }
+        if (orderItems == null || orderItems.isEmpty()) {
+            throw new DomainException("주문 상품은 비어있을 수 없습니다.");
+        }
+        if (deliveryInfo == null) {
+            throw new DomainException("주문 정보는 비어있을 수 없습니다.");
+        }
+
+        Money itemTotalPrice = orderItems.stream()
+                .map(OrderItem::getTotalPrice)
+                .reduce(Money.zero(), Money::add);
+
+        if (!totalPrice.equals(itemTotalPrice)) {
+            throw new DomainException("주문 금액이 일치하지 않습니다.");
+        }
     }
 
     public void completedStockReduction() {
@@ -83,5 +115,9 @@ public class Order extends AggregateRoot {
             throw new DomainException("주문 상태가 올바르지 않습니다.");
         }
         this.orderStatus = OrderStatus.CANCELLED;
+    }
+
+    public List<OrderItem> getOrderItems() {
+        return Collections.unmodifiableList(orderItems);
     }
 }

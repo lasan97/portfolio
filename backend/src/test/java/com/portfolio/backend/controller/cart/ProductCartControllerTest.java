@@ -2,7 +2,7 @@ package com.portfolio.backend.controller.cart;
 
 import com.portfolio.backend.controller.ControllerTest;
 import com.portfolio.backend.domain.cart.entity.ProductCart;
-import com.portfolio.backend.domain.cart.fixture.ProductCartFixtures;
+import com.portfolio.backend.domain.cart.fixture.ProductCartTestFixtures;
 import com.portfolio.backend.domain.cart.repository.ProductCartRepository;
 import com.portfolio.backend.domain.product.entity.Product;
 import com.portfolio.backend.domain.product.fixture.ProductTestFixtures;
@@ -64,7 +64,7 @@ class ProductCartControllerTest extends ControllerTest {
         @WithUserDetails
         void shouldGetCartItemsWithAuthentication() throws Exception {
             // Given
-            ProductCart cart = ProductCartFixtures.createProductCart(user);
+            ProductCart cart = ProductCartTestFixtures.createProductCart(user);
             cart.addItem(product, 1);
             cart = productCartRepository.save(cart);
 
@@ -166,7 +166,7 @@ class ProductCartControllerTest extends ControllerTest {
         @WithUserDetails
         void shouldRemoveCartItemWithAuthentication() throws Exception {
             // Given
-            ProductCart cart = ProductCartFixtures.createProductCart(user);
+            ProductCart cart = ProductCartTestFixtures.createProductCart(user);
             cart.addItem(product, 1);
             productCartRepository.save(cart);
 

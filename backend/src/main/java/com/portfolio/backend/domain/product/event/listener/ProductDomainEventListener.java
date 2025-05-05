@@ -12,7 +12,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class ProductEventListener {
+public class ProductDomainEventListener {
 
     private final ProductStockHistoryRepository productStockHistoryRepository;
 

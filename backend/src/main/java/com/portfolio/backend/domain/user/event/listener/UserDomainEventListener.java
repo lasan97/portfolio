@@ -12,7 +12,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class UserEventListener {
+public class UserDomainEventListener {
 
     private final UserCreditRepository creditRepository;
 

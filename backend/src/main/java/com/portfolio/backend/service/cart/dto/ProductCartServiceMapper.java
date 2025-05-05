@@ -1,6 +1,6 @@
 package com.portfolio.backend.service.cart.dto;
 
-import com.portfolio.backend.domain.cart.entity.ProductCartItem;
+import com.portfolio.backend.domain.cart.value.ProductCartItem;
 import com.portfolio.backend.domain.product.entity.Product;
 import com.portfolio.backend.service.common.dto.ServiceBaseResponse;
 import org.springframework.stereotype.Component;

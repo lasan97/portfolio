@@ -1,6 +1,7 @@
 package com.portfolio.backend.domain.order.value;
 
 import com.portfolio.backend.common.exception.DomainException;
+import com.portfolio.backend.domain.common.value.Money;
 import com.portfolio.backend.domain.product.entity.Product;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
@@ -30,5 +31,9 @@ public class OrderItem implements Serializable {
 
         this.product = new OrderProduct(product);
         this.quantity = quantity;
+    }
+
+    public Money getTotalPrice() {
+        return product.getPrice().multiply(quantity);
     }
 }

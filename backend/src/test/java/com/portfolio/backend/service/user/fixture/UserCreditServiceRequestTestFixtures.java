@@ -5,7 +5,7 @@ import com.portfolio.backend.service.user.dto.UserCreditServiceRequest;
 
 import java.math.BigDecimal;
 
-public class UserCreditServiceRequestFixtures {
+public class UserCreditServiceRequestTestFixtures {
 
     public static UserCreditServiceRequest.Increase createIncrease(BigDecimal amount) {
         return new UserCreditServiceRequest.Increase(new Money(amount));

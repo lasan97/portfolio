@@ -29,6 +29,15 @@ public class DeliveryInfo implements Serializable {
     private String deliveryRequest;
 
     public DeliveryInfo(String name, String phone, Address address, String deliveryRequest) {
+        this.name = name;
+        this.phone = phone;
+        this.address = address;
+        this.deliveryRequest = deliveryRequest;
+
+        validation();
+    }
+
+    private void validation() {
         if (name == null || name.isBlank()) {
             throw new DomainException("주문자 이름은 비어있을 수 없습니다.");
         }
@@ -38,9 +47,5 @@ public class DeliveryInfo implements Serializable {
         if (address == null) {
             throw new DomainException("배송 주소는 비어있을 수 없습니다.");
         }
-        this.name = name;
-        this.phone = phone;
-        this.address = address;
-        this.deliveryRequest = deliveryRequest;
     }
 }

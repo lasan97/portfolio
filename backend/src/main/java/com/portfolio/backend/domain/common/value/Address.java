@@ -21,15 +21,19 @@ public class Address {
     private String postCode;
 
     public Address(String address, String detailAddress, String postCode) {
+        this.address = address;
+        this.detailAddress = detailAddress;
+        this.postCode = postCode;
+
+        validation();
+    }
+
+    private void validation() {
         if (address == null || address.isBlank()) {
             throw new DomainException("주소는 비어있을 수 없습니다.");
         }
         if (postCode == null || postCode.isBlank()) {
             throw new DomainException("우편번호는 비어있을 수 없습니다.");
         }
-
-        this.address = address;
-        this.detailAddress = detailAddress;
-        this.postCode = postCode;
     }
 }

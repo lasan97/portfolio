@@ -1,4 +1,4 @@
-package com.portfolio.backend.domain.cart.entity;
+package com.portfolio.backend.domain.cart.value;
 
 import com.portfolio.backend.domain.product.entity.Product;
 import com.portfolio.backend.domain.product.fixture.ProductTestFixtures;
