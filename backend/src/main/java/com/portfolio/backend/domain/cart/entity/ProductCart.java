@@ -46,4 +46,8 @@ public class ProductCart {
         ProductCartItem item = new ProductCartItem(product);
         items.remove(item);
     }
+
+    public void removeAllItem() {
+        items.clear();
+    }
 }

@@ -4,6 +4,7 @@ import com.github.f4b6a3.ulid.Ulid;
 import com.github.f4b6a3.ulid.UlidCreator;
 import com.portfolio.backend.common.config.converter.MoneyConverter;
 import com.portfolio.backend.common.exception.DomainException;
+import com.portfolio.backend.common.exception.UnprocessableEntityException;
 import com.portfolio.backend.domain.common.entity.AggregateRoot;
 import com.portfolio.backend.domain.common.value.Money;
 import com.portfolio.backend.domain.order.value.DeliveryInfo;
@@ -87,7 +88,7 @@ public class Order extends AggregateRoot {
                 .reduce(Money.zero(), Money::add);
 
         if (!totalPrice.equals(itemTotalPrice)) {
-            throw new DomainException("주문 금액이 일치하지 않습니다.");
+            throw new UnprocessableEntityException("주문 금액이 일치하지 않습니다.");
         }
     }
 

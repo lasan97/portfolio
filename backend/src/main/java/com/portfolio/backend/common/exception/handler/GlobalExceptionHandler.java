@@ -67,6 +67,7 @@ public class GlobalExceptionHandler {
 
 	@ExceptionHandler(DomainException.class)
 	public ResponseEntity<ErrorResponse> handleDomainException(DomainException ex, WebRequest request) {
+		log.error("DomainException: {}", ex.getMessage(), ex);
 		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
 				.body(new ErrorResponse(
 						LocalDateTime.now(),
@@ -87,6 +88,7 @@ public class GlobalExceptionHandler {
 
 	@ExceptionHandler(FileStorageException.class)
 	public ResponseEntity<ErrorResponse> handleFileStorageException(FileStorageException ex, WebRequest request) {
+		log.error("FileStorageException: {}", ex.getMessage(), ex);
 		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
 				.body(new ErrorResponse(
 						LocalDateTime.now(),

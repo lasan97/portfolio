@@ -202,7 +202,7 @@ class ProductStockManagerTest extends ServiceTest {
     }
 
     @Nested
-    @DisplayName("재고 조정 처리")
+    @DisplayName("재고 조정")
     class Adjust {
 
         @Test
