@@ -1,11 +1,10 @@
 package com.portfolio.backend.service.product.outbox.scheduler;
 
+import com.portfolio.backend.common.event.ProductStockStatus;
 import com.portfolio.backend.domain.product.outbox.ProductStockOrderOutbox;
 import com.portfolio.backend.domain.product.repository.ProductStockOrderOutboxRepository;
-import com.portfolio.backend.domain.user.outbox.UserCreditOrderOutbox;
-import com.portfolio.backend.domain.user.repository.UserCreditOrderOutboxRepository;
+import com.portfolio.backend.service.common.outbox.OutboxStatus;
 import com.portfolio.backend.service.product.outbox.ProductStockOrderOutboxManager;
-import com.portfolio.backend.service.user.outbox.UserCreditOrderOutboxManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -24,14 +23,21 @@ public class ProductStockOutboxScheduler {
     private final ProductStockOrderOutboxRepository productStockOrderOutboxRepository;
     private final ProductStockOrderOutboxManager productStockOrderOutboxManager;
 
-    @Scheduled(fixedRate = 5000) // 5초마다
-    public void processOrderOutboxEveryTenSeconds() {
-        log.info("Processing user credit outbox - 10 seconds scheduler");
-
+    @Scheduled(fixedRate = 5000)
+    public void processOrderOutbox() {
         Optional<List<ProductStockOrderOutbox>> response = productStockOrderOutboxRepository.findAllByOutboxStatusIsNull();
+        Optional<List<ProductStockOrderOutbox>> failureResponse = productStockOrderOutboxRepository.findAllByOutboxStatusAndProductStockStatus(OutboxStatus.STARTED, ProductStockStatus.FAILED);
 
-        response.ifPresent(productStockOrderOutboxes ->
-                productStockOrderOutboxes.forEach(productStockOrderOutboxManager::productStockOrderOutboxProcess));
+        if (response.isPresent() && !response.get().isEmpty()) {
+            List<ProductStockOrderOutbox> productStockOrderOutboxes = response.get();
+            log.info("Processing product stock outbox size: {}", productStockOrderOutboxes.size());
+            productStockOrderOutboxes.forEach(productStockOrderOutboxManager::productStockOrderOutboxProcess);
+        }
 
+        if (failureResponse.isPresent() && !failureResponse.get().isEmpty()) {
+            List<ProductStockOrderOutbox> productStockOrderOutboxes = failureResponse.get();
+            log.info("Failure product stock outbox size: {}", productStockOrderOutboxes.size());
+            productStockOrderOutboxes.forEach(productStockOrderOutboxManager::productStockOrderOutboxFailure);
+        }
     }
 }

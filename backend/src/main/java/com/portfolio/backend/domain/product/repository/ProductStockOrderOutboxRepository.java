@@ -1,5 +1,6 @@
 package com.portfolio.backend.domain.product.repository;
 
+import com.portfolio.backend.common.event.ProductStockStatus;
 import com.portfolio.backend.domain.product.outbox.ProductStockOrderOutbox;
 import com.portfolio.backend.service.common.outbox.OutboxStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -15,4 +16,7 @@ public interface ProductStockOrderOutboxRepository extends JpaRepository<Product
     Optional<ProductStockOrderOutbox> findBySagaIdAndOutboxStatus(UUID sagaId, OutboxStatus outboxStatus);
 
     Optional<List<ProductStockOrderOutbox>> findAllByOutboxStatusIsNull();
+
+    Optional<List<ProductStockOrderOutbox>> findAllByOutboxStatusAndProductStockStatus(OutboxStatus outboxStatus, ProductStockStatus productStockStatus);
+
 }

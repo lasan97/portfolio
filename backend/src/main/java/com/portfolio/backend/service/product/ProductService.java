@@ -82,6 +82,6 @@ public class ProductService {
 
         product.delete();
 
-        productStockManager.deleted(product);
+        productStockManager.deleted(product.getId());
     }
 }

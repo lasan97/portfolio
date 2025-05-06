@@ -33,10 +33,19 @@ public class UserCreditService {
     }
 
     @Transactional
-    public void pay(Long userId, Money amount) {
+    public void pay(Long userId, Money amount, String description) {
         UserCredit credit = getLockedCreditByUserId(userId);
 
-        credit.subtract(amount);
+        credit.subtract(amount, description);
+
+        eventPublisher.publishDomainEventsFrom(credit);
+    }
+
+    @Transactional
+    public void refund(Long userId, Money amount, String description) {
+        UserCredit credit = getLockedCreditByUserId(userId);
+
+        credit.add(amount, description);
 
         eventPublisher.publishDomainEventsFrom(credit);
     }

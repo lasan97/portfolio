@@ -50,8 +50,12 @@ public class UserCredit extends AggregateRoot {
         this.amount = new Money(BigDecimal.ZERO);
         this.user = user;
     }
-    
+
     public void add(Money amount) {
+        add(amount, null);
+    }
+
+    public void add(Money amount, String description) {
         if (amount.isLessThanOrEqual(Money.zero())) {
             throw new UnprocessableEntityException("충전금액은 0과 같거나 작을 수 없습니다.");
         }
@@ -62,12 +66,17 @@ public class UserCredit extends AggregateRoot {
                 .userCredit(this)
                 .transactionType(CreditTransactionType.INCREASE)
                 .amount(amount)
+                .description(description)
                 .balanceAfterTransaction(this.amount)
                 .transactionDateTime(LocalDateTime.now())
                 .build());
     }
 
     public void subtract(Money amount) {
+        subtract(amount, null);
+    }
+
+    public void subtract(Money amount, String description) {
         if (amount.isLessThanOrEqual(Money.zero())) {
             throw new UnprocessableEntityException("차감금액은 0과 같거나 작을 수 없습니다.");
         }
@@ -82,6 +91,7 @@ public class UserCredit extends AggregateRoot {
                 .userCredit(this)
                 .transactionType(CreditTransactionType.DECREASE)
                 .amount(amount)
+                .description(description)
                 .balanceAfterTransaction(this.amount)
                 .transactionDateTime(LocalDateTime.now())
                 .build());

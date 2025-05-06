@@ -6,25 +6,30 @@ import com.portfolio.backend.domain.product.entity.Product;
 import com.portfolio.backend.domain.product.entity.ProductStatus;
 import com.portfolio.backend.domain.product.entity.ProductStock;
 import com.portfolio.backend.domain.product.entity.StockChangeReason;
+import com.portfolio.backend.domain.product.repository.ProductRepository;
 import com.portfolio.backend.domain.product.repository.ProductStockRepository;
+import com.portfolio.backend.domain.product.service.dto.ProductStockItemDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
 public class ProductStockManager {
 
     private final ProductStockRepository productStockRepository;
+    private final ProductRepository productRepository;
     private final EventPublisher eventPublisher;
 
     @Transactional
-    public void refund(Product product, int quantity) {
-        ProductStock productStock = getLockedByProductId(product.getId());
+    public void refund(Long productId, int quantity) {
+        ProductStock productStock = getLockedByProductId(productId);
+        Product product = productStock.getProduct();
 
         productStock.increase(quantity, StockChangeReason.RETURN);
 
-        // TODO - 여기있을 로직이 아님 테스트가 실패할 것
         if (product.getStatus() == ProductStatus.SOLD_OUT && productStock.isAvailable()) {
             product.active();
         }
@@ -33,8 +38,9 @@ public class ProductStockManager {
     }
 
     @Transactional
-    public void sale(Product product, int quantity) {
-        ProductStock productStock = getLockedByProductId(product.getId());
+    public void sale(Long productId, int quantity) {
+        ProductStock productStock = getLockedByProductId(productId);
+        Product product = productStock.getProduct();
 
         if (product.getStatus() == ProductStatus.DELETED) {
             throw new DomainException("삭제된 상품은 재고를 변경할 수 없습니다.");
@@ -42,8 +48,7 @@ public class ProductStockManager {
 
         productStock.decrease(quantity, StockChangeReason.SALE);
 
-        // TODO - 여기있을 로직이 아님 테스트가 실패할 것
-        if (product.getStatus() == ProductStatus.ACTIVE && productStock.isAvailable()) {
+        if (product.getStatus() == ProductStatus.ACTIVE && !productStock.isAvailable()) {
             product.soldOut();
         }
 
@@ -51,8 +56,15 @@ public class ProductStockManager {
     }
 
     @Transactional
-    public void adjust(Product product, int quantity, String memo) {
-        ProductStock productStock = getLockedByProductId(product.getId());
+    public void sale(List<ProductStockItemDto> productStockItems) {
+        productStockItems.forEach(item ->
+                sale(item.getProductId(), item.getQuantity()));
+    }
+
+    @Transactional
+    public void adjust(Long productId, int quantity, String memo) {
+        ProductStock productStock = getLockedByProductId(productId);
+        Product product = productStock.getProduct();
 
         if (product.getStatus() == ProductStatus.DELETED) {
             throw new DomainException("삭제된 상품은 재고를 변경할 수 없습니다.");
@@ -60,7 +72,6 @@ public class ProductStockManager {
 
         productStock.adjust(quantity, memo);
 
-        // TODO - 여기있을 로직이 아님 테스트가 실패할 것
         if (product.getStatus() != ProductStatus.DELETED) {
             if (productStock.isAvailable()) {
                 product.active();
@@ -73,8 +84,9 @@ public class ProductStockManager {
     }
 
     @Transactional
-    public void deleted(Product product) {
-        ProductStock productStock = getLockedByProductId(product.getId());
+    public void deleted(Long productId) {
+        ProductStock productStock = getLockedByProductId(productId);
+        Product product = productStock.getProduct();
 
         if (product.getStatus() != ProductStatus.DELETED) {
             throw new DomainException("삭제된 상품이 아닙니다.");

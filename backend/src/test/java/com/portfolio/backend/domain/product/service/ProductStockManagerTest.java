@@ -56,7 +56,7 @@ class ProductStockManagerTest extends ServiceTest {
             Product product = productRepository.save(ProductTestFixtures.createDefaultProduct(initQuantity));
 
             // When
-            productStockManager.refund(product, refundQuantity);
+            productStockManager.refund(product.getId(), refundQuantity);
 
             // Then
             ProductStock response = productStockRepository.findByProductId(product.getId()).get();
@@ -73,7 +73,7 @@ class ProductStockManagerTest extends ServiceTest {
             int refundQuantity = 5;
 
             // When
-            productStockManager.refund(product, refundQuantity);
+            productStockManager.refund(product.getId(), refundQuantity);
 
             // Then
             Product response = productRepository.findById(product.getId()).get();
@@ -89,7 +89,7 @@ class ProductStockManagerTest extends ServiceTest {
             productStockRepository.deleteAll();
 
             // When & Then
-            assertThatThrownBy(() -> productStockManager.refund(product, 5))
+            assertThatThrownBy(() -> productStockManager.refund(product.getId(), 5))
                     .isInstanceOf(DomainException.class)
                     .hasMessageContaining("재고가 존재하지 않습니다");
         }
@@ -104,7 +104,7 @@ class ProductStockManagerTest extends ServiceTest {
             Product product = productRepository.save(ProductTestFixtures.createDefaultProduct(initQuantity));
 
             // When
-            productStockManager.refund(product, refundQuantity);
+            productStockManager.refund(product.getId(), refundQuantity);
 
             // Then
             ArgumentCaptor<ProductStock> productStockCaptor = ArgumentCaptor.forClass(ProductStock.class);
@@ -131,7 +131,7 @@ class ProductStockManagerTest extends ServiceTest {
             Product product = productRepository.save(ProductTestFixtures.createDefaultProduct(initialQuantity));
 
             // When
-            productStockManager.sale(product, saleQuantity);
+            productStockManager.sale(product.getId(), saleQuantity);
 
             // Then
             ProductStock response = productStockRepository.findByProductId(product.getId()).get();
@@ -146,10 +146,11 @@ class ProductStockManagerTest extends ServiceTest {
             Product product = productRepository.save(ProductTestFixtures.createDefaultProduct(initialQuantity));
 
             // When
-            productStockManager.sale(product, initialQuantity);
+            productStockManager.sale(product.getId(), initialQuantity);
 
             // Then
-            assertThat(product.getStatus()).isEqualTo(ProductStatus.SOLD_OUT);
+            Product response = productRepository.findById(product.getId()).get();
+            assertThat(response.getStatus()).isEqualTo(ProductStatus.SOLD_OUT);
         }
 
         @Test
@@ -161,7 +162,7 @@ class ProductStockManagerTest extends ServiceTest {
             productRepository.save(product);
 
             // When & Then
-            assertThatThrownBy(() -> productStockManager.sale(product, 5))
+            assertThatThrownBy(() -> productStockManager.sale(product.getId(), 5))
                     .isInstanceOf(DomainException.class)
                     .hasMessageContaining("삭제된 상품은 재고를 변경할 수 없습니다");
         }
@@ -173,7 +174,7 @@ class ProductStockManagerTest extends ServiceTest {
             Product product = productRepository.save(ProductTestFixtures.createDefaultProduct(1));
 
             // When & Then
-            assertThatThrownBy(() -> productStockManager.sale(product, 100))
+            assertThatThrownBy(() -> productStockManager.sale(product.getId(), 100))
                     .isInstanceOf(UnprocessableEntityException.class)
                     .hasMessageContaining("재고가 부족합니다.");
         }
@@ -187,7 +188,7 @@ class ProductStockManagerTest extends ServiceTest {
             Product product = productRepository.save(ProductTestFixtures.createDefaultProduct(initQuantity));
 
             // When
-            productStockManager.sale(product, saleQuantity);
+            productStockManager.sale(product.getId(), saleQuantity);
 
             // Then
             ArgumentCaptor<ProductStock> productStockCaptor = ArgumentCaptor.forClass(ProductStock.class);
@@ -215,7 +216,7 @@ class ProductStockManagerTest extends ServiceTest {
             String memo = "재고 조정 테스트";
 
             // When
-            productStockManager.adjust(product, adjustQuantity, memo);
+            productStockManager.adjust(product.getId(), adjustQuantity, memo);
 
             // Then
             ProductStock response = productStockRepository.findByProductId(product.getId()).get();
@@ -231,7 +232,7 @@ class ProductStockManagerTest extends ServiceTest {
             String memo = "재고 조정 테스트";
 
             // When
-            productStockManager.adjust(product, adjustQuantity, memo);
+            productStockManager.adjust(product.getId(), adjustQuantity, memo);
 
             // Then
             Product response = productRepository.findById(product.getId()).get();
@@ -247,10 +248,11 @@ class ProductStockManagerTest extends ServiceTest {
             String memo = "재고 조정 테스트";
 
             // When
-            productStockManager.adjust(product, adjustQuantity, memo);
+            productStockManager.adjust(product.getId(), adjustQuantity, memo);
 
             // Then
-            assertThat(product.getStatus()).isEqualTo(ProductStatus.SOLD_OUT);
+            Product response = productRepository.findById(product.getId()).get();
+            assertThat(response.getStatus()).isEqualTo(ProductStatus.SOLD_OUT);
         }
 
         @Test
@@ -262,7 +264,7 @@ class ProductStockManagerTest extends ServiceTest {
             productRepository.save(product);
 
             // When & Then
-            assertThatThrownBy(() -> productStockManager.adjust(product, 5, "재고 조정 테스트"))
+            assertThatThrownBy(() -> productStockManager.adjust(product.getId(), 5, "재고 조정 테스트"))
                     .isInstanceOf(DomainException.class)
                     .hasMessageContaining("삭제된 상품은 재고를 변경할 수 없습니다");
         }
@@ -275,7 +277,7 @@ class ProductStockManagerTest extends ServiceTest {
             int adjustQuantity = 5;
 
             // When
-            productStockManager.adjust(product, adjustQuantity, "재고 조정");
+            productStockManager.adjust(product.getId(), adjustQuantity, "재고 조정");
 
             // Then
             ArgumentCaptor<ProductStock> productStockCaptor = ArgumentCaptor.forClass(ProductStock.class);
@@ -302,7 +304,7 @@ class ProductStockManagerTest extends ServiceTest {
             productRepository.save(product);
 
             // When
-            productStockManager.deleted(product);
+            productStockManager.deleted(product.getId());
 
             // Then
             ProductStock response = productStockRepository.findByProductId(product.getId()).get();
@@ -316,7 +318,7 @@ class ProductStockManagerTest extends ServiceTest {
             Product product = productRepository.save(ProductTestFixtures.createDefaultProduct(10));
 
             // When & Then
-            assertThatThrownBy(() -> productStockManager.deleted(product))
+            assertThatThrownBy(() -> productStockManager.deleted(product.getId()))
                     .isInstanceOf(DomainException.class)
                     .hasMessageContaining("삭제된 상품이 아닙니다");
         }
@@ -330,7 +332,7 @@ class ProductStockManagerTest extends ServiceTest {
             productRepository.save(product);
 
             // When
-            productStockManager.deleted(product);
+            productStockManager.deleted(product.getId());
 
             // Then
             ArgumentCaptor<ProductStock> productStockCaptor = ArgumentCaptor.forClass(ProductStock.class);

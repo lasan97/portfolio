@@ -101,18 +101,28 @@ public class OrderOutboxManager {
     @Transactional
     public void userCreditPaymentResponseProcess(PaymentOutbox paymentOutbox, PaymentStatus paymentStatus) {
         try {
-            
+
+            Order order = orderRepository.findById(paymentOutbox.getOrderId())
+                    .orElseThrow(() -> new DomainException("주문 정보가 존재하지 않습니다."));
+
             if (paymentStatus == PaymentStatus.FAILED) {
-                // TODO - 실패 로직
+
+                order.failed("결제 실패");
+
+                paymentOutbox.setProcessedAt(LocalDateTime.now());
+                paymentOutbox.setOutboxStatus(OutboxStatus.FAILED);
+                paymentOutbox.setSagaStatus(SagaStatus.FAILED);
+                paymentOutbox.setOrderStatus(order.getOrderStatus());
+
+                paymentOutboxRepository.save(paymentOutbox);
             } else if (paymentStatus == PaymentStatus.COMPLETED) {
+
+                order.paymentCompleted();
 
                 paymentOutbox.setProcessedAt(LocalDateTime.now());
                 paymentOutbox.setOutboxStatus(OutboxStatus.COMPLETED);
+                paymentOutbox.setOrderStatus(order.getOrderStatus());
                 paymentOutboxRepository.save(paymentOutbox);
-
-                Order order = orderRepository.findById(paymentOutbox.getOrderId())
-                        .orElseThrow(() -> new DomainException("주문 정보가 존재하지 않습니다."));
-                order.paymentCompleted();
 
                 List<ProductStockReductionEventPayload.OrderItem> items = order.getOrderItems().stream()
                         .map(item -> new ProductStockReductionEventPayload.OrderItem(item.getProduct().getId(), item.getQuantity()))
@@ -134,10 +144,12 @@ public class OrderOutboxManager {
                         .build();
 
                 productStockOutboxRepository.save(productStockOutbox);
+            } else if (paymentStatus == PaymentStatus.COMPLETED) {
+                paymentOutbox.setSagaStatus(SagaStatus.COMPENSATED);
+                paymentOutboxRepository.save(paymentOutbox);
             }
         } catch (OptimisticLockingFailureException e) {
             // No-Op
-            System.out.println("test");
         } catch (ResourceNotFoundException e) {
             log.error(e.getMessage(), e);
         } catch (DataAccessException e) {
@@ -149,24 +161,60 @@ public class OrderOutboxManager {
     public void productStockReductionResponseProcess(ProductStockOutbox productStockOutbox, ProductStockStatus productStockStatus) {
         try {
 
+            Order order = orderRepository.findById(productStockOutbox.getOrderId())
+                    .orElseThrow(() -> new DomainException("주문 정보가 존재하지 않습니다."));
+
             if (productStockStatus == ProductStockStatus.FAILED) {
-                // TODO - 실패 로직
-            } else if (productStockStatus == ProductStockStatus.COMPLETED) {
+
+                order.failed("재고 부족");
 
                 productStockOutbox.setProcessedAt(LocalDateTime.now());
-                productStockOutbox.setOutboxStatus(OutboxStatus.COMPLETED);
-                productStockOutbox.setSagaStatus(SagaStatus.COMPENSATED);
+                productStockOutbox.setOutboxStatus(OutboxStatus.FAILED);
+                productStockOutbox.setSagaStatus(SagaStatus.FAILED);
+                productStockOutbox.setOrderStatus(order.getOrderStatus());
+
                 productStockOutboxRepository.save(productStockOutbox);
 
                 PaymentOutbox paymentOutbox = paymentOutboxRepository.findBySagaIdAndOutboxStatus(productStockOutbox.getSagaId(), OutboxStatus.COMPLETED)
                         .orElseThrow(() -> new DomainException("PaymentOutbox가 존재하지 않습니다."));
-                paymentOutbox.setSagaStatus(SagaStatus.COMPENSATED);
+                paymentOutbox.setSagaStatus(SagaStatus.COMPENSATING);
+                paymentOutboxRepository.save(paymentOutbox);
+            } else if (productStockStatus == ProductStockStatus.COMPLETED) {
 
-                Order order = orderRepository.findById(productStockOutbox.getOrderId())
-                        .orElseThrow(() -> new DomainException("주문 정보가 존재하지 않습니다."));
                 order.completedStockReduction();
 
+                productStockOutbox.setProcessedAt(LocalDateTime.now());
+                productStockOutbox.setOutboxStatus(OutboxStatus.COMPLETED);
+                productStockOutbox.setSagaStatus(SagaStatus.SUCCEEDED);
+                productStockOutbox.setOrderStatus(order.getOrderStatus());
+                productStockOutboxRepository.save(productStockOutbox);
+
+                PaymentOutbox paymentOutbox = paymentOutboxRepository.findBySagaIdAndOutboxStatus(productStockOutbox.getSagaId(), OutboxStatus.COMPLETED)
+                        .orElseThrow(() -> new DomainException("PaymentOutbox가 존재하지 않습니다."));
+                paymentOutbox.setSagaStatus(SagaStatus.SUCCEEDED);
+                paymentOutboxRepository.save(paymentOutbox);
             }
+        } catch (OptimisticLockingFailureException e) {
+            // No-Op
+        } catch (ResourceNotFoundException e) {
+            log.error(e.getMessage(), e);
+        } catch (DataAccessException e) {
+            log.error("DB Exception", e.getMessage(), e);
+        }
+    }
+
+    @Transactional
+    public void paymentOutboxCompensation(PaymentOutbox paymentOutbox) {
+        log.info("PaymentOutbox compensation received saga id : {}", paymentOutbox.getSagaId());
+
+        try {
+            paymentOutbox.setOutboxStatus(OutboxStatus.STARTED);
+            paymentOutboxRepository.save(paymentOutbox);
+
+            UserCreditOrderOutbox userCreditOrderOutbox = userCreditOrderOutboxRepository.findBySagaIdAndOutboxStatus(paymentOutbox.getSagaId(), OutboxStatus.COMPLETED)
+                    .orElseThrow(() -> new DomainException("UserCreditOrderOutbox가 존재하지 않습니다."));
+            userCreditOrderOutbox.setPaymentStatus(PaymentStatus.COMPENSATING);
+            userCreditOrderOutboxRepository.save(userCreditOrderOutbox);
         } catch (OptimisticLockingFailureException e) {
             // No-Op
         } catch (ResourceNotFoundException e) {

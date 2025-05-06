@@ -11,11 +11,9 @@ import com.portfolio.backend.service.order.outbox.event.ProductStockReductionRes
 import com.portfolio.backend.service.order.outbox.event.UserCreditPaymentResponseEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.event.TransactionPhase;
-import org.springframework.transaction.event.TransactionalEventListener;
 
 import java.util.Optional;
 
@@ -28,8 +26,8 @@ public class OrderOutboxListener {
     private final ProductStockOutboxRepository productStockOutboxRepository;
     private final OrderOutboxManager orderOutboxManager;
 
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @EventListener
+    @Transactional
     public void handleUserCreditPaymentResponseEvent(UserCreditPaymentResponseEvent event) {
         log.info("UserCreditPaymentResponseEvent received saga id : {}", event.getSagaId());
 
@@ -45,8 +43,8 @@ public class OrderOutboxListener {
         orderOutboxManager.userCreditPaymentResponseProcess(paymentOutbox, event.getPaymentStatus());
     }
 
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @EventListener
+    @Transactional
     public void handleProductStockReductionResponseEvent(ProductStockReductionResponseEvent event) {
         log.info("ProductStockReductionResponseEvent received saga id : {}", event.getSagaId());
 

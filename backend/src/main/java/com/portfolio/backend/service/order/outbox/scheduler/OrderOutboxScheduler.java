@@ -4,6 +4,8 @@ import com.portfolio.backend.domain.order.outbox.PaymentOutbox;
 import com.portfolio.backend.domain.order.outbox.ProductStockOutbox;
 import com.portfolio.backend.domain.order.repository.PaymentOutboxRepository;
 import com.portfolio.backend.domain.order.repository.ProductStockOutboxRepository;
+import com.portfolio.backend.service.common.outbox.OutboxStatus;
+import com.portfolio.backend.service.common.outbox.SagaStatus;
 import com.portfolio.backend.service.order.outbox.OrderOutboxManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,16 +26,32 @@ public class OrderOutboxScheduler {
     private final ProductStockOutboxRepository productStockOutboxRepository;
     private final OrderOutboxManager orderOutboxManager;
 
-    @Scheduled(fixedRate = 5000) // 5초마다
-    public void processOrderOutboxEveryTenSeconds() {
-        log.info("Processing order outbox - 10 seconds scheduler");
+    @Scheduled(fixedRate = 5000)
+    public void processOrderOutbox() {
         Optional<List<PaymentOutbox>> paymentOutboxesResponse = paymentOutboxRepository.findAllByOutboxStatusIsNull();
         Optional<List<ProductStockOutbox>> productStockOutboxesResponse = productStockOutboxRepository.findAllByOutboxStatusIsNull();
 
-        paymentOutboxesResponse.ifPresent(paymentOutboxes ->
-                paymentOutboxes.forEach(orderOutboxManager::paymentOutboxProcess));
+        if (paymentOutboxesResponse.isPresent() && !paymentOutboxesResponse.get().isEmpty()) {
+            List<PaymentOutbox> paymentOutboxes = paymentOutboxesResponse.get();
+            log.info("Processing payment outbox size: {}", paymentOutboxes.size());
+            paymentOutboxes.forEach(orderOutboxManager::paymentOutboxProcess);
+        }
 
-        productStockOutboxesResponse.ifPresent(productStockOutboxes ->
-                productStockOutboxes.forEach(orderOutboxManager::productStockOutboxProcess));
+        if (productStockOutboxesResponse.isPresent() && !productStockOutboxesResponse.get().isEmpty()) {
+            List<ProductStockOutbox> productStockOutboxes = productStockOutboxesResponse.get();
+            log.info("Processing product stock outbox size: {}", productStockOutboxes.size());
+            productStockOutboxes.forEach(orderOutboxManager::productStockOutboxProcess);
+        }
+    }
+
+    @Scheduled(fixedRate = 5000)
+    public void processCompensating() {
+        Optional<List<PaymentOutbox>> compensatingOutboxesResponse = paymentOutboxRepository.findAllBySagaStatusAndOutboxStatus(SagaStatus.COMPENSATING, OutboxStatus.COMPLETED);
+
+        if (compensatingOutboxesResponse.isPresent() && !compensatingOutboxesResponse.get().isEmpty()) {
+            List<PaymentOutbox> paymentOutboxes = compensatingOutboxesResponse.get();
+            log.info("Compensating payment outbox size: {}", paymentOutboxes.size());
+            paymentOutboxes.forEach(orderOutboxManager::paymentOutboxCompensation);
+        }
     }
 }

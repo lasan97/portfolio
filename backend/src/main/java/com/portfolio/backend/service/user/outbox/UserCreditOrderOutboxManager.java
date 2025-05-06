@@ -19,7 +19,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
@@ -33,14 +32,13 @@ public class UserCreditOrderOutboxManager {
     private final UserCreditService userCreditService;
     private final UserCreditOrderOutboxRepository userCreditOrderOutboxRepository;
 
-    @Transactional
     public void userCreditOrderOutboxProcess(UserCreditOrderOutbox userCreditOrderOutbox) {
         log.info("UserCreditOrderOutbox received order id : {}", userCreditOrderOutbox.getOrderId());
 
         try {
             OrderPaymentEventPayload payload = getPayload(userCreditOrderOutbox.getPayload(), OrderPaymentEventPayload.class);
 
-            userCreditService.pay(payload.getUserId(), new Money(payload.getPrice()));
+            userCreditService.pay(payload.getUserId(), new Money(payload.getPrice()), "주문 결제");
             log.info("UserCreditOrderOutbox paid order id : {}", userCreditOrderOutbox.getOrderId());
 
             userCreditOrderOutbox.setPaymentStatus(PaymentStatus.COMPLETED);
@@ -54,9 +52,40 @@ public class UserCreditOrderOutboxManager {
 
         } catch (UnprocessableEntityException | DomainException e) {
             log.error("UserCreditOrderOutbox failed order id : {}", userCreditOrderOutbox.getOrderId());
-
-            userCreditOrderOutbox.setOutboxStatus(OutboxStatus.FAILED);
             userCreditOrderOutbox.setPaymentStatus(PaymentStatus.FAILED);
+            userCreditOrderOutbox.setOutboxStatus(OutboxStatus.STARTED);
+            userCreditOrderOutbox.setProcessedAt(LocalDateTime.now());
+            userCreditOrderOutboxRepository.save(userCreditOrderOutbox);
+        } catch (OptimisticLockingFailureException e) {
+            // No-Op
+        } catch (ResourceNotFoundException e) {
+            log.error(e.getMessage(), e);
+        } catch (DataAccessException e) {
+            log.error("DB Exception", e.getMessage(), e);
+        }
+    }
+
+    public void userCreditOrderOutboxFailure(UserCreditOrderOutbox userCreditOrderOutbox) {
+        log.info("UserCreditOrderOutbox failed order id : {}", userCreditOrderOutbox.getOrderId());
+        userCreditOrderOutbox.setOutboxStatus(OutboxStatus.FAILED);
+        userCreditOrderOutboxRepository.save(userCreditOrderOutbox);
+
+        eventPublisher.publishEvent(new UserCreditPaymentResponseEvent(
+                userCreditOrderOutbox.getSagaId(),
+                userCreditOrderOutbox.getPaymentStatus()));
+    }
+
+    public void userCreditOrderOutboxCompensation(UserCreditOrderOutbox userCreditOrderOutbox) {
+        log.info("UserCreditOrderOutbox compensation received order id : {}", userCreditOrderOutbox.getOrderId());
+
+        try {
+            OrderPaymentEventPayload payload = getPayload(userCreditOrderOutbox.getPayload(), OrderPaymentEventPayload.class);
+
+            userCreditService.refund(payload.getUserId(), new Money(payload.getPrice()), "주문 실패 결제 환불");
+            log.info("UserCreditOrderOutbox refund order id : {}", userCreditOrderOutbox.getOrderId());
+
+            userCreditOrderOutbox.setPaymentStatus(PaymentStatus.COMPENSATED);
+            userCreditOrderOutbox.setOutboxStatus(OutboxStatus.COMPLETED);
             userCreditOrderOutbox.setProcessedAt(LocalDateTime.now());
             userCreditOrderOutboxRepository.save(userCreditOrderOutbox);
 

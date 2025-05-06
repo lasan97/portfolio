@@ -203,7 +203,7 @@ class UserCreditServiceTest extends ServiceTest {
             Money deductionMoney = new Money(BigDecimal.valueOf(10000));
 
             // When
-            userCreditService.pay(userId, deductionMoney);
+            userCreditService.pay(userId, deductionMoney, "테스트");
 
             // Then
             UserCredit response = userCreditRepository.findByUserId(userId).get();
@@ -223,7 +223,7 @@ class UserCreditServiceTest extends ServiceTest {
             Money deductionMoney = new Money(BigDecimal.valueOf(10000));
 
             // When
-            userCreditService.pay(userId, deductionMoney);
+            userCreditService.pay(userId, deductionMoney, "테스트");
 
             // Then
             ArgumentCaptor<UserCredit> userCreditCaptor = ArgumentCaptor.forClass(UserCredit.class);
@@ -244,7 +244,7 @@ class UserCreditServiceTest extends ServiceTest {
             Money amount = new Money(BigDecimal.valueOf(10000));
 
             // When, Then
-            assertThatThrownBy(() -> userCreditService.pay(userId, amount))
+            assertThatThrownBy(() -> userCreditService.pay(userId, amount, "테스트"))
                     .isInstanceOf(DomainException.class)
                     .hasMessageContaining("지갑이 존재하지 않습니다");
         }
@@ -282,7 +282,7 @@ class UserCreditServiceTest extends ServiceTest {
 
             Future<?> decreaseFuture = executorService.submit(() -> {
                 try {
-                    userCreditService.pay(userId, decreaseAmount);
+                    userCreditService.pay(userId, decreaseAmount, "테스트");
                 } finally {
                     latch.countDown();
                 }
@@ -397,7 +397,7 @@ class UserCreditServiceTest extends ServiceTest {
             Thread thread1 = new Thread(() -> {
                 try {
                     startLatch.await();
-                    userCreditService.pay(userId, new Money(BigDecimal.valueOf(1000)));
+                    userCreditService.pay(userId, new Money(BigDecimal.valueOf(1000)), "테스트");
                     Thread.sleep(1000); // 첫 번째 스레드가 락을 보유하는 시간
                 } catch (Exception e) {
                     threadException.set(e);
@@ -410,7 +410,7 @@ class UserCreditServiceTest extends ServiceTest {
                 try {
                     startLatch.await();
                     secondThreadStarted.set(true);
-                    userCreditService.pay(userId, new Money(BigDecimal.valueOf(1000)));
+                    userCreditService.pay(userId, new Money(BigDecimal.valueOf(1000)), "테스트");
                 } catch (Exception e) {
                     threadException.set(e);
                 } finally {

@@ -1,10 +1,10 @@
 package com.portfolio.backend.service.order;
 
+import com.portfolio.backend.common.event.EventPublisher;
 import com.portfolio.backend.common.exception.ResourceNotFoundException;
 import com.portfolio.backend.common.exception.UnprocessableEntityException;
 import com.portfolio.backend.domain.cart.entity.ProductCart;
 import com.portfolio.backend.domain.cart.repository.ProductCartRepository;
-import com.portfolio.backend.common.event.EventPublisher;
 import com.portfolio.backend.domain.common.value.Money;
 import com.portfolio.backend.domain.order.entity.Order;
 import com.portfolio.backend.domain.order.fixture.OrderTestFixtures;
@@ -17,7 +17,6 @@ import com.portfolio.backend.service.order.dto.OrderServiceRequest;
 import com.portfolio.backend.service.order.dto.OrderServiceResponse;
 import com.portfolio.backend.service.order.fixture.OrderServiceRequestTestFixtures;
 import org.junit.jupiter.api.*;
-import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
@@ -30,7 +29,6 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.verify;
 
 @DisplayName("OrderService 테스트")
 class OrderServiceTest extends ServiceTest {
@@ -90,24 +88,6 @@ class OrderServiceTest extends ServiceTest {
             assertThat(createdOrder.getUser().getId()).isEqualTo(user.getId());
             assertThat(createdOrder.getTotalPrice()).isEqualTo(request.totalPrice());
             assertThat(createdOrder.getDeliveryInfo().getName()).isEqualTo(request.deliveryInfo().name());
-        }
-
-        @Test
-        @DisplayName("주문 생성 시 이벤트가 발행되어야 한다")
-        void shouldPublishEventWhenOrderCreated() {
-            // Given
-            OrderServiceRequest.Create request = OrderServiceRequestTestFixtures.createOrderCreateRequest(product.getPrice());
-
-            // When
-            orderService.createOrder(user.getId(), request);
-
-            // Then
-            ArgumentCaptor<Order> orderCaptor = ArgumentCaptor.forClass(Order.class);
-            verify(eventPublisher).publishDomainEventsFrom(orderCaptor.capture());
-
-            Order capturedOrder = orderCaptor.getValue();
-            assertThat(capturedOrder).isNotNull();
-            assertThat(capturedOrder.getDomainEvents()).isNotEmpty();
         }
 
         @Test

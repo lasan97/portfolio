@@ -24,6 +24,6 @@ public class ProductStockService {
         Product product = productRepository.findByIdAndStatusNot(productId, ProductStatus.DELETED)
                 .orElseThrow(() -> new ResourceNotFoundException("상품을 찾을 수 없습니다. ID: " + productId));
 
-        productStockManager.adjust(product, request.quantity(), "재고 조정");
+        productStockManager.adjust(product.getId(), request.quantity(), "재고 조정");
     }
 }
