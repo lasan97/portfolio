@@ -299,7 +299,7 @@ class OrderTest {
             Order order = OrderTestFixtures.createDefaultOrder(user, List.of(product));
 
             // when
-            order.failed();
+            order.failed("실패");
 
             // then
             assertEquals(OrderStatus.FAILED, order.getOrderStatus());
@@ -318,7 +318,7 @@ class OrderTest {
             order.completedStockReduction();
 
             // when & then
-            assertThrows(DomainException.class, order::failed);
+            assertThrows(DomainException.class, () -> order.failed("주문 실패"));
         }
     }
 }

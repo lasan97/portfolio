@@ -1,9 +1,8 @@
 package com.portfolio.backend.service.product;
 
-import com.portfolio.backend.common.exception.DomainException;
 import com.portfolio.backend.common.exception.ResourceNotFoundException;
 import com.portfolio.backend.common.exception.UnprocessableEntityException;
-import com.portfolio.backend.domain.common.event.DomainEventPublisher;
+import com.portfolio.backend.common.event.EventPublisher;
 import com.portfolio.backend.domain.product.entity.Product;
 import com.portfolio.backend.domain.product.entity.ProductStock;
 import com.portfolio.backend.domain.product.event.ProductStockChangedEvent;
@@ -35,7 +34,7 @@ class ProductStockServiceTest extends ServiceTest {
     private ProductStockService productStockService;
 
     @MockBean
-    protected DomainEventPublisher eventPublisher;
+    protected EventPublisher eventPublisher;
 
     @BeforeEach
     void setUp() {
@@ -92,7 +91,7 @@ class ProductStockServiceTest extends ServiceTest {
 
             // Then
             ArgumentCaptor<ProductStock> productStockCaptor = ArgumentCaptor.forClass(ProductStock.class);
-            verify(eventPublisher).publishEventsFrom(productStockCaptor.capture());
+            verify(eventPublisher).publishDomainEventsFrom(productStockCaptor.capture());
             ProductStock capturedProductStock = productStockCaptor.getValue();
 
             boolean hasExpectedEvent = capturedProductStock.getDomainEvents().stream()

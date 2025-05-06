@@ -1,7 +1,7 @@
 package com.portfolio.backend.service.user;
 
 import com.portfolio.backend.common.exception.DomainException;
-import com.portfolio.backend.domain.common.event.DomainEventPublisher;
+import com.portfolio.backend.common.event.EventPublisher;
 import com.portfolio.backend.domain.common.value.Money;
 import com.portfolio.backend.domain.user.entity.UserCredit;
 import com.portfolio.backend.domain.user.repository.UserCreditHistoryRepository;
@@ -21,7 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserCreditService {
 
     private final UserCreditRepository userCreditRepository;
-    private final DomainEventPublisher eventPublisher;
+    private final EventPublisher eventPublisher;
     private final UserCreditHistoryRepository userCreditHistoryRepository;
 
     private final UserCreditServiceMapper userCreditServiceMapper;
@@ -38,7 +38,7 @@ public class UserCreditService {
 
         credit.subtract(amount);
 
-        eventPublisher.publishEventsFrom(credit);
+        eventPublisher.publishDomainEventsFrom(credit);
     }
 
     @Transactional
@@ -47,7 +47,7 @@ public class UserCreditService {
 
         credit.add(request.amount());
 
-        eventPublisher.publishEventsFrom(credit);
+        eventPublisher.publishDomainEventsFrom(credit);
     }
 
     private UserCredit getCreditByUserId(Long userId) {

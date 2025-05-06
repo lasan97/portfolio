@@ -20,9 +20,9 @@ public class ProductStockService {
     private final ProductStockManager productStockManager;
 
     @Transactional
-    public void adjustStock(Long id, ProductStockServiceRequest.AdjustStock request) {
-        Product product = productRepository.findByIdAndStatusNot(id, ProductStatus.DELETED)
-                .orElseThrow(() -> new ResourceNotFoundException("상품을 찾을 수 없습니다. ID: " + id));
+    public void adjustStock(Long productId, ProductStockServiceRequest.AdjustStock request) {
+        Product product = productRepository.findByIdAndStatusNot(productId, ProductStatus.DELETED)
+                .orElseThrow(() -> new ResourceNotFoundException("상품을 찾을 수 없습니다. ID: " + productId));
 
         productStockManager.adjust(product, request.quantity(), "재고 조정");
     }

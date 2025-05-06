@@ -11,10 +11,7 @@ import com.portfolio.backend.domain.order.value.DeliveryInfo;
 import com.portfolio.backend.domain.order.value.OrderItem;
 import com.portfolio.backend.domain.user.entity.User;
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -35,6 +32,9 @@ public class Order extends AggregateRoot {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private OrderStatus orderStatus;
+
+    @Column
+    private String failReason;
 
     @Embedded
     private DeliveryInfo deliveryInfo;
@@ -106,11 +106,12 @@ public class Order extends AggregateRoot {
         this.orderStatus = OrderStatus.ORDERED;
     }
 
-    public void failed() {
+    public void failed(String failReason) {
         if (this.orderStatus == OrderStatus.ORDERED) {
             throw new DomainException("주문 상태가 올바르지 않습니다.");
         }
         this.orderStatus = OrderStatus.FAILED;
+        this.failReason = failReason;
     }
 
     public void canceling() {

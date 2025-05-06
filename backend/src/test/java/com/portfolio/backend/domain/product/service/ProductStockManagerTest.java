@@ -2,7 +2,7 @@ package com.portfolio.backend.domain.product.service;
 
 import com.portfolio.backend.common.exception.DomainException;
 import com.portfolio.backend.common.exception.UnprocessableEntityException;
-import com.portfolio.backend.domain.common.event.DomainEventPublisher;
+import com.portfolio.backend.common.event.EventPublisher;
 import com.portfolio.backend.domain.product.entity.Product;
 import com.portfolio.backend.domain.product.entity.ProductStatus;
 import com.portfolio.backend.domain.product.entity.ProductStock;
@@ -36,7 +36,7 @@ class ProductStockManagerTest extends ServiceTest {
     private ProductStockManager productStockManager;
 
     @MockBean
-    private DomainEventPublisher eventPublisher;
+    private EventPublisher eventPublisher;
 
     @AfterEach
     void tearDown() {
@@ -108,7 +108,7 @@ class ProductStockManagerTest extends ServiceTest {
 
             // Then
             ArgumentCaptor<ProductStock> productStockCaptor = ArgumentCaptor.forClass(ProductStock.class);
-            verify(eventPublisher).publishEventsFrom(productStockCaptor.capture());
+            verify(eventPublisher).publishDomainEventsFrom(productStockCaptor.capture());
             ProductStock capturedProductStock = productStockCaptor.getValue();
 
             boolean hasExpectedEvent = capturedProductStock.getDomainEvents().stream()
@@ -191,7 +191,7 @@ class ProductStockManagerTest extends ServiceTest {
 
             // Then
             ArgumentCaptor<ProductStock> productStockCaptor = ArgumentCaptor.forClass(ProductStock.class);
-            verify(eventPublisher).publishEventsFrom(productStockCaptor.capture());
+            verify(eventPublisher).publishDomainEventsFrom(productStockCaptor.capture());
             ProductStock capturedProductStock = productStockCaptor.getValue();
 
             boolean hasExpectedEvent = capturedProductStock.getDomainEvents().stream()
@@ -279,7 +279,7 @@ class ProductStockManagerTest extends ServiceTest {
 
             // Then
             ArgumentCaptor<ProductStock> productStockCaptor = ArgumentCaptor.forClass(ProductStock.class);
-            verify(eventPublisher).publishEventsFrom(productStockCaptor.capture());
+            verify(eventPublisher).publishDomainEventsFrom(productStockCaptor.capture());
             ProductStock capturedProductStock = productStockCaptor.getValue();
 
             boolean hasExpectedEvent = capturedProductStock.getDomainEvents().stream()
@@ -334,7 +334,7 @@ class ProductStockManagerTest extends ServiceTest {
 
             // Then
             ArgumentCaptor<ProductStock> productStockCaptor = ArgumentCaptor.forClass(ProductStock.class);
-            verify(eventPublisher).publishEventsFrom(productStockCaptor.capture());
+            verify(eventPublisher).publishDomainEventsFrom(productStockCaptor.capture());
             ProductStock capturedProductStock = productStockCaptor.getValue();
 
             boolean hasExpectedEvent = capturedProductStock.getDomainEvents().stream()

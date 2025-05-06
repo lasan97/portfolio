@@ -1,44 +1,51 @@
-package com.portfolio.backend.service.product.outbox;
+package com.portfolio.backend.domain.order.outbox;
 
 import com.portfolio.backend.domain.order.entity.OrderStatus;
+import com.portfolio.backend.service.common.outbox.OutboxStatus;
 import com.portfolio.backend.service.common.outbox.SagaStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
-import java.util.Objects;
 import java.util.UUID;
 
 @Getter
+@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "product_stock_reduction_outbox")
+@AllArgsConstructor
+@Builder
+@Table(name = "payment_outbox")
 @Entity
-public class ProductStockReductionOutbox {
+public class PaymentOutbox {
 
     @Id
     private UUID id;
-    private Long sagaId;
+
+    @Column(nullable = false)
+    private UUID sagaId;
+
+    @Column(nullable = false)
+    private UUID orderId;
+
+    @Column(nullable = false)
     private LocalDateTime createdAt;
+
     private LocalDateTime processedAt;
+
+    @Column(nullable = false)
     private String payload;
+
+    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private SagaStatus sagaStatus;
+
+    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private OrderStatus orderStatus;
-//    @Enumerated(EnumType.STRING)
-//    private OutboxStatus outboxStatus;
+
+    @Enumerated(EnumType.STRING)
+    private OutboxStatus outboxStatus;
+
     @Version
     private int version;
-
-    @Override
-    public boolean equals(Object o) {
-        if (o == null || getClass() != o.getClass()) return false;
-        ProductStockReductionOutbox that = (ProductStockReductionOutbox) o;
-        return Objects.equals(id, that.id);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(id);
-    }
 }

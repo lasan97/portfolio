@@ -1,7 +1,7 @@
 package com.portfolio.backend.service.user;
 
 import com.portfolio.backend.common.exception.DomainException;
-import com.portfolio.backend.domain.common.event.DomainEventPublisher;
+import com.portfolio.backend.common.event.EventPublisher;
 import com.portfolio.backend.domain.common.value.Money;
 import com.portfolio.backend.domain.user.entity.CreditTransactionType;
 import com.portfolio.backend.domain.user.entity.UserCredit;
@@ -45,7 +45,7 @@ class UserCreditServiceTest extends ServiceTest {
     private UserCreditService userCreditService;
 
     @MockBean
-    protected DomainEventPublisher eventPublisher;
+    protected EventPublisher eventPublisher;
 
     @AfterEach
     void tearDown() {
@@ -163,7 +163,7 @@ class UserCreditServiceTest extends ServiceTest {
 
             // Then
             ArgumentCaptor<UserCredit> userCreditCaptor = ArgumentCaptor.forClass(UserCredit.class);
-            verify(eventPublisher).publishEventsFrom(userCreditCaptor.capture());
+            verify(eventPublisher).publishDomainEventsFrom(userCreditCaptor.capture());
             UserCredit capturedUserCredit = userCreditCaptor.getValue();
 
             boolean hasExpectedEvent = capturedUserCredit.getDomainEvents().stream()
@@ -227,7 +227,7 @@ class UserCreditServiceTest extends ServiceTest {
 
             // Then
             ArgumentCaptor<UserCredit> userCreditCaptor = ArgumentCaptor.forClass(UserCredit.class);
-            verify(eventPublisher).publishEventsFrom(userCreditCaptor.capture());
+            verify(eventPublisher).publishDomainEventsFrom(userCreditCaptor.capture());
             UserCredit capturedUserCredit = userCreditCaptor.getValue();
 
             boolean hasExpectedEvent = capturedUserCredit.getDomainEvents().stream()

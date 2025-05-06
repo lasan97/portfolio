@@ -1,7 +1,7 @@
 package com.portfolio.backend.domain.product.service;
 
 import com.portfolio.backend.common.exception.DomainException;
-import com.portfolio.backend.domain.common.event.DomainEventPublisher;
+import com.portfolio.backend.common.event.EventPublisher;
 import com.portfolio.backend.domain.product.entity.Product;
 import com.portfolio.backend.domain.product.entity.ProductStatus;
 import com.portfolio.backend.domain.product.entity.ProductStock;
@@ -16,7 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class ProductStockManager {
 
     private final ProductStockRepository productStockRepository;
-    private final DomainEventPublisher eventPublisher;
+    private final EventPublisher eventPublisher;
 
     @Transactional
     public void refund(Product product, int quantity) {
@@ -29,7 +29,7 @@ public class ProductStockManager {
             product.active();
         }
 
-        eventPublisher.publishEventsFrom(productStock);
+        eventPublisher.publishDomainEventsFrom(productStock);
     }
 
     @Transactional
@@ -47,7 +47,7 @@ public class ProductStockManager {
             product.soldOut();
         }
 
-        eventPublisher.publishEventsFrom(productStock);
+        eventPublisher.publishDomainEventsFrom(productStock);
     }
 
     @Transactional
@@ -69,7 +69,7 @@ public class ProductStockManager {
             }
         }
 
-        eventPublisher.publishEventsFrom(productStock);
+        eventPublisher.publishDomainEventsFrom(productStock);
     }
 
     @Transactional
@@ -82,7 +82,7 @@ public class ProductStockManager {
 
         productStock.adjust(0, "판매 중지");
 
-        eventPublisher.publishEventsFrom(productStock);
+        eventPublisher.publishDomainEventsFrom(productStock);
     }
 
     private ProductStock getLockedByProductId(Long productId) {

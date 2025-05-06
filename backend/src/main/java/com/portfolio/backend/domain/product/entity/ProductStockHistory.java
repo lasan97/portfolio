@@ -34,6 +34,7 @@ public class ProductStockHistory {
 	@Column(nullable = false)
 	private Integer currentQuantity;
 
+	@Column(nullable = false)
 	@Enumerated(EnumType.STRING)
 	private StockChangeReason reason;
 

@@ -4,7 +4,7 @@ import com.portfolio.backend.common.exception.ResourceNotFoundException;
 import com.portfolio.backend.common.exception.UnprocessableEntityException;
 import com.portfolio.backend.domain.cart.entity.ProductCart;
 import com.portfolio.backend.domain.cart.repository.ProductCartRepository;
-import com.portfolio.backend.domain.common.event.DomainEventPublisher;
+import com.portfolio.backend.common.event.EventPublisher;
 import com.portfolio.backend.domain.common.value.Money;
 import com.portfolio.backend.domain.order.entity.Order;
 import com.portfolio.backend.domain.order.fixture.OrderTestFixtures;
@@ -48,7 +48,7 @@ class OrderServiceTest extends ServiceTest {
     private OrderService orderService;
 
     @MockBean
-    protected DomainEventPublisher eventPublisher;
+    protected EventPublisher eventPublisher;
 
     private Product product;
     private ProductCart cart;
@@ -103,7 +103,7 @@ class OrderServiceTest extends ServiceTest {
 
             // Then
             ArgumentCaptor<Order> orderCaptor = ArgumentCaptor.forClass(Order.class);
-            verify(eventPublisher).publishEventsFrom(orderCaptor.capture());
+            verify(eventPublisher).publishDomainEventsFrom(orderCaptor.capture());
 
             Order capturedOrder = orderCaptor.getValue();
             assertThat(capturedOrder).isNotNull();

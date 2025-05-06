@@ -1,7 +1,7 @@
 package com.portfolio.backend.service.product;
 
 import com.portfolio.backend.common.exception.ResourceNotFoundException;
-import com.portfolio.backend.domain.common.event.DomainEventPublisher;
+import com.portfolio.backend.common.event.EventPublisher;
 import com.portfolio.backend.domain.product.entity.Product;
 import com.portfolio.backend.domain.product.entity.ProductStatus;
 import com.portfolio.backend.domain.product.entity.ProductStock;
@@ -42,7 +42,7 @@ class ProductServiceTest extends ServiceTest {
     private ProductService productService;
 
     @MockBean
-    protected DomainEventPublisher eventPublisher;
+    protected EventPublisher eventPublisher;
 
     @AfterEach
     void tearDown() {
@@ -176,7 +176,7 @@ class ProductServiceTest extends ServiceTest {
 
             // Then
             ArgumentCaptor<Product> productCaptor = ArgumentCaptor.forClass(Product.class);
-            verify(eventPublisher).publishEventsFrom(productCaptor.capture());
+            verify(eventPublisher).publishDomainEventsFrom(productCaptor.capture());
             Product capturedProduct = productCaptor.getValue();
 
             boolean hasExpectedEvent = capturedProduct.getDomainEvents().stream()
@@ -281,7 +281,7 @@ class ProductServiceTest extends ServiceTest {
 
             // Then
             ArgumentCaptor<ProductStock> productStockCaptor = ArgumentCaptor.forClass(ProductStock.class);
-            verify(eventPublisher).publishEventsFrom(productStockCaptor.capture());
+            verify(eventPublisher).publishDomainEventsFrom(productStockCaptor.capture());
             ProductStock capturedProductStock = productStockCaptor.getValue();
 
             boolean hasExpectedEvent = capturedProductStock.getDomainEvents().stream()

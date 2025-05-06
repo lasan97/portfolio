@@ -1,7 +1,7 @@
 package com.portfolio.backend.service.product;
 
 import com.portfolio.backend.common.exception.ResourceNotFoundException;
-import com.portfolio.backend.domain.common.event.DomainEventPublisher;
+import com.portfolio.backend.common.event.EventPublisher;
 import com.portfolio.backend.domain.product.entity.Product;
 import com.portfolio.backend.domain.product.entity.ProductStatus;
 import com.portfolio.backend.domain.product.repository.ProductRepository;
@@ -23,7 +23,7 @@ public class ProductService {
 
     private final ProductRepository productRepository;
     private final ProductStockManager productStockManager;
-    private final DomainEventPublisher eventPublisher;
+    private final EventPublisher eventPublisher;
     private final ProductServiceMapper productServiceMapper;
 
     @Transactional(readOnly = true)
@@ -53,7 +53,7 @@ public class ProductService {
 
         Product savedProduct = productRepository.save(product);
 
-        eventPublisher.publishEventsFrom(savedProduct);
+        eventPublisher.publishDomainEventsFrom(savedProduct);
 
         return savedProduct.getId();
     }
