@@ -159,9 +159,9 @@
             </div>
             
             <div class="mt-8 space-y-4">
-              <!-- 주문 취소 버튼 (상태가 PENDING인 경우에만 표시) -->
+              <!-- 주문 취소 버튼 (적절한 상태인 경우에만 표시) -->
               <button 
-                v-if="order.orderStatus === OrderStatus.PENDING"
+                v-if="isCancellable(order.orderStatus)"
                 @click="cancelOrder"
                 class="w-full border border-red-600 text-red-600 py-3 rounded-md font-medium hover:bg-red-50 transition-colors"
               >
@@ -272,6 +272,11 @@ export default defineComponent({
       return OrderStatus.getDescription(status);
     };
     
+    // 주문 취소가 가능한 상태인지 확인
+    const isCancellable = (status: OrderStatus): boolean => {
+      return [OrderStatus.CREATED, OrderStatus.PAYMENT_CONFIRMED].includes(status);
+    };
+    
     // 총 상품 가격 계산
     const getTotalProductPrice = () => {
       if (!order.value) return '0원';
@@ -281,11 +286,7 @@ export default defineComponent({
           // price가 객체인지 숫자인지 확인
           let itemPrice = 0;
           
-          if (typeof item.product.price === 'object' && item.product.price !== null && 'amount' in item.product.price) {
-            itemPrice = item.product.price.amount;
-          } else if (typeof item.product.price === 'number' && !isNaN(item.product.price)) {
-            itemPrice = item.product.price;
-          }
+          itemPrice = item.product.price;
           
           return sum + (itemPrice * item.quantity);
         }, 0);
@@ -311,23 +312,13 @@ export default defineComponent({
           // price가 객체인지 숫자인지 확인
           let itemPrice = 0;
           
-          if (typeof item.product.price === 'object' && item.product.price !== null && 'amount' in item.product.price) {
-            itemPrice = item.product.price.amount;
-          } else if (typeof item.product.price === 'number' && !isNaN(item.product.price)) {
-            itemPrice = item.product.price;
-          }
+          itemPrice = item.product.price;
           
           return sum + (itemPrice * item.quantity);
         }, 0);
         
-        // totalPrice가 객체인지 숫자인지 확인
-        let orderTotalPrice = 0;
-        
-        if (typeof order.value.totalPrice === 'object' && order.value.totalPrice !== null && 'amount' in order.value.totalPrice) {
-          orderTotalPrice = order.value.totalPrice.amount;
-        } else if (typeof order.value.totalPrice === 'number' && !isNaN(order.value.totalPrice)) {
-          orderTotalPrice = order.value.totalPrice;
-        }
+        // totalPrice는 항상 숫자로 저장됨
+        let orderTotalPrice = order.value.totalPrice;
         
         const shippingFee = Math.max(0, orderTotalPrice - totalProductPrice);
         
@@ -413,7 +404,8 @@ export default defineComponent({
       goToOrderHistory,
       cancelOrder,
       OrderStatus,
-      isOriginalPriceDifferent
+      isOriginalPriceDifferent,
+      isCancellable
     };
   }
 });

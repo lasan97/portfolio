@@ -1,5 +1,6 @@
 import { useOrderStore, DeliveryInfo } from '@entities/order';
 import { useAuthStore } from '@features/auth';
+import { useUserStore } from '@entities/user';
 import { useCartStore } from '@entities/cart';
 import { ToastService } from '@shared/ui/toast';
 import { useRouter } from 'vue-router';
@@ -9,6 +10,7 @@ export function useOrderWithAuth() {
   const orderStore = useOrderStore();
   const cartStore = useCartStore();
   const authStore = useAuthStore();
+  const userStore = useUserStore();
   let router: any = null;
   
   try {
@@ -108,12 +110,12 @@ export function useOrderWithAuth() {
       
       // localStorage에서 캐시된 주문 목록이 있는지 확인
       const cachedOrdersJson = localStorage.getItem('cached_orders');
-      const userId = authStore.userData?.id;
+      const userId = userStore.user?.id;
       
       // 캐시된 데이터가 현재 로그인한 사용자의 것인지 확인하기 위해 사용자 ID도 함께 저장
       const cachedUserId = localStorage.getItem('cached_orders_user');
       
-      if (cachedOrdersJson && cachedUserId === userId) {
+      if (cachedOrdersJson && cachedUserId === String(userId)) {
         try {
           const cachedOrders = JSON.parse(cachedOrdersJson);
           // 캐시된 주문 데이터가 있으면 스토어에 설정
@@ -127,7 +129,7 @@ export function useOrderWithAuth() {
           localStorage.removeItem('cached_orders');
           localStorage.removeItem('cached_orders_user');
         }
-      } else if (cachedUserId !== userId) {
+      } else if (cachedUserId !== String(userId)) {
         // 다른 사용자의 캐시가 있으면 삭제
         localStorage.removeItem('cached_orders');
         localStorage.removeItem('cached_orders_user');
@@ -140,7 +142,7 @@ export function useOrderWithAuth() {
       // 결과를 localStorage에 캐싱
       if (orderStore.orders.length > 0) {
         localStorage.setItem('cached_orders', JSON.stringify(orderStore.orders));
-        localStorage.setItem('cached_orders_user', userId);
+        localStorage.setItem('cached_orders_user', String(userId));
       }
       
       return true;
@@ -189,10 +191,10 @@ export function useOrderWithAuth() {
       
       // localStorage에서 캐시된 주문이 있는지 확인
       const cachedOrdersJson = localStorage.getItem('cached_orders');
-      const userId = authStore.userData?.id;
+      const userId = userStore.user?.id;
       const cachedUserId = localStorage.getItem('cached_orders_user');
       
-      if (cachedOrdersJson && cachedUserId === userId) {
+      if (cachedOrdersJson && cachedUserId === String(userId)) {
         try {
           const cachedOrders = JSON.parse(cachedOrdersJson);
           // 캐시된 주문 중에서 현재 주문 ID와 일치하는 것이 있으면 사용
@@ -213,7 +215,7 @@ export function useOrderWithAuth() {
           localStorage.removeItem('cached_orders');
           localStorage.removeItem('cached_orders_user');
         }
-      } else if (cachedUserId !== userId) {
+      } else if (cachedUserId !== String(userId)) {
         // 다른 사용자의 캐시가 있으면 삭제
         localStorage.removeItem('cached_orders');
         localStorage.removeItem('cached_orders_user');
@@ -227,7 +229,7 @@ export function useOrderWithAuth() {
       if (order) {
         const ordersToCache = orderStore.orders.length > 0 ? orderStore.orders : [order];
         localStorage.setItem('cached_orders', JSON.stringify(ordersToCache));
-        localStorage.setItem('cached_orders_user', userId);
+        localStorage.setItem('cached_orders_user', String(userId));
       }
       
       return order;

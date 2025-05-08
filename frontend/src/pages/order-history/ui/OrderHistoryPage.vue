@@ -151,44 +151,14 @@ export default defineComponent({
       return '₩0';
     };
     
-    // 주문 상태에 따른 스타일 클래스
+    // OrderStatus의 namespace를 통해 스타일 클래스 가져오기
     const getStatusClass = (status: OrderStatus): string => {
-      switch (status) {
-        case OrderStatus.CREATED:
-          return 'bg-blue-100 text-blue-800';
-        case OrderStatus.PAYMENT_CONFIRMED:
-          return 'bg-green-100 text-green-800';
-        case OrderStatus.SHIPPING_READY:
-          return 'bg-yellow-100 text-yellow-800';
-        case OrderStatus.SHIPPING:
-          return 'bg-purple-100 text-purple-800';
-        case OrderStatus.DELIVERED:
-          return 'bg-green-100 text-green-800';
-        case OrderStatus.CANCELED:
-          return 'bg-red-100 text-red-800';
-        default:
-          return 'bg-gray-100 text-gray-800';
-      }
+      return OrderStatus.getStatusClass(status);
     };
     
-    // 주문 상태 텍스트
+    // OrderStatus의 namespace를 통해 상태 설명 가져오기
     const getStatusText = (status: OrderStatus): string => {
-      switch (status) {
-        case OrderStatus.CREATED:
-          return '주문 완료';
-        case OrderStatus.PAYMENT_CONFIRMED:
-          return '결제 확인';
-        case OrderStatus.SHIPPING_READY:
-          return '배송 준비중';
-        case OrderStatus.SHIPPING:
-          return '배송중';
-        case OrderStatus.DELIVERED:
-          return '배송 완료';
-        case OrderStatus.CANCELED:
-          return '주문 취소';
-        default:
-          return '알 수 없음';
-      }
+      return OrderStatus.getDescription(status);
     };
     
     // 상품 페이지로 이동

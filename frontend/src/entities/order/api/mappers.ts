@@ -7,7 +7,7 @@ import { OrderResponse } from './types';
 export const mapToOrder = (response: OrderResponse.Get): Order => {
   return {
     id: response.id,
-    orderStatus: response.orderStatus as OrderStatus,
+    orderStatus: OrderStatus.mapToFrontendStatus(response.orderStatus),
     deliveryInfo: {
       name: response.deliveryInfo.name,
       phone: response.deliveryInfo.phone,
@@ -18,29 +18,13 @@ export const mapToOrder = (response: OrderResponse.Get): Order => {
         postCode: response.deliveryInfo.address.postCode
       }
     },
-    // 직접 숫자로 설정하여 중첩된 객체(price.amount) 구조 제거
-    totalPrice: typeof response.totalPrice === 'number' 
-      ? response.totalPrice
-      : (response.totalPrice && typeof response.totalPrice === 'object' && 'amount' in response.totalPrice 
-          ? response.totalPrice.amount
-          : 0),
-          
+    totalPrice: response.totalPrice,
     orderItems: response.orderItems.map(item => ({
       product: {
         id: item.product.id,
         name: item.product.name,
-        // 원가 직접 숫자로 변환
-        originalPrice: typeof item.product.originalPrice === 'number'
-          ? item.product.originalPrice
-          : (item.product.originalPrice && typeof item.product.originalPrice === 'object' && 'amount' in item.product.originalPrice
-              ? item.product.originalPrice.amount
-              : 0),
-        // 판매가 직접 숫자로 변환
-        price: typeof item.product.price === 'number'
-          ? item.product.price
-          : (item.product.price && typeof item.product.price === 'object' && 'amount' in item.product.price
-              ? item.product.price.amount
-              : 0),
+        originalPrice: item.product.originalPrice,
+        price: item.product.price,
         thumbnailImageUrl: item.product.thumbnailImageUrl
       },
       quantity: item.quantity

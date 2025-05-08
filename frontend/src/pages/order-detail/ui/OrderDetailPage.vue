@@ -159,9 +159,9 @@
             </div>
             
             <div class="mt-8 space-y-4">
-              <!-- 주문 취소 버튼 (상태가 CREATED인 경우에만 표시) -->
+              <!-- 주문 취소 버튼 (적절한 상태인 경우에만 표시) -->
               <button 
-                v-if="order.orderStatus === OrderStatus.CREATED"
+                v-if="isCancellable(order.orderStatus)"
                 @click="cancelOrder"
                 class="w-full border border-red-600 text-red-600 py-3 rounded-md font-medium hover:bg-red-50 transition-colors"
               >
@@ -256,44 +256,19 @@ export default defineComponent({
       return '₩0';
     };
     
-    // 주문 상태에 따른 스타일 클래스
+    // OrderStatus의 namespace를 통해 스타일 클래스 가져오기
     const getStatusClass = (status: OrderStatus): string => {
-      switch (status) {
-        case OrderStatus.CREATED:
-          return 'bg-blue-100 text-blue-800';
-        case OrderStatus.PAYMENT_CONFIRMED:
-          return 'bg-green-100 text-green-800';
-        case OrderStatus.SHIPPING_READY:
-          return 'bg-yellow-100 text-yellow-800';
-        case OrderStatus.SHIPPING:
-          return 'bg-purple-100 text-purple-800';
-        case OrderStatus.DELIVERED:
-          return 'bg-green-100 text-green-800';
-        case OrderStatus.CANCELED:
-          return 'bg-red-100 text-red-800';
-        default:
-          return 'bg-gray-100 text-gray-800';
-      }
+      return OrderStatus.getStatusClass(status);
     };
     
-    // 주문 상태 텍스트
+    // OrderStatus의 namespace를 통해 상태 설명 가져오기
     const getStatusText = (status: OrderStatus): string => {
-      switch (status) {
-        case OrderStatus.CREATED:
-          return '주문 완료';
-        case OrderStatus.PAYMENT_CONFIRMED:
-          return '결제 확인';
-        case OrderStatus.SHIPPING_READY:
-          return '배송 준비중';
-        case OrderStatus.SHIPPING:
-          return '배송중';
-        case OrderStatus.DELIVERED:
-          return '배송 완료';
-        case OrderStatus.CANCELED:
-          return '주문 취소';
-        default:
-          return '알 수 없음';
-      }
+      return OrderStatus.getDescription(status);
+    };
+    
+    // 주문 취소가 가능한 상태인지 확인
+    const isCancellable = (status: OrderStatus): boolean => {
+      return [OrderStatus.CREATED, OrderStatus.PAYMENT_CONFIRMED].includes(status);
     };
     
     // 총 상품 가격 계산
@@ -305,11 +280,7 @@ export default defineComponent({
           // price가 객체인지 숫자인지 확인
           let itemPrice = 0;
           
-          if (typeof item.product.price === 'object' && item.product.price !== null && 'amount' in item.product.price) {
-            itemPrice = item.product.price.amount;
-          } else if (typeof item.product.price === 'number' && !isNaN(item.product.price)) {
-            itemPrice = item.product.price;
-          }
+          itemPrice = item.product.price;
           
           return sum + (itemPrice * item.quantity);
         }, 0);
@@ -335,23 +306,13 @@ export default defineComponent({
           // price가 객체인지 숫자인지 확인
           let itemPrice = 0;
           
-          if (typeof item.product.price === 'object' && item.product.price !== null && 'amount' in item.product.price) {
-            itemPrice = item.product.price.amount;
-          } else if (typeof item.product.price === 'number' && !isNaN(item.product.price)) {
-            itemPrice = item.product.price;
-          }
+          itemPrice = item.product.price;
           
           return sum + (itemPrice * item.quantity);
         }, 0);
         
-        // totalPrice가 객체인지 숫자인지 확인
-        let orderTotalPrice = 0;
-        
-        if (typeof order.value.totalPrice === 'object' && order.value.totalPrice !== null && 'amount' in order.value.totalPrice) {
-          orderTotalPrice = order.value.totalPrice.amount;
-        } else if (typeof order.value.totalPrice === 'number' && !isNaN(order.value.totalPrice)) {
-          orderTotalPrice = order.value.totalPrice;
-        }
+        // totalPrice는 항상 숫자로 저장됨
+        let orderTotalPrice = order.value.totalPrice;
         
         const shippingFee = Math.max(0, orderTotalPrice - totalProductPrice);
         
@@ -437,7 +398,8 @@ export default defineComponent({
       goToOrderHistory,
       cancelOrder,
       OrderStatus,
-      isOriginalPriceDifferent
+      isOriginalPriceDifferent,
+      isCancellable
     };
   }
 });

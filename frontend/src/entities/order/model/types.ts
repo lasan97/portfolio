@@ -1,31 +1,52 @@
 // 주문 상태 열거형
 export enum OrderStatus {
-  PENDING = 'PENDING',         // 대기
-  PAID = 'PAID',               // 결제완료
-  FAILED = 'FAILED',           // 주문 실패
-  CANCELLED = 'CANCELLED',     // 주문 취소
-  CANCELING = 'CANCELING',     // 주문 취소 요청
-  ORDERED = 'ORDERED'          // 주문 완료
+  CREATED = 'CREATED',               // 주문 완료
+  PAYMENT_CONFIRMED = 'PAYMENT_CONFIRMED', // 결제 확인
+  SHIPPING_READY = 'SHIPPING_READY', // 배송 준비중
+  SHIPPING = 'SHIPPING',             // 배송중
+  DELIVERED = 'DELIVERED',           // 배송 완료
+  CANCELLED = 'CANCELLED',           // 주문 취소
+
+  // 백엔드 호환성을 위한 기존 상태
+  PENDING = 'PENDING',               // 대기
+  PAID = 'PAID',                     // 결제완료
+  FAILED = 'FAILED',                 // 주문 실패
+  CANCELING = 'CANCELING',           // 주문 취소 요청
+  ORDERED = 'ORDERED'                // 주문 완료
 }
 
 // OrderStatus Namespace
 export namespace OrderStatus {
   // 설명 매핑
   export const descriptions: Record<OrderStatus, string> = {
+    [OrderStatus.CREATED]: '주문 완료',
+    [OrderStatus.PAYMENT_CONFIRMED]: '결제 확인',
+    [OrderStatus.SHIPPING_READY]: '배송 준비중',
+    [OrderStatus.SHIPPING]: '배송중',
+    [OrderStatus.DELIVERED]: '배송 완료',
+    [OrderStatus.CANCELLED]: '주문 취소',
+
+    // 백엔드 호환성을 위한 기존 상태
     [OrderStatus.PENDING]: '대기',
     [OrderStatus.PAID]: '결제완료',
     [OrderStatus.FAILED]: '주문 실패',
-    [OrderStatus.CANCELLED]: '주문 취소',
     [OrderStatus.CANCELING]: '주문 취소 요청',
     [OrderStatus.ORDERED]: '주문 완료'
   };
 
   // 상태별 스타일 클래스 매핑
   export const statusClasses: Record<OrderStatus, string> = {
+    [OrderStatus.CREATED]: 'bg-blue-100 text-blue-800',
+    [OrderStatus.PAYMENT_CONFIRMED]: 'bg-green-100 text-green-800',
+    [OrderStatus.SHIPPING_READY]: 'bg-yellow-100 text-yellow-800',
+    [OrderStatus.SHIPPING]: 'bg-purple-100 text-purple-800',
+    [OrderStatus.DELIVERED]: 'bg-green-100 text-green-800',
+    [OrderStatus.CANCELLED]: 'bg-red-100 text-red-800',
+
+    // 백엔드 호환성을 위한 기존 상태
     [OrderStatus.PENDING]: 'bg-blue-100 text-blue-800',
     [OrderStatus.PAID]: 'bg-green-100 text-green-800',
     [OrderStatus.FAILED]: 'bg-red-100 text-red-800',
-    [OrderStatus.CANCELLED]: 'bg-gray-100 text-gray-800',
     [OrderStatus.CANCELING]: 'bg-orange-100 text-orange-800',
     [OrderStatus.ORDERED]: 'bg-purple-100 text-purple-800'
   };
@@ -55,9 +76,20 @@ export namespace OrderStatus {
     return Object.values(OrderStatus)
       .filter(value => typeof value === 'string') as OrderStatus[];
   }
+
+  // 백엔드 상태를 프론트엔드 상태로 매핑
+  export function mapToFrontendStatus(backendStatus: string): OrderStatus {
+    // 백엔드 상태를 프론트엔드 상태로 매핑하는 로직
+    const statusMapping: Record<string, OrderStatus> = {
+      'PENDING': OrderStatus.CREATED,
+      'PAID': OrderStatus.PAYMENT_CONFIRMED,
+      'ORDERED': OrderStatus.SHIPPING_READY,
+      'CANCELLED': OrderStatus.CANCELLED
+    };
+
+    return statusMapping[backendStatus as keyof typeof statusMapping] || backendStatus as OrderStatus;
+  }
 }
-
-
 
 // 주문 상품 정보
 export interface OrderProduct {
