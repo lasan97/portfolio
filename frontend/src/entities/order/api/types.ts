@@ -1,4 +1,6 @@
 // API 요청 타입
+import {OrderStatus} from "@entities/order";
+
 export namespace OrderRequest {
   // 주문 생성 요청
   export interface Create {
@@ -21,7 +23,7 @@ export namespace OrderResponse {
   // 주문 응답
   export interface Get {
     id: string;
-    orderStatus: string;
+    orderStatus: OrderStatus;
     deliveryInfo: {
       name: string;
       phone: string;

@@ -8,4 +8,4 @@ export { orderRepository } from './api/repository';
 export { mapToOrder, mapToOrders } from './api/mappers';
 
 // 스토어
-export { useOrderStore } from './model/orderStore';
+export { useOrderStore, usePersistedOrderStore } from './model/orderStore';

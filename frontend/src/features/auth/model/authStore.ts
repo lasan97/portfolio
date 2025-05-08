@@ -3,11 +3,11 @@ import { ref, computed } from 'vue';
 import { useUserStore } from '@entities/user';
 import { authRepository } from '../api';
 import { setAuthToken, getAuthToken, logout as logoutAuth, recoverAuthState, syncAuthState } from '@shared/lib';
-import { useRouter } from 'vue-router';
+import { useRouter, Router } from 'vue-router';
 
 export const useAuthStore = defineStore('auth', () => {
   // 라우터 (직접 import 대신 필요할 때 가져오기)
-  let router: any = null;
+  let router: Router | null = null;
   try {
     // SSR 환경에서는 오류가 발생할 수 있으므로 try-catch로 감싸기
     const vueRouter = import('vue-router');
@@ -95,7 +95,7 @@ export const useAuthStore = defineStore('auth', () => {
       // repository 사용하여 현재 사용자 정보 가져오기
       const userData = await authRepository.fetchCurrentUser();
       userStore.setUser(userData);
-      
+
       // 사용자 정보를 성공적으로 가져왔으면 인증됨으로 표시
       authenticated.value = true;
     } catch (err: any) {

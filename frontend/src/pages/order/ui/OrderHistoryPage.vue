@@ -1,12 +1,12 @@
 <template>
   <div class="container mx-auto px-4 py-8">
     <h1 class="text-2xl font-bold mb-6">주문 내역</h1>
-    
+
     <!-- 로딩 중 표시 -->
     <div v-if="loading" class="flex justify-center py-12">
       <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600"></div>
     </div>
-    
+
     <!-- 주문 내역이 없는 경우 -->
     <div v-else-if="!hasOrders" class="bg-white rounded-lg shadow p-8 text-center">
       <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -20,7 +20,7 @@
         상품 둘러보기
       </button>
     </div>
-    
+
     <!-- 주문 내역 목록 -->
     <div v-else class="space-y-6">
       <div v-for="order in sortedOrders" :key="order.id" class="bg-white rounded-lg shadow-md overflow-hidden">
@@ -38,7 +38,7 @@
             </span>
           </div>
         </div>
-        
+
         <div class="p-6">
           <div class="space-y-4">
             <!-- 주문 상품 목록 (최대 2개만 표시) -->
@@ -64,19 +64,19 @@
                 </div>
               </div>
             </div>
-            
+
             <!-- 추가 상품이 있는 경우 표시 -->
             <div v-if="order.orderItems.length > 2" class="text-sm text-gray-500 pt-2">
               외 {{ order.orderItems.length - 2 }}개 상품
             </div>
-            
+
             <!-- 합계 금액 -->
             <div class="border-t border-gray-200 pt-4 flex justify-between items-center">
               <span class="text-sm text-gray-600">총 결제 금액</span>
               <span class="text-lg font-semibold text-indigo-600">{{ formatPrice(order.totalPrice) }}</span>
             </div>
           </div>
-          
+
           <!-- 상세 보기 버튼 -->
           <div class="mt-6 text-right">
             <router-link 
@@ -93,7 +93,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, onMounted, onActivated } from 'vue';
+import { defineComponent, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useOrderWithAuth } from '@features/order';
 import { OrderStatus } from '@entities/order';
@@ -103,18 +103,12 @@ export default defineComponent({
   setup() {
     const router = useRouter();
     const { fetchOrders, sortedOrders, loading, hasOrders } = useOrderWithAuth();
-    
-    // 데이터 가져오는 함수
-    const loadOrders = async () => {
-      await fetchOrders();
-    };
-    
-    // 컴포넌트 마운트 시 주문 내역 조회
-    onMounted(loadOrders);
-    
-    // keep-alive를 사용하는 경우 활성화될 때마다 데이터 새로고침
-    onActivated(loadOrders);
-    
+
+    // 컴포넌트 마운트 시 데이터 로드
+    onMounted(() => {
+      fetchOrders(0, 10);
+    });
+
     // 날짜 포맷팅
     const formatDate = (dateString: string): string => {
       const date = new Date(dateString);
@@ -126,7 +120,7 @@ export default defineComponent({
         minute: '2-digit'
       }).format(date);
     };
-    
+
     // 가격 포맷팅
     const formatPrice = (price: any): string => {
       // price가 숫자인 경우 바로 포맷팅
@@ -137,7 +131,7 @@ export default defineComponent({
           maximumFractionDigits: 0
         }).format(price);
       }
-      
+
       // price가 객체인 경우 price.amount 사용 (API 응답 구조 호환성 유지)
       if (price && typeof price === 'object' && 'amount' in price) {
         return new Intl.NumberFormat('ko-KR', {
@@ -146,26 +140,26 @@ export default defineComponent({
           maximumFractionDigits: 0
         }).format(price.amount);
       }
-      
+
       // 오류 방지를 위한 기본값
       return '₩0';
     };
-    
+
     // 주문 상태에 따른 스타일 클래스
     const getStatusClass = (status: OrderStatus): string => {
       return OrderStatus.getStatusClass(status);
     };
-    
+
     // 주문 상태 텍스트
     const getStatusText = (status: OrderStatus): string => {
       return OrderStatus.getDescription(status);
     };
-    
+
     // 상품 페이지로 이동
     const goToProducts = () => {
       router.push('/products');
     };
-    
+
     return {
       sortedOrders,
       loading,

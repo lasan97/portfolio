@@ -7,7 +7,7 @@ import { OrderResponse } from './types';
 export const mapToOrder = (response: OrderResponse.Get): Order => {
   return {
     id: response.id,
-    orderStatus: OrderStatus.mapToFrontendStatus(response.orderStatus),
+    orderStatus: response.orderStatus,
     deliveryInfo: {
       name: response.deliveryInfo.name,
       phone: response.deliveryInfo.phone,

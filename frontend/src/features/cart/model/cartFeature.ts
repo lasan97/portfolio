@@ -2,14 +2,14 @@ import { useCartStore } from '@entities/cart';
 import { useAuthStore } from '@features/auth';
 import { ToastService } from '@shared/ui/toast';
 import { Product } from '@entities/product';
-import { useRouter } from 'vue-router';
+import { useRouter, Router } from 'vue-router';
 
 // 인증이 필요한 장바구니 기능을 위한 컴포지션 함수
 export function useCartWithAuth() {
   const cartStore = useCartStore();
   const authStore = useAuthStore();
-  let router: any = null;
-  
+  let router: Router | null = null;
+
   try {
     // SSR 환경에서는 오류가 발생할 수 있으므로 try-catch로 감싸기
     if (typeof window !== 'undefined') {

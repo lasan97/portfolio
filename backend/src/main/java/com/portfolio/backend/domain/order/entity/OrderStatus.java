@@ -14,8 +14,4 @@ public enum OrderStatus {
     ORDERED("주문 완료");
 
     private final String description;
-
-    public String getDescription() {
-        return description;
-    }
 }

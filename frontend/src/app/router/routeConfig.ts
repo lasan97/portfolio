@@ -66,7 +66,7 @@ const orderRouteConfig: RouteRecordRaw[] = [
         path: '/products/manage',
         name: 'product-management',
         component: ProductManagementPage,
-        meta: { requiresAuth: true } // 로그인 필요
+        meta: { requiresAuth: true }
     },
     {
         path: '/cart',
@@ -77,25 +77,25 @@ const orderRouteConfig: RouteRecordRaw[] = [
         path: '/order',
         name: 'order',
         component: OrderPage,
-        meta: { requiresAuth: true } // 로그인 필요
+        meta: { requiresAuth: true }
     },
     {
         path: '/order-complete',
         name: 'order-complete',
         component: OrderCompletePage,
-        meta: { requiresAuth: true } // 로그인 필요
+        meta: { requiresAuth: true }
     },
     {
         path: '/orders',
         name: 'order-history',
         component: OrderHistoryPage,
-        meta: { requiresAuth: true } // 로그인 필요
+        meta: { requiresAuth: true }
     },
     {
         path: '/order/:id',
         name: 'order-detail',
         component: OrderDetailPage,
-        meta: { requiresAuth: true } // 로그인 필요
+        meta: { ssr: true, requiresAuth: true}
     }
 ];
 

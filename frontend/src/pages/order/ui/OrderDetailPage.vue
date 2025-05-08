@@ -4,7 +4,7 @@
     <div v-if="loading" class="flex justify-center py-12">
       <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600"></div>
     </div>
-    
+
     <!-- 주문 정보가 없는 경우 -->
     <div v-else-if="!order" class="bg-white rounded-lg shadow p-8 text-center">
       <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -26,7 +26,7 @@
         </button>
       </div>
     </div>
-    
+
     <!-- 주문 상세 정보 -->
     <div v-else>
       <!-- 상단 헤더 영역 -->
@@ -55,7 +55,7 @@
           </span>
         </div>
       </div>
-      
+
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- 주문 상품 및 금액 정보 -->
         <div class="lg:col-span-2 space-y-6">
@@ -64,7 +64,7 @@
             <div class="p-6 border-b border-gray-200">
               <h2 class="text-xl font-medium">주문 상품 ({{ order.orderItems.length }}개)</h2>
             </div>
-            
+
             <ul class="divide-y divide-gray-200">
               <li v-for="(item, index) in order.orderItems" :key="index" class="p-6 flex flex-col sm:flex-row">
                 <div class="flex-shrink-0 mb-4 sm:mb-0 sm:mr-4">
@@ -82,11 +82,11 @@
                     </div>
                   </div>
                 </div>
-                
+
                 <div class="flex-grow">
                   <div class="flex flex-col sm:flex-row sm:justify-between">
                     <h3 class="text-base font-medium text-gray-900">{{ item.product.name }}</h3>
-                    
+
                     <div class="mt-2 sm:mt-0 sm:text-right">
                       <p class="text-base font-medium text-gray-900">{{ formatPrice(item.product.price) }}</p>
                       <p v-if="isOriginalPriceDifferent(item.product)" class="text-sm text-gray-500 line-through">
@@ -99,13 +99,13 @@
               </li>
             </ul>
           </div>
-          
+
           <!-- 배송 정보 -->
           <div class="bg-white rounded-lg shadow-md overflow-hidden">
             <div class="p-6 border-b border-gray-200">
               <h2 class="text-xl font-medium">배송 정보</h2>
             </div>
-            
+
             <div class="p-6">
               <dl class="divide-y divide-gray-200">
                 <div class="py-3 flex justify-between">
@@ -132,32 +132,32 @@
             </div>
           </div>
         </div>
-        
+
         <!-- 결제 정보 요약 -->
         <div class="lg:col-span-1">
           <div class="bg-white rounded-lg shadow-md p-6 sticky top-6">
             <h2 class="text-xl font-medium mb-6">결제 정보</h2>
-            
+
             <div class="space-y-4">
               <!-- 상품 금액 -->
               <div class="flex justify-between">
                 <span class="text-gray-600">상품 금액</span>
                 <span>{{ getTotalProductPrice() }}</span>
               </div>
-              
+
               <!-- 배송비 -->
               <div class="flex justify-between">
                 <span class="text-gray-600">배송비</span>
                 <span>{{ getShippingFee() }}</span>
               </div>
-              
+
               <!-- 총 결제금액 -->
               <div class="border-t border-gray-200 pt-4 flex justify-between font-semibold">
                 <span>총 결제 금액</span>
                 <span class="text-indigo-600 text-xl">{{ formatPrice(order.totalPrice) }}</span>
               </div>
             </div>
-            
+
             <div class="mt-8 space-y-4">
               <!-- 주문 취소 버튼 (적절한 상태인 경우에만 표시) -->
               <button 
@@ -167,7 +167,7 @@
               >
                 주문 취소
               </button>
-              
+
               <!-- 주문 내역으로 버튼 -->
               <button 
                 @click="goToOrderHistory"
@@ -196,30 +196,33 @@ export default defineComponent({
     const route = useRoute();
     const router = useRouter();
     const { fetchOrderDetails, loading } = useOrderWithAuth();
-    
+
     // 현재 주문 정보
     const order = ref<Order | null>(null);
-    
+
     // 주문 상세 정보를 가져오는 함수
     const loadOrderDetails = async () => {
       try {
         const orderId = route.params.id as string;
         if (orderId) {
           const orderData = await fetchOrderDetails(orderId);
-          order.value = orderData;
+          // orderData가 Order 객체인 경우에만 할당
+          if (orderData) {
+            order.value = orderData;
+          }
         }
       } catch (error) {
         console.error('주문 상세 정보 조회 실패:', error);
         ToastService.error('주문 정보를 불러오는데 실패했습니다.');
       }
     };
-    
+
     // 컴포넌트 마운트 시 주문 상세 정보 조회
     onMounted(loadOrderDetails);
-    
+
     // keep-alive를 사용하는 경우 활성화될 때마다 데이터 새로고침
     onActivated(loadOrderDetails);
-    
+
     // 날짜 포맷팅
     const formatDate = (dateString: string): string => {
       const date = new Date(dateString);
@@ -231,7 +234,7 @@ export default defineComponent({
         minute: '2-digit'
       }).format(date);
     };
-    
+
     // 가격 포맷팅
     const formatPrice = (price: any): string => {
       // price가 숫자인 경우 바로 포맷팅 (개선된 API 응답 구조)
@@ -242,7 +245,7 @@ export default defineComponent({
           maximumFractionDigits: 0
         }).format(price);
       }
-      
+
       // price가 객체인 경우 price.amount 사용 (기존 API 응답 구조)
       if (price && typeof price === 'object' && 'amount' in price) {
         return new Intl.NumberFormat('ko-KR', {
@@ -251,46 +254,46 @@ export default defineComponent({
           maximumFractionDigits: 0
         }).format(price.amount);
       }
-      
+
       // NaN 값인 경우
       if (price === 'NaN' || price === 'WNaN' || (typeof price === 'number' && isNaN(price))) {
         console.error('가격 데이터 오류: NaN 값이 감지되었습니다', price);
         return '₩0';
       }
-      
+
       // 오류 방지를 위한 기본값
       return '₩0';
     };
-    
+
     // 주문 상태에 따른 스타일 클래스
     const getStatusClass = (status: OrderStatus): string => {
       return OrderStatus.getStatusClass(status);
     };
-    
+
     // 주문 상태 텍스트
     const getStatusText = (status: OrderStatus): string => {
       return OrderStatus.getDescription(status);
     };
-    
+
     // 주문 취소가 가능한 상태인지 확인
     const isCancellable = (status: OrderStatus): boolean => {
-      return [OrderStatus.CREATED, OrderStatus.PAYMENT_CONFIRMED].includes(status);
+      return [OrderStatus.ORDERED].includes(status);
     };
-    
+
     // 총 상품 가격 계산
     const getTotalProductPrice = () => {
       if (!order.value) return '0원';
-      
+
       try {
         const totalProductPrice = order.value.orderItems.reduce((sum, item) => {
           // price가 객체인지 숫자인지 확인
           let itemPrice = 0;
-          
+
           itemPrice = item.product.price;
-          
+
           return sum + (itemPrice * item.quantity);
         }, 0);
-        
+
         return new Intl.NumberFormat('ko-KR', {
           style: 'currency',
           currency: 'KRW',
@@ -301,27 +304,27 @@ export default defineComponent({
         return '₩0';
       }
     };
-    
+
     // 배송비 계산 (실제 비즈니스 로직에 맞게 수정 필요)
     const getShippingFee = () => {
       if (!order.value) return '0원';
-      
+
       try {
         // 주문 총액과 상품 금액의 차이를 배송비로 계산
         const totalProductPrice = order.value.orderItems.reduce((sum, item) => {
           // price가 객체인지 숫자인지 확인
           let itemPrice = 0;
-          
+
           itemPrice = item.product.price;
-          
+
           return sum + (itemPrice * item.quantity);
         }, 0);
-        
+
         // totalPrice는 항상 숫자로 저장됨
         let orderTotalPrice = order.value.totalPrice;
-        
+
         const shippingFee = Math.max(0, orderTotalPrice - totalProductPrice);
-        
+
         return new Intl.NumberFormat('ko-KR', {
           style: 'currency',
           currency: 'KRW',
@@ -332,28 +335,28 @@ export default defineComponent({
         return '₩0';
       }
     };
-    
+
     // 이전 페이지로 이동
     const goBack = () => {
       router.go(-1);
     };
-    
+
     // 주문 내역 페이지로 이동
     const goToOrderHistory = () => {
       router.push('/orders');
     };
-    
+
     // 주문 취소 (실제 구현 필요)
     const cancelOrder = async () => {
       try {
         if (!order.value) return;
-        
+
         // 실제 주문 취소 API 호출이 필요합니다
         // const result = await orderRepository.cancelOrder(order.value.id);
-        
+
         // 임시로 성공 메시지만 표시
         ToastService.success('주문이 취소되었습니다.');
-        
+
         // 주문 내역 페이지로 이동
         router.push('/orders');
       } catch (error) {
@@ -361,7 +364,7 @@ export default defineComponent({
         ToastService.error('주문 취소에 실패했습니다.');
       }
     };
-    
+
     // 원래 가격과 판매 가격이 다른지 확인하는 함수
     const isOriginalPriceDifferent = (product: any) => {
       // 둘 다 객체인 경우
@@ -370,27 +373,27 @@ export default defineComponent({
           'amount' in product.originalPrice && 'amount' in product.price) {
         return product.originalPrice.amount !== product.price.amount;
       }
-      
+
       // 둘 다 숫자인 경우
       if (typeof product.originalPrice === 'number' && typeof product.price === 'number') {
         return product.originalPrice !== product.price;
       }
-      
+
       // 혼합된 경우
       if (typeof product.originalPrice === 'object' && product.originalPrice !== null && 'amount' in product.originalPrice &&
           typeof product.price === 'number') {
         return product.originalPrice.amount !== product.price;
       }
-      
+
       if (typeof product.price === 'object' && product.price !== null && 'amount' in product.price &&
           typeof product.originalPrice === 'number') {
         return product.originalPrice !== product.price.amount;
       }
-      
+
       // 기본값: 다르지 않음
       return false;
     };
-    
+
     return {
       order,
       loading,
