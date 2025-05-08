@@ -68,6 +68,7 @@
 <script lang="ts">
 import { defineComponent, computed } from 'vue';
 import { useCartStore } from '../model/cartStore';
+import {formatPrice} from "@shared/lib";
 
 export default defineComponent({
   name: 'CartSummary',
@@ -82,14 +83,7 @@ export default defineComponent({
     const discountRate = computed(() => cart.discountRate);
     const shippingInfo = computed(() => cart.shippingInfo);
     const total = computed(() => cart.total);
-    
-    const formatPrice = (price: number): string => {
-      return new Intl.NumberFormat('ko-KR', {
-        style: 'currency',
-        currency: 'KRW'
-      }).format(price);
-    };
-    
+
     return {
       cart,
       isEmpty,

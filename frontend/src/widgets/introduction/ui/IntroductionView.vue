@@ -37,7 +37,7 @@
     
     <!-- 마지막 업데이트 정보 -->
     <div class="mt-8 text-sm text-gray-500">
-      마지막 업데이트: {{ formatDate(introduction?.updatedAt) }}
+      마지막 업데이트: {{ formatDateWithOptions(introduction?.updatedAt) }}
     </div>
   </div>
 </template>
@@ -46,6 +46,7 @@
 import { computed } from 'vue';
 import { LinkIcon, MarkdownRenderer } from '@shared/ui';
 import type { IntroductionDto } from '@features/introduction';
+import {formatDate} from "@shared/lib";
 
 const props = defineProps<{
   introduction: IntroductionDto | null;
@@ -60,18 +61,17 @@ const emit = defineEmits<{
 const hasLinks = computed(() => {
   return props.introduction?.externalLinks && props.introduction.externalLinks.length > 0;
 });
+// 날짜 포맷팅에 사용할 옵션
+const dateFormatOptions: Intl.DateTimeFormatOptions = {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit'
+};
 
-// 날짜 포맷팅 함수
-const formatDate = (dateString?: string): string => {
-  if (!dateString) return '';
-  
-  const date = new Date(dateString);
-  return new Intl.DateTimeFormat('ko-KR', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  }).format(date);
+// 날짜 포맷팅 함수 (옵션 적용)
+const formatDateWithOptions = (dateString: string | undefined) => {
+  return formatDate(dateString, dateFormatOptions);
 };
 </script>

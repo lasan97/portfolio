@@ -199,15 +199,7 @@ import { useProductStore, Product, ProductCategory, ProductStatus } from '@entit
 import { useUserStore } from '@entities/user';
 import { ProductFormData, StockAdjustmentData, ProductFormModal, StockAdjustmentModal } from '@features/productManagement';
 import { UserRole } from "@entities/user";
-
-// 가격 포맷팅 함수
-const formatPrice = (price: number): string => {
-  return new Intl.NumberFormat('ko-KR', { 
-    style: 'currency', 
-    currency: 'KRW',
-    maximumFractionDigits: 0
-  }).format(price);
-};
+import {formatPrice} from "@shared/lib";
 
 export default defineComponent({
   name: 'ProductManagementPage',

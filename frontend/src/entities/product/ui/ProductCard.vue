@@ -63,6 +63,7 @@
 import { defineComponent, PropType, ref } from 'vue';
 import { Product, ProductCategory } from '@entities/product';
 import { useCartWithAuth } from '@features/cart';
+import {formatPrice} from "@shared/lib";
 
 export default defineComponent({
   name: 'ProductCard',
@@ -79,13 +80,6 @@ export default defineComponent({
     // 이미지 로딩 상태 관리
     const imageLoading = ref(true);
     const imageError = ref(false);
-
-    const formatPrice = (price: number): string => {
-      return new Intl.NumberFormat('ko-KR', {
-        style: 'currency',
-        currency: 'KRW'
-      }).format(price);
-    };
 
     const calculateDiscountRate = (originalPrice: number, currentPrice: number): number => {
       const discountRate = ((originalPrice - currentPrice) / originalPrice) * 100;

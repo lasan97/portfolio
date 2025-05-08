@@ -97,7 +97,7 @@
                           {{ history.transactionType === 'INCREASE' ? '+' : '-' }}{{ formatNumber(history.amount) }}원
                         </p>
                       </div>
-                      <p class="text-gray-500 text-sm">{{ formatDateTime(history.transactionDateTime) }}</p>
+                      <p class="text-gray-500 text-sm">{{ formatDate(history.transactionDateTime) }}</p>
                     </div>
                   </div>
                 </div>
@@ -135,6 +135,7 @@ import { useRouter } from 'vue-router';
 import { Button } from '@shared/ui';
 import { CreditCard } from '@features/credit';
 import { UserRole } from "@entities/user";
+import {formatDate, formatNumber} from "@shared/lib";
 
 export default defineComponent({
   name: 'ProfilePage',
@@ -232,21 +233,18 @@ export default defineComponent({
       }
     };
 
-    // 숫자 포맷팅 함수
-    const formatNumber = (num: number): string => {
-      return new Intl.NumberFormat('ko-KR').format(num);
+    // 날짜 포맷팅에 사용할 옵션
+    const dateFormatOptions: Intl.DateTimeFormatOptions = {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
     };
 
-    // 날짜 포맷팅 함수
-    const formatDateTime = (dateTimeStr: string): string => {
-      const date = new Date(dateTimeStr);
-      return new Intl.DateTimeFormat('ko-KR', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      }).format(date);
+    // 날짜 포맷팅 함수 (옵션 적용)
+    const formatDateWithOptions = (dateString: string) => {
+      return formatDate(dateString, dateFormatOptions);
     };
 
     return {
@@ -263,7 +261,7 @@ export default defineComponent({
       handleChargeCredit,
       loadMoreHistory,
       formatNumber,
-      formatDateTime
+      formatDate: formatDateWithOptions
     };
   }
 });

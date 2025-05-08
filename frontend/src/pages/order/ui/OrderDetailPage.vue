@@ -189,6 +189,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useOrderWithAuth } from '@features/order';
 import { Order, OrderStatus } from '@entities/order';
 import { ToastService } from '@shared/ui/toast';
+import { formatDate, formatPrice } from '@shared/lib/utils';
 
 export default defineComponent({
   name: 'OrderDetailPage',
@@ -222,48 +223,6 @@ export default defineComponent({
 
     // keep-alive를 사용하는 경우 활성화될 때마다 데이터 새로고침
     onActivated(loadOrderDetails);
-
-    // 날짜 포맷팅
-    const formatDate = (dateString: string): string => {
-      const date = new Date(dateString);
-      return new Intl.DateTimeFormat('ko-KR', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      }).format(date);
-    };
-
-    // 가격 포맷팅
-    const formatPrice = (price: any): string => {
-      // price가 숫자인 경우 바로 포맷팅 (개선된 API 응답 구조)
-      if (typeof price === 'number') {
-        return new Intl.NumberFormat('ko-KR', {
-          style: 'currency',
-          currency: 'KRW',
-          maximumFractionDigits: 0
-        }).format(price);
-      }
-
-      // price가 객체인 경우 price.amount 사용 (기존 API 응답 구조)
-      if (price && typeof price === 'object' && 'amount' in price) {
-        return new Intl.NumberFormat('ko-KR', {
-          style: 'currency',
-          currency: 'KRW',
-          maximumFractionDigits: 0
-        }).format(price.amount);
-      }
-
-      // NaN 값인 경우
-      if (price === 'NaN' || price === 'WNaN' || (typeof price === 'number' && isNaN(price))) {
-        console.error('가격 데이터 오류: NaN 값이 감지되었습니다', price);
-        return '₩0';
-      }
-
-      // 오류 방지를 위한 기본값
-      return '₩0';
-    };
 
     // 주문 상태에 따른 스타일 클래스
     const getStatusClass = (status: OrderStatus): string => {
@@ -394,10 +353,24 @@ export default defineComponent({
       return false;
     };
 
+    // 날짜 포맷팅에 사용할 옵션
+    const dateFormatOptions: Intl.DateTimeFormatOptions = {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    };
+
+    // 날짜 포맷팅 함수 (옵션 적용)
+    const formatDateWithOptions = (dateString: string) => {
+      return formatDate(dateString, dateFormatOptions);
+    };
+
     return {
       order,
       loading,
-      formatDate,
+      formatDate: formatDateWithOptions,
       formatPrice,
       getStatusClass,
       getStatusText,

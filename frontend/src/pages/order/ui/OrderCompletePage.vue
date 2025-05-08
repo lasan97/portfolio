@@ -63,6 +63,7 @@ import { defineComponent, ref, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useOrderWithAuth } from '@features/order';
 import { Order } from '@entities/order';
+import {formatDate, formatPrice} from "@shared/lib";
 
 export default defineComponent({
   name: 'OrderCompletePage',
@@ -93,25 +94,6 @@ export default defineComponent({
       }
     });
     
-    const formatDate = (dateString: string): string => {
-      const date = new Date(dateString);
-      return new Intl.DateTimeFormat('ko-KR', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      }).format(date);
-    };
-    
-    const formatPrice = (price: any): string => {
-      return new Intl.NumberFormat('ko-KR', {
-        style: 'currency',
-        currency: 'KRW',
-        maximumFractionDigits: 0
-      }).format(price);
-    };
-    
     const goToOrderHistory = () => {
       router.push('/orders');
     };
@@ -119,11 +101,25 @@ export default defineComponent({
     const goToProducts = () => {
       router.push('/products');
     };
+
+    // 날짜 포맷팅에 사용할 옵션
+    const dateFormatOptions: Intl.DateTimeFormatOptions = {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    };
+
+    // 날짜 포맷팅 함수 (옵션 적용)
+    const formatDateWithOptions = (dateString: string) => {
+      return formatDate(dateString, dateFormatOptions);
+    };
     
     return {
       order,
       loading,
-      formatDate,
+      formatDate: formatDateWithOptions,
       formatPrice,
       goToOrderHistory,
       goToProducts

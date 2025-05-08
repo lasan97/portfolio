@@ -97,6 +97,7 @@ import { defineComponent, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useOrderWithAuth } from '@features/order';
 import { OrderStatus } from '@entities/order';
+import {formatDate, formatPrice} from "@shared/lib";
 
 export default defineComponent({
   name: 'OrderHistoryPage',
@@ -108,42 +109,6 @@ export default defineComponent({
     onMounted(() => {
       fetchOrders(0, 10);
     });
-
-    // 날짜 포맷팅
-    const formatDate = (dateString: string): string => {
-      const date = new Date(dateString);
-      return new Intl.DateTimeFormat('ko-KR', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      }).format(date);
-    };
-
-    // 가격 포맷팅
-    const formatPrice = (price: any): string => {
-      // price가 숫자인 경우 바로 포맷팅
-      if (typeof price === 'number') {
-        return new Intl.NumberFormat('ko-KR', {
-          style: 'currency',
-          currency: 'KRW',
-          maximumFractionDigits: 0
-        }).format(price);
-      }
-
-      // price가 객체인 경우 price.amount 사용 (API 응답 구조 호환성 유지)
-      if (price && typeof price === 'object' && 'amount' in price) {
-        return new Intl.NumberFormat('ko-KR', {
-          style: 'currency',
-          currency: 'KRW',
-          maximumFractionDigits: 0
-        }).format(price.amount);
-      }
-
-      // 오류 방지를 위한 기본값
-      return '₩0';
-    };
 
     // 주문 상태에 따른 스타일 클래스
     const getStatusClass = (status: OrderStatus): string => {
@@ -160,11 +125,26 @@ export default defineComponent({
       router.push('/products');
     };
 
+
+    // 날짜 포맷팅에 사용할 옵션
+    const dateFormatOptions: Intl.DateTimeFormatOptions = {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    };
+
+    // 날짜 포맷팅 함수 (옵션 적용)
+    const formatDateWithOptions = (dateString: string) => {
+      return formatDate(dateString, dateFormatOptions);
+    };
+
     return {
       sortedOrders,
       loading,
       hasOrders,
-      formatDate,
+      formatDate: formatDateWithOptions,
       formatPrice,
       getStatusClass,
       getStatusText,

@@ -901,13 +901,6 @@ const handleImageError = (e: Event) => {
   e.stopPropagation();
 };
 
-const formatPrice = (price: number): string => {
-  return new Intl.NumberFormat('ko-KR', {
-    style: 'currency',
-    currency: 'KRW'
-  }).format(price);
-};
-
 const goBack = () => {
   router.push('/products');
 };

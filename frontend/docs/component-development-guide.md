@@ -45,7 +45,7 @@ Vue 3 컴포넌트는 다음과 같은 구조로 구성됩니다:
 <script setup lang="ts">
 import { defineProps, defineEmits, computed } from 'vue';
 import type { Product } from '@entities/product';
-
+import { formatPrice } from "@shared/lib";
 // Props 정의
 const props = defineProps<{
   product: Product;
@@ -60,14 +60,7 @@ const emit = defineEmits<{
 const addToCart = () => {
   emit('add-to-cart', props.product.id);
 };
-
-// 포맷 유틸리티
-const formatPrice = (price: number) => {
-  return new Intl.NumberFormat('ko-KR', {
-    style: 'currency',
-    currency: 'KRW'
-  }).format(price);
-};
+  
 </script>
 
 <style scoped>
@@ -103,6 +96,7 @@ const formatPrice = (price: number) => {
 <script lang="ts">
 import { defineComponent, PropType, ref, computed } from 'vue';
 import type { Product } from '@entities/product';
+import { formatPrice } from "@shared/lib";
 
 export default defineComponent({
   name: 'ProductCard',
@@ -117,14 +111,6 @@ export default defineComponent({
     // 메서드
     const addToCart = () => {
       emit('add-to-cart', props.product.id);
-    };
-    
-    // 포맷 유틸리티
-    const formatPrice = (price: number) => {
-      return new Intl.NumberFormat('ko-KR', {
-        style: 'currency',
-        currency: 'KRW'
-      }).format(price);
     };
     
     return {
@@ -432,6 +418,7 @@ defineEmits<{
 <script setup lang="ts">
 import { defineProps, defineEmits } from 'vue';
 import type { Product } from '@entities/product';
+import { formatPrice } from "@shared/lib";
 
 defineProps<{
   products: Product[];
@@ -445,12 +432,6 @@ const addToCart = (productId: number) => {
   emit('add-to-cart', productId);
 };
 
-const formatPrice = (price: number) => {
-  return new Intl.NumberFormat('ko-KR', {
-    style: 'currency',
-    currency: 'KRW'
-  }).format(price);
-};
 </script>
 ```
 

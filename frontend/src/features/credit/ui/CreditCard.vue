@@ -89,6 +89,7 @@
 
 <script lang="ts">
 import { defineComponent, ref, PropType } from 'vue';
+import {formatDate, formatNumber} from "@shared/lib";
 
 export default defineComponent({
   name: 'CreditCard',
@@ -108,17 +109,17 @@ export default defineComponent({
     const chargeAmounts = [10000, 50000, 100000, 1000000];
     const selectedAmount = ref(chargeAmounts[0]);
     const charging = ref(false);
-    
-    const formatNumber = (num: number): string => {
-      return new Intl.NumberFormat('ko-KR').format(num);
+
+    // 날짜 포맷팅에 사용할 옵션
+    const dateFormatOptions: Intl.DateTimeFormatOptions = {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
     };
-    
-    const formatDate = (date: Date): string => {
-      return new Intl.DateTimeFormat('ko-KR', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      }).format(date);
+
+    // 날짜 포맷팅 함수 (옵션 적용)
+    const formatDateWithOptions = (dateString: Date | string) => {
+      return formatDate(dateString, dateFormatOptions);
     };
     
     const handleCharge = async () => {
@@ -130,14 +131,14 @@ export default defineComponent({
         isChargeModalOpen.value = false;
       }
     };
-    
+
     return {
       isChargeModalOpen,
       chargeAmounts,
       selectedAmount,
       charging,
       formatNumber,
-      formatDate,
+      formatDate: formatDateWithOptions,
       handleCharge
     };
   }

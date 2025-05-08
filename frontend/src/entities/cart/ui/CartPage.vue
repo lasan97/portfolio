@@ -312,6 +312,7 @@ import { ProductCategory } from '@entities/product';
 import { ToastService } from '@shared/ui/toast';
 import { FREE_SHIPPING_THRESHOLD } from '@entities/cart/model/constants';
 import type { CartItem } from '@entities/cart';
+import {formatPrice} from "@shared/lib";
 
 interface OrderForm {
   name: string;
@@ -408,13 +409,6 @@ export default defineComponent({
         }
       }
     });
-    
-    const formatPrice = (price: number): string => {
-      return new Intl.NumberFormat('ko-KR', {
-        style: 'currency',
-        currency: 'KRW'
-      }).format(price);
-    };
     
     const goToProducts = () => {
       router.push('/products');
@@ -530,7 +524,7 @@ export default defineComponent({
         isSubmitting.value = false;
       }
     };
-    
+
     return {
       cartStore,
       isLoggedIn,

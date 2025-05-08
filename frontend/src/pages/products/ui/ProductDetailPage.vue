@@ -154,6 +154,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useProductStore, type Product, ProductCategory } from '@entities/product';
 import { CartSummary } from '@entities/cart';
 import { useCartWithAuth } from '@features/cart';
+import {formatPrice} from "@shared/lib";
 
 export default defineComponent({
   name: 'ProductDetail',
@@ -204,13 +205,6 @@ export default defineComponent({
       imageLoading.value = false;
       imageError.value = true;
       e.stopPropagation();
-    };
-    
-    const formatPrice = (price: number): string => {
-      return new Intl.NumberFormat('ko-KR', {
-        style: 'currency',
-        currency: 'KRW'
-      }).format(price);
     };
     
     const goBack = () => {

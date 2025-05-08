@@ -60,6 +60,7 @@
 import { defineComponent, PropType, ref } from 'vue';
 import { CartItem } from '@entities/cart';
 import { useCartWithAuth } from '@features/cart';
+import { formatPrice } from "@shared/lib";
 
 export default defineComponent({
   name: 'CartItemComponent',
@@ -73,13 +74,6 @@ export default defineComponent({
     const { updateQuantity, removeFromCart } = useCartWithAuth();
     const isUpdating = ref(false);
     const imageError = ref(false);
-    
-    const formatPrice = (price: number): string => {
-      return new Intl.NumberFormat('ko-KR', {
-        style: 'currency',
-        currency: 'KRW'
-      }).format(price);
-    };
     
     const increaseQuantity = async () => {
       try {
@@ -130,7 +124,7 @@ export default defineComponent({
       const imgElement = e.target as HTMLImageElement;
       imgElement.src = 'https://via.placeholder.com/150';
     };
-    
+
     return {
       formatPrice,
       increaseQuantity,

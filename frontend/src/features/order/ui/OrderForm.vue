@@ -186,6 +186,7 @@
 import { defineComponent, ref, computed, onMounted } from 'vue';
 import { useCartStore, CartItem } from '@entities/cart';
 import { useOrderWithAuth } from '../model/orderFeature';
+import {formatPrice} from "@shared/lib";
 
 export default defineComponent({
   name: 'OrderForm',
@@ -300,15 +301,6 @@ export default defineComponent({
         console.error('주문 처리 중 오류 발생:', error);
         alert('주문 처리 중 오류가 발생했습니다. 다시 시도해주세요.');
       }
-    };
-    
-    // 가격 포맷
-    const formatPrice = (price: number) => {
-      return new Intl.NumberFormat('ko-KR', {
-        style: 'currency',
-        currency: 'KRW',
-        maximumFractionDigits: 0
-      }).format(price);
     };
     
     // 컴포넌트 마운트 시 카트 아이템이 있는지 확인
