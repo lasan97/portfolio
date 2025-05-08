@@ -35,6 +35,7 @@
           </router-link>
 
           <template v-if="isAuthenticated">
+            <router-link to="/orders" class="text-gray-700 hover:text-blue-600">주문내역</router-link>
             <router-link to="/profile" class="text-gray-700 hover:text-blue-600">프로필</router-link>
             <button 
               @click="handleLogout" 

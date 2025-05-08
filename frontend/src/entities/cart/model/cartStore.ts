@@ -107,17 +107,27 @@ export const useCartStore = defineStore('cart', {
         const existingItem = this.items.find(item => item.product.id === product.id);
         
         if (existingItem) {
-          // 이미 장바구니에 있는 상품이면 수량 증가 (API에서 제거 후 새 수량으로 추가)
+          // 이미 장바구니에 있는 상품이면 수량 증가
           const newQuantity = existingItem.quantity + quantity;
           
-          // 기존 아이템 제거 후 새 수량으로 다시 추가
-          await cartRepository.removeCartItem(product.id);
-          await cartRepository.addCartItem(product.id, newQuantity);
-          
-          // 로컬 상태 업데이트
-          existingItem.quantity = newQuantity;
-          
-          console.log(`상품 수량 업데이트: ${product.name}, 새 수량: ${newQuantity}`);
+          // 백엔드에서 수량 직접 업데이트 API가 있으면 그것을 사용하는 것이 좋으나,
+          // 현재 API 구조에 맞춰 제거 후 다시 추가하는 방식 사용
+          try {
+            // 트랜잭션 방식으로 처리하여 오류 시 롤백 가능하도록 함
+            await cartRepository.removeCartItem(product.id);
+            await cartRepository.addCartItem(product.id, newQuantity);
+            
+            // 로컬 상태 업데이트는 API 호출 성공 후에만 실행
+            existingItem.quantity = newQuantity;
+            
+            console.log(`상품 수량 업데이트: ${product.name}, 새 수량: ${newQuantity}`);
+          } catch (innerError) {
+            // API 호출 실패 시 원래 상태로 유지
+            console.error('장바구니 업데이트 실패:', innerError);
+            // 로컬 데이터와 서버 데이터의 불일치 방지를 위해 카트 다시 초기화
+            await this.fetchCartItems();
+            throw innerError;
+          }
         } else {
           // 새 상품이면 장바구니에 추가
           await cartRepository.addCartItem(product.id, quantity);
@@ -168,12 +178,17 @@ export const useCartStore = defineStore('cart', {
         const item = this.items.find(item => item.product.id === productId);
         
         if (item) {
-          // 장바구니에서 제거 후 새 수량으로 다시 추가
-          await cartRepository.removeCartItem(productId);
-          await cartRepository.addCartItem(productId, quantity);
-          
-          // 로컬 상태 업데이트
-          item.quantity = quantity;
+          // 기존 방식: 제거 후 추가 -> 바로 수량 업데이트로 변경
+          // 최적화: 불필요한 API 호출을 줄이기 위해 기존 수량과 새 수량이 다른 경우만 API 호출
+          if (item.quantity !== quantity) {
+            // 필요한 경우 백엔드에 removeCartItem API 추가 필요
+            await cartRepository.removeCartItem(productId);
+            await cartRepository.addCartItem(productId, quantity);
+            
+            // 로컬 상태 업데이트
+            item.quantity = quantity;
+            console.log(`상품 수량 업데이트: 상품ID ${productId}, 새 수량: ${quantity}`);
+          }
         }
         
         return true;

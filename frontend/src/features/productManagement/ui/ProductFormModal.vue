@@ -222,11 +222,31 @@ export default defineComponent({
         return;
       }
       
+      // 가격이 0인지 확인
+      if (form.price <= 0) {
+        error.value = '판매가는 0보다 커야 합니다.';
+        return;
+      }
+      
+      // 필드 유효성 검사 추가
+      if (!form.name.trim()) {
+        error.value = '상품명을 입력해주세요.';
+        return;
+      }
+      
+      if (!form.thumbnailImageUrl.trim()) {
+        error.value = '썸네일 이미지 URL을 입력해주세요.';
+        return;
+      }
+      
       try {
         isSubmitting.value = true;
         
         // 폼 제출 이벤트 발생
         emit('submit', form);
+        
+        // 성공 시에만 모달 닫기
+        // 참고: 부모 컴포넌트에서 API 호출 성공 여부를 처리해야 함
       } catch (err) {
         console.error('폼 제출 오류:', err);
         error.value = '오류가 발생했습니다. 다시 시도해주세요.';

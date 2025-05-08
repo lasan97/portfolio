@@ -279,39 +279,15 @@
               </div>
               
               <div class="mt-8">
-                <button 
-                  v-if="!orderMode"
-                  @click="orderMode = true" 
-                  class="w-full bg-indigo-600 text-white py-3 rounded-md font-medium hover:bg-indigo-700 transition-colors"
+                <router-link 
+                  to="/order"
+                  class="w-full bg-indigo-600 text-white py-3 rounded-md font-medium hover:bg-indigo-700 transition-colors block text-center"
                 >
                   주문하기
-                </button>
-                
-                <button 
-                  v-else
-                  @click="placeOrder" 
-                  class="w-full bg-indigo-600 text-white py-3 rounded-md font-medium hover:bg-indigo-700 transition-colors"
-                  :disabled="isSubmitting"
-                >
-                  <span v-if="isSubmitting">
-                    <svg class="animate-spin inline-block h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    처리 중...
-                  </span>
-                  <span v-else>결제하기</span>
-                </button>
+                </router-link>
               </div>
               
               <div class="mt-6 text-center">
-                <button 
-                  v-if="orderMode"
-                  @click="orderMode = false" 
-                  class="text-indigo-600 hover:text-indigo-800 transition-colors mr-4"
-                >
-                  이전으로
-                </button>
                 <button 
                   @click="goToProducts" 
                   class="text-indigo-600 hover:text-indigo-800 transition-colors"

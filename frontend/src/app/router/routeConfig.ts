@@ -4,7 +4,12 @@ import { LoginPage, OAuthCallbackPage } from '@pages/auth'
 import { NotFoundPage } from '@pages/notFound'
 import {SsrPage} from "@pages/ssr";
 import {ProductDetailPage, ProductManagementPage, ProductsPage} from "@pages/products";
-import {OrderCompletePage} from "@pages/order-complete";
+import {
+  OrderPage,
+  OrderHistoryPage,
+  OrderDetailPage,
+  OrderCompletePage
+} from "@pages/order";
 import { CartPage } from '@entities/cart';
 
 
@@ -69,10 +74,29 @@ const orderRouteConfig: RouteRecordRaw[] = [
         component: CartPage
     },
     {
+        path: '/order',
+        name: 'order',
+        component: OrderPage,
+        meta: { requiresAuth: true } // 로그인 필요
+    },
+    {
         path: '/order-complete',
         name: 'order-complete',
-        component: OrderCompletePage
+        component: OrderCompletePage,
+        meta: { requiresAuth: true } // 로그인 필요
     },
+    {
+        path: '/orders',
+        name: 'order-history',
+        component: OrderHistoryPage,
+        meta: { requiresAuth: true } // 로그인 필요
+    },
+    {
+        path: '/order/:id',
+        name: 'order-detail',
+        component: OrderDetailPage,
+        meta: { requiresAuth: true } // 로그인 필요
+    }
 ];
 
 export {
