@@ -8,6 +8,7 @@ import com.portfolio.backend.common.event.ProductStockStatus;
 import com.portfolio.backend.common.event.payload.ProductStockReductionEventPayload;
 import com.portfolio.backend.common.exception.DomainException;
 import com.portfolio.backend.common.exception.ResourceNotFoundException;
+import com.portfolio.backend.domain.common.outbox.SagaType;
 import com.portfolio.backend.domain.order.entity.Order;
 import com.portfolio.backend.domain.order.outbox.PaymentOutbox;
 import com.portfolio.backend.domain.order.outbox.ProductStockOutbox;
@@ -18,8 +19,8 @@ import com.portfolio.backend.domain.product.outbox.ProductStockOrderOutbox;
 import com.portfolio.backend.domain.product.repository.ProductStockOrderOutboxRepository;
 import com.portfolio.backend.domain.user.outbox.UserCreditOrderOutbox;
 import com.portfolio.backend.domain.user.repository.UserCreditOrderOutboxRepository;
-import com.portfolio.backend.service.common.outbox.OutboxStatus;
-import com.portfolio.backend.service.common.outbox.SagaStatus;
+import com.portfolio.backend.domain.common.outbox.OutboxStatus;
+import com.portfolio.backend.domain.common.outbox.SagaStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
@@ -73,6 +74,112 @@ public class OrderOutboxManager {
     }
 
     @Transactional
+    public void paymentOutboxCancelProcess(PaymentOutbox paymentOutbox) {
+        log.info("PaymentOutbox cancel received saga id : {}", paymentOutbox.getSagaId());
+
+        try {
+            paymentOutbox.setOutboxStatus(OutboxStatus.STARTED);
+            paymentOutboxRepository.save(paymentOutbox);
+
+            UserCreditOrderOutbox userCreditOrderOutbox = UserCreditOrderOutbox.builder()
+                    .id(paymentOutbox.getId())
+                    .sagaId(paymentOutbox.getSagaId())
+                    .orderId(paymentOutbox.getOrderId())
+                    .payload(paymentOutbox.getPayload())
+                    .outboxStatus(OutboxStatus.STARTED)
+                    .paymentStatus(PaymentStatus.COMPENSATING)
+                    .createdAt(LocalDateTime.now())
+                    .build();
+
+            userCreditOrderOutboxRepository.save(userCreditOrderOutbox);
+        } catch (OptimisticLockingFailureException e) {
+            // No-Op
+        } catch (ResourceNotFoundException e) {
+            log.error(e.getMessage(), e);
+        } catch (DataAccessException e) {
+            log.error("DB Exception", e.getMessage(), e);
+        }
+    }
+
+    @Transactional
+    public void userCreditPaymentResponseProcess(PaymentOutbox paymentOutbox, PaymentStatus paymentStatus) {
+        try {
+
+            Order order = orderRepository.findById(paymentOutbox.getOrderId())
+                    .orElseThrow(() -> new DomainException("주문 정보가 존재하지 않습니다."));
+
+            switch (paymentStatus) {
+                case COMPLETED -> {
+                    paymentOutbox.setProcessedAt(LocalDateTime.now());
+                    paymentOutbox.setOutboxStatus(OutboxStatus.COMPLETED);
+                    paymentOutbox.setOrderStatus(order.getOrderStatus());
+                    paymentOutboxRepository.save(paymentOutbox);
+
+                    order.paymentCompleted();
+
+                    publishProductStockOutbox(paymentOutbox, order);
+                }
+                case FAILED -> {
+                    order.failed("결제 실패");
+
+                    paymentOutbox.setProcessedAt(LocalDateTime.now());
+                    paymentOutbox.setOutboxStatus(OutboxStatus.FAILED);
+                    paymentOutbox.setSagaStatus(SagaStatus.FAILED);
+                    paymentOutbox.setOrderStatus(order.getOrderStatus());
+
+                    paymentOutboxRepository.save(paymentOutbox);
+                }
+                case COMPENSATED -> {
+                    switch (paymentOutbox.getSagaType()) {
+                        case ORDER -> {
+                            paymentOutbox.setSagaStatus(SagaStatus.COMPENSATED);
+                        }
+                        case ORDER_CANCELING -> {
+                            paymentOutbox.setProcessedAt(LocalDateTime.now());
+                            paymentOutbox.setOutboxStatus(OutboxStatus.COMPLETED);
+                            paymentOutbox.setOrderStatus(order.getOrderStatus());
+                        }
+                    }
+
+                    paymentOutboxRepository.save(paymentOutbox);
+
+                    publishProductStockOutbox(paymentOutbox, order);
+                }
+            }
+        } catch (OptimisticLockingFailureException e) {
+            // No-Op
+        } catch (ResourceNotFoundException e) {
+            log.error(e.getMessage(), e);
+        } catch (DataAccessException e) {
+            log.error("DB Exception", e.getMessage(), e);
+        }
+    }
+
+    private void publishProductStockOutbox(PaymentOutbox paymentOutbox, Order order) {
+        List<ProductStockReductionEventPayload.OrderItem> items = order.getOrderItems().stream()
+                .map(item -> new ProductStockReductionEventPayload.OrderItem(item.getProduct().getId(), item.getQuantity()))
+                .toList();
+
+        ProductStockReductionEventPayload payload = ProductStockReductionEventPayload.builder()
+                .orderItems(items)
+                .build();
+
+        String productStockEventPayload = createPayload(order.getId(), payload);
+        ProductStockOutbox productStockOutbox = ProductStockOutbox.builder()
+                .id(UlidCreator.getUlid().toUuid())
+                .sagaId(paymentOutbox.getSagaId())
+                .orderId(order.getId())
+                .sagaType(paymentOutbox.getSagaType())
+                .payload(productStockEventPayload)
+                .orderStatus(order.getOrderStatus())
+                .sagaStatus(paymentOutbox.getSagaStatus())
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        productStockOutboxRepository.save(productStockOutbox);
+    }
+
+    @Transactional
     public void productStockOutboxProcess(ProductStockOutbox productStockOutbox) {
         log.info("ProductStockOutbox received saga id : {}", productStockOutbox.getSagaId());
 
@@ -99,55 +206,24 @@ public class OrderOutboxManager {
     }
 
     @Transactional
-    public void userCreditPaymentResponseProcess(PaymentOutbox paymentOutbox, PaymentStatus paymentStatus) {
+    public void productStockOutboxCancelProcess(ProductStockOutbox productStockOutbox) {
+        log.info("ProductStockOutbox cancel received saga id : {}", productStockOutbox.getSagaId());
+
         try {
+            productStockOutbox.setOutboxStatus(OutboxStatus.STARTED);
+            productStockOutboxRepository.save(productStockOutbox);
 
-            Order order = orderRepository.findById(paymentOutbox.getOrderId())
-                    .orElseThrow(() -> new DomainException("주문 정보가 존재하지 않습니다."));
+            ProductStockOrderOutbox productStockOrderOutbox = ProductStockOrderOutbox.builder()
+                    .id(productStockOutbox.getId())
+                    .sagaId(productStockOutbox.getSagaId())
+                    .orderId(productStockOutbox.getOrderId())
+                    .payload(productStockOutbox.getPayload())
+                    .outboxStatus(OutboxStatus.STARTED)
+                    .productStockStatus(ProductStockStatus.COMPENSATING)
+                    .createdAt(LocalDateTime.now())
+                    .build();
 
-            if (paymentStatus == PaymentStatus.FAILED) {
-
-                order.failed("결제 실패");
-
-                paymentOutbox.setProcessedAt(LocalDateTime.now());
-                paymentOutbox.setOutboxStatus(OutboxStatus.FAILED);
-                paymentOutbox.setSagaStatus(SagaStatus.FAILED);
-                paymentOutbox.setOrderStatus(order.getOrderStatus());
-
-                paymentOutboxRepository.save(paymentOutbox);
-            } else if (paymentStatus == PaymentStatus.COMPLETED) {
-
-                order.paymentCompleted();
-
-                paymentOutbox.setProcessedAt(LocalDateTime.now());
-                paymentOutbox.setOutboxStatus(OutboxStatus.COMPLETED);
-                paymentOutbox.setOrderStatus(order.getOrderStatus());
-                paymentOutboxRepository.save(paymentOutbox);
-
-                List<ProductStockReductionEventPayload.OrderItem> items = order.getOrderItems().stream()
-                        .map(item -> new ProductStockReductionEventPayload.OrderItem(item.getProduct().getId(), item.getQuantity()))
-                        .toList();
-
-                ProductStockReductionEventPayload payload = ProductStockReductionEventPayload.builder()
-                        .orderItems(items)
-                        .build();
-
-                String productStockEventPayload = createPayload(order.getId(), payload);
-                ProductStockOutbox productStockOutbox = ProductStockOutbox.builder()
-                        .id(UlidCreator.getUlid().toUuid())
-                        .sagaId(paymentOutbox.getSagaId())
-                        .orderId(order.getId())
-                        .payload(productStockEventPayload)
-                        .orderStatus(order.getOrderStatus())
-                        .sagaStatus(paymentOutbox.getSagaStatus())
-                        .createdAt(LocalDateTime.now())
-                        .build();
-
-                productStockOutboxRepository.save(productStockOutbox);
-            } else if (paymentStatus == PaymentStatus.COMPLETED) {
-                paymentOutbox.setSagaStatus(SagaStatus.COMPENSATED);
-                paymentOutboxRepository.save(paymentOutbox);
-            }
+            productStockOrderOutboxRepository.save(productStockOrderOutbox);
         } catch (OptimisticLockingFailureException e) {
             // No-Op
         } catch (ResourceNotFoundException e) {
@@ -164,35 +240,53 @@ public class OrderOutboxManager {
             Order order = orderRepository.findById(productStockOutbox.getOrderId())
                     .orElseThrow(() -> new DomainException("주문 정보가 존재하지 않습니다."));
 
-            if (productStockStatus == ProductStockStatus.FAILED) {
+            switch (productStockStatus) {
+                case COMPLETED -> {
+                    order.completedStockReduction();
 
-                order.failed("재고 부족");
+                    productStockOutbox.setProcessedAt(LocalDateTime.now());
+                    productStockOutbox.setOutboxStatus(OutboxStatus.COMPLETED);
+                    productStockOutbox.setSagaStatus(SagaStatus.SUCCEEDED);
+                    productStockOutbox.setOrderStatus(order.getOrderStatus());
+                    productStockOutboxRepository.save(productStockOutbox);
 
-                productStockOutbox.setProcessedAt(LocalDateTime.now());
-                productStockOutbox.setOutboxStatus(OutboxStatus.FAILED);
-                productStockOutbox.setSagaStatus(SagaStatus.FAILED);
-                productStockOutbox.setOrderStatus(order.getOrderStatus());
+                    PaymentOutbox paymentOutbox = paymentOutboxRepository.findBySagaIdAndOutboxStatus(productStockOutbox.getSagaId(), OutboxStatus.COMPLETED)
+                            .orElseThrow(() -> new DomainException("PaymentOutbox가 존재하지 않습니다."));
+                    paymentOutbox.setSagaStatus(SagaStatus.SUCCEEDED);
+                    paymentOutbox.setOrderStatus(order.getOrderStatus());
+                    paymentOutboxRepository.save(paymentOutbox);
+                }
+                case FAILED -> {
+                    order.failed("재고 부족");
 
-                productStockOutboxRepository.save(productStockOutbox);
+                    productStockOutbox.setProcessedAt(LocalDateTime.now());
+                    productStockOutbox.setOutboxStatus(OutboxStatus.FAILED);
+                    productStockOutbox.setSagaStatus(SagaStatus.FAILED);
+                    productStockOutbox.setOrderStatus(order.getOrderStatus());
 
-                PaymentOutbox paymentOutbox = paymentOutboxRepository.findBySagaIdAndOutboxStatus(productStockOutbox.getSagaId(), OutboxStatus.COMPLETED)
-                        .orElseThrow(() -> new DomainException("PaymentOutbox가 존재하지 않습니다."));
-                paymentOutbox.setSagaStatus(SagaStatus.COMPENSATING);
-                paymentOutboxRepository.save(paymentOutbox);
-            } else if (productStockStatus == ProductStockStatus.COMPLETED) {
+                    productStockOutboxRepository.save(productStockOutbox);
 
-                order.completedStockReduction();
+                    PaymentOutbox paymentOutbox = paymentOutboxRepository.findBySagaIdAndOutboxStatus(productStockOutbox.getSagaId(), OutboxStatus.COMPLETED)
+                            .orElseThrow(() -> new DomainException("PaymentOutbox가 존재하지 않습니다."));
+                    paymentOutbox.setSagaStatus(SagaStatus.COMPENSATING);
+                    paymentOutboxRepository.save(paymentOutbox);
+                }
+                case COMPENSATED -> {
+                    order.cancel();
 
-                productStockOutbox.setProcessedAt(LocalDateTime.now());
-                productStockOutbox.setOutboxStatus(OutboxStatus.COMPLETED);
-                productStockOutbox.setSagaStatus(SagaStatus.SUCCEEDED);
-                productStockOutbox.setOrderStatus(order.getOrderStatus());
-                productStockOutboxRepository.save(productStockOutbox);
+                    productStockOutbox.setProcessedAt(LocalDateTime.now());
+                    productStockOutbox.setOutboxStatus(OutboxStatus.COMPLETED);
+                    productStockOutbox.setSagaStatus(SagaStatus.SUCCEEDED);
+                    productStockOutbox.setOrderStatus(order.getOrderStatus());
+                    productStockOutboxRepository.save(productStockOutbox);
 
-                PaymentOutbox paymentOutbox = paymentOutboxRepository.findBySagaIdAndOutboxStatus(productStockOutbox.getSagaId(), OutboxStatus.COMPLETED)
-                        .orElseThrow(() -> new DomainException("PaymentOutbox가 존재하지 않습니다."));
-                paymentOutbox.setSagaStatus(SagaStatus.SUCCEEDED);
-                paymentOutboxRepository.save(paymentOutbox);
+                    PaymentOutbox paymentOutbox = paymentOutboxRepository.findBySagaIdAndOutboxStatus(productStockOutbox.getSagaId(), OutboxStatus.COMPLETED)
+                            .orElseThrow(() -> new DomainException("PaymentOutbox가 존재하지 않습니다."));
+                    paymentOutbox.setSagaStatus(SagaStatus.SUCCEEDED);
+                    paymentOutbox.setOrderStatus(order.getOrderStatus());
+
+                    paymentOutboxRepository.save(paymentOutbox);
+                }
             }
         } catch (OptimisticLockingFailureException e) {
             // No-Op
@@ -213,6 +307,7 @@ public class OrderOutboxManager {
 
             UserCreditOrderOutbox userCreditOrderOutbox = userCreditOrderOutboxRepository.findBySagaIdAndOutboxStatus(paymentOutbox.getSagaId(), OutboxStatus.COMPLETED)
                     .orElseThrow(() -> new DomainException("UserCreditOrderOutbox가 존재하지 않습니다."));
+            userCreditOrderOutbox.setOutboxStatus(OutboxStatus.STARTED);
             userCreditOrderOutbox.setPaymentStatus(PaymentStatus.COMPENSATING);
             userCreditOrderOutboxRepository.save(userCreditOrderOutbox);
         } catch (OptimisticLockingFailureException e) {

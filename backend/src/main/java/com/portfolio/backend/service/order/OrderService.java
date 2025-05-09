@@ -8,11 +8,12 @@ import com.portfolio.backend.common.exception.DomainException;
 import com.portfolio.backend.common.exception.ResourceNotFoundException;
 import com.portfolio.backend.domain.cart.entity.ProductCart;
 import com.portfolio.backend.domain.cart.repository.ProductCartRepository;
+import com.portfolio.backend.domain.common.outbox.SagaType;
 import com.portfolio.backend.domain.order.entity.Order;
 import com.portfolio.backend.domain.order.outbox.PaymentOutbox;
 import com.portfolio.backend.domain.order.repository.OrderRepository;
 import com.portfolio.backend.domain.order.repository.PaymentOutboxRepository;
-import com.portfolio.backend.service.common.outbox.SagaStatus;
+import com.portfolio.backend.domain.common.outbox.SagaStatus;
 import com.portfolio.backend.service.order.dto.OrderServiceMapper;
 import com.portfolio.backend.service.order.dto.OrderServiceRequest;
 import com.portfolio.backend.service.order.dto.OrderServiceResponse;
@@ -44,9 +45,9 @@ public class OrderService {
 
         orderRepository.save(order);
 
-        ProductCart response = productCartRepository.findByUserId(userId)
+        ProductCart productCart = productCartRepository.findByUserId(userId)
                 .orElseThrow(() -> new DomainException("장바구니가 존재하지 않습니다."));
-        response.removeAllItem();
+        productCart.removeAllItem();
 
         OrderPaymentEventPayload payload = OrderPaymentEventPayload.builder()
                 .userId(userId)
@@ -57,6 +58,31 @@ public class OrderService {
                 .id(UlidCreator.getUlid().toUuid())
                 .sagaId(UlidCreator.getUlid().toUuid())
                 .orderId(order.getId())
+                .sagaType(SagaType.ORDER)
+                .createdAt(LocalDateTime.now())
+                .payload(createPayload(order.getId(), payload))
+                .orderStatus(order.getOrderStatus())
+                .sagaStatus(SagaStatus.STARTED)
+                .build());
+    }
+
+    @Transactional
+    public void cancel(Long userId, UUID orderId) {
+        Order order = orderRepository.findByIdAndUserId(orderId, userId)
+                .orElseThrow(() -> new ResourceNotFoundException("주문이 존재하지 않습니다."));
+
+        order.canceling();
+
+        OrderPaymentEventPayload payload = OrderPaymentEventPayload.builder()
+                .userId(userId)
+                .price(order.getTotalPrice().getAmount())
+                .build();
+
+        paymentOutboxRepository.save(PaymentOutbox.builder()
+                .id(UlidCreator.getUlid().toUuid())
+                .sagaId(UlidCreator.getUlid().toUuid())
+                .orderId(order.getId())
+                .sagaType(SagaType.ORDER_CANCELING)
                 .createdAt(LocalDateTime.now())
                 .payload(createPayload(order.getId(), payload))
                 .orderStatus(order.getOrderStatus())

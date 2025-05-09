@@ -14,6 +14,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/api/orders")
 @RequiredArgsConstructor
@@ -26,6 +28,13 @@ public class OrderController {
     public void createOrder(@Valid @RequestBody OrderServiceRequest.Create request,
                             @AuthenticationPrincipal UserDetailsImpl userDetails){
         orderService.createOrder(userDetails.getId(), request);
+    }
+
+    @PostMapping("/cancel/{orderId}")
+    @PreAuthorize("isAuthenticated()")
+    public void cancel(@PathVariable UUID orderId,
+                       @AuthenticationPrincipal UserDetailsImpl userDetails){
+        orderService.cancel(userDetails.getId(), orderId);
     }
 
     @GetMapping("/page")

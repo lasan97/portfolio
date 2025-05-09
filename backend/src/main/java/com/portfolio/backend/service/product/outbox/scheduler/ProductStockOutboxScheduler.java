@@ -3,7 +3,7 @@ package com.portfolio.backend.service.product.outbox.scheduler;
 import com.portfolio.backend.common.event.ProductStockStatus;
 import com.portfolio.backend.domain.product.outbox.ProductStockOrderOutbox;
 import com.portfolio.backend.domain.product.repository.ProductStockOrderOutboxRepository;
-import com.portfolio.backend.service.common.outbox.OutboxStatus;
+import com.portfolio.backend.domain.common.outbox.OutboxStatus;
 import com.portfolio.backend.service.product.outbox.ProductStockOrderOutboxManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +26,8 @@ public class ProductStockOutboxScheduler {
     @Scheduled(fixedRate = 5000)
     public void processOrderOutbox() {
         Optional<List<ProductStockOrderOutbox>> response = productStockOrderOutboxRepository.findAllByOutboxStatusIsNull();
-        Optional<List<ProductStockOrderOutbox>> failureResponse = productStockOrderOutboxRepository.findAllByOutboxStatusAndProductStockStatus(OutboxStatus.STARTED, ProductStockStatus.FAILED);
+        Optional<List<ProductStockOrderOutbox>> failureResponse = productStockOrderOutboxRepository
+                .findAllByOutboxStatusAndProductStockStatus(OutboxStatus.STARTED, ProductStockStatus.FAILED);
 
         if (response.isPresent() && !response.get().isEmpty()) {
             List<ProductStockOrderOutbox> productStockOrderOutboxes = response.get();
@@ -38,6 +39,18 @@ public class ProductStockOutboxScheduler {
             List<ProductStockOrderOutbox> productStockOrderOutboxes = failureResponse.get();
             log.info("Failure product stock outbox size: {}", productStockOrderOutboxes.size());
             productStockOrderOutboxes.forEach(productStockOrderOutboxManager::productStockOrderOutboxFailure);
+        }
+    }
+
+    @Scheduled(fixedRate = 5000)
+    public void processCompensating() {
+        Optional<List<ProductStockOrderOutbox>> compensatingOutboxesResponse = productStockOrderOutboxRepository
+                .findAllByOutboxStatusAndProductStockStatus(OutboxStatus.STARTED, ProductStockStatus.COMPENSATING);
+
+        if (compensatingOutboxesResponse.isPresent() && !compensatingOutboxesResponse.get().isEmpty()) {
+            List<ProductStockOrderOutbox> productStockOrderOutboxes = compensatingOutboxesResponse.get();
+            log.info("Compensating product stock outbox size: {}", productStockOrderOutboxes.size());
+            productStockOrderOutboxes.forEach(productStockOrderOutboxManager::productStockOrderOutboxCompensation);
         }
     }
 }

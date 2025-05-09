@@ -12,7 +12,7 @@ import com.portfolio.backend.domain.product.outbox.ProductStockOrderOutbox;
 import com.portfolio.backend.domain.product.repository.ProductStockOrderOutboxRepository;
 import com.portfolio.backend.domain.product.service.ProductStockManager;
 import com.portfolio.backend.domain.product.service.dto.ProductStockItemDto;
-import com.portfolio.backend.service.common.outbox.OutboxStatus;
+import com.portfolio.backend.domain.common.outbox.OutboxStatus;
 import com.portfolio.backend.service.order.outbox.event.ProductStockReductionResponseEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -78,6 +78,37 @@ public class ProductStockOrderOutboxManager {
         eventPublisher.publishEvent(new ProductStockReductionResponseEvent(
                 productStockOrderOutbox.getSagaId(),
                 productStockOrderOutbox.getProductStockStatus()));
+    }
+
+
+    public void productStockOrderOutboxCompensation(ProductStockOrderOutbox productStockOrderOutbox) {
+        log.info("ProductStockOrderOutbox compensation received saga id : {}", productStockOrderOutbox.getSagaId());
+
+        try {
+            ProductStockReductionEventPayload payload = getPayload(productStockOrderOutbox.getPayload(), ProductStockReductionEventPayload.class);
+
+            List<ProductStockItemDto> items = payload.getOrderItems().stream().map(item -> new ProductStockItemDto(item.productId(), item.quantity()))
+                    .toList();
+            productStockManager.refund(items);
+
+            log.info("ProductStockOutbox refund order id : {}", productStockOrderOutbox.getOrderId());
+
+            productStockOrderOutbox.setProductStockStatus(ProductStockStatus.COMPENSATED);
+            productStockOrderOutbox.setOutboxStatus(OutboxStatus.COMPLETED);
+            productStockOrderOutbox.setProcessedAt(LocalDateTime.now());
+            productStockOrderOutboxRepository.save(productStockOrderOutbox);
+
+            eventPublisher.publishEvent(new ProductStockReductionResponseEvent(
+                    productStockOrderOutbox.getSagaId(),
+                    productStockOrderOutbox.getProductStockStatus()));
+
+        } catch (OptimisticLockingFailureException e) {
+            // No Op
+        } catch (ResourceNotFoundException e) {
+            log.error(e.getMessage(), e);
+        } catch (DataAccessException e) {
+            log.error("DB Exception", e.getMessage(), e);
+        }
     }
 
     private <T> T getPayload(String payload, Class<T> outputType) {

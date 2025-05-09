@@ -5,7 +5,7 @@ import com.portfolio.backend.domain.order.outbox.PaymentOutbox;
 import com.portfolio.backend.domain.order.outbox.ProductStockOutbox;
 import com.portfolio.backend.domain.order.repository.PaymentOutboxRepository;
 import com.portfolio.backend.domain.order.repository.ProductStockOutboxRepository;
-import com.portfolio.backend.service.common.outbox.OutboxStatus;
+import com.portfolio.backend.domain.common.outbox.OutboxStatus;
 import com.portfolio.backend.service.order.outbox.OrderOutboxManager;
 import com.portfolio.backend.service.order.outbox.event.ProductStockReductionResponseEvent;
 import com.portfolio.backend.service.order.outbox.event.UserCreditPaymentResponseEvent;

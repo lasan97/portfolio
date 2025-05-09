@@ -1,11 +1,12 @@
 package com.portfolio.backend.service.order.outbox.scheduler;
 
+import com.portfolio.backend.domain.common.outbox.SagaType;
 import com.portfolio.backend.domain.order.outbox.PaymentOutbox;
 import com.portfolio.backend.domain.order.outbox.ProductStockOutbox;
 import com.portfolio.backend.domain.order.repository.PaymentOutboxRepository;
 import com.portfolio.backend.domain.order.repository.ProductStockOutboxRepository;
-import com.portfolio.backend.service.common.outbox.OutboxStatus;
-import com.portfolio.backend.service.common.outbox.SagaStatus;
+import com.portfolio.backend.domain.common.outbox.OutboxStatus;
+import com.portfolio.backend.domain.common.outbox.SagaStatus;
 import com.portfolio.backend.service.order.outbox.OrderOutboxManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,8 +29,10 @@ public class OrderOutboxScheduler {
 
     @Scheduled(fixedRate = 5000)
     public void processOrderOutbox() {
-        Optional<List<PaymentOutbox>> paymentOutboxesResponse = paymentOutboxRepository.findAllByOutboxStatusIsNull();
-        Optional<List<ProductStockOutbox>> productStockOutboxesResponse = productStockOutboxRepository.findAllByOutboxStatusIsNull();
+        Optional<List<PaymentOutbox>> paymentOutboxesResponse = paymentOutboxRepository.findAllBySagaTypeAndOutboxStatusIsNull(SagaType.ORDER);
+        Optional<List<ProductStockOutbox>> productStockOutboxesResponse = productStockOutboxRepository.findAllBySagaTypeAndOutboxStatusIsNull(SagaType.ORDER);
+        Optional<List<PaymentOutbox>> cancelOutboxesResponse = paymentOutboxRepository.findAllBySagaTypeAndOutboxStatusIsNull(SagaType.ORDER_CANCELING);
+        Optional<List<ProductStockOutbox>> cancelStockOutboxesResponse = productStockOutboxRepository.findAllBySagaTypeAndOutboxStatusIsNull(SagaType.ORDER_CANCELING);
 
         if (paymentOutboxesResponse.isPresent() && !paymentOutboxesResponse.get().isEmpty()) {
             List<PaymentOutbox> paymentOutboxes = paymentOutboxesResponse.get();
@@ -41,6 +44,18 @@ public class OrderOutboxScheduler {
             List<ProductStockOutbox> productStockOutboxes = productStockOutboxesResponse.get();
             log.info("Processing product stock outbox size: {}", productStockOutboxes.size());
             productStockOutboxes.forEach(orderOutboxManager::productStockOutboxProcess);
+        }
+
+        if (cancelOutboxesResponse.isPresent() && !cancelOutboxesResponse.get().isEmpty()) {
+            List<PaymentOutbox> paymentOutboxes = cancelOutboxesResponse.get();
+            log.info("Processing cancel outbox size: {}", paymentOutboxes.size());
+            paymentOutboxes.forEach(orderOutboxManager::paymentOutboxCancelProcess);
+        }
+
+        if (cancelStockOutboxesResponse.isPresent() && !cancelStockOutboxesResponse.get().isEmpty()) {
+            List<ProductStockOutbox> productStockOutboxes = cancelStockOutboxesResponse.get();
+            log.info("Processing product stock cancel outbox size: {}", productStockOutboxes.size());
+            productStockOutboxes.forEach(orderOutboxManager::productStockOutboxCancelProcess);
         }
     }
 

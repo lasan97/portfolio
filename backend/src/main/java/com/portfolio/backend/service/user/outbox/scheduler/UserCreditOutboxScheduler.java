@@ -3,7 +3,7 @@ package com.portfolio.backend.service.user.outbox.scheduler;
 import com.portfolio.backend.common.event.PaymentStatus;
 import com.portfolio.backend.domain.user.outbox.UserCreditOrderOutbox;
 import com.portfolio.backend.domain.user.repository.UserCreditOrderOutboxRepository;
-import com.portfolio.backend.service.common.outbox.OutboxStatus;
+import com.portfolio.backend.domain.common.outbox.OutboxStatus;
 import com.portfolio.backend.service.user.outbox.UserCreditOrderOutboxManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -46,7 +46,7 @@ public class UserCreditOutboxScheduler {
     @Scheduled(fixedRate = 5000)
     public void processCompensating() {
         Optional<List<UserCreditOrderOutbox>> compensatingOutboxesResponse = userCreditOrderOutboxRepository
-                .findAllByOutboxStatusAndPaymentStatus(OutboxStatus.COMPLETED, PaymentStatus.COMPENSATING);
+                .findAllByOutboxStatusAndPaymentStatus(OutboxStatus.STARTED, PaymentStatus.COMPENSATING);
 
         if (compensatingOutboxesResponse.isPresent() && !compensatingOutboxesResponse.get().isEmpty()) {
             List<UserCreditOrderOutbox> userCreditOrderOutboxes = compensatingOutboxesResponse.get();

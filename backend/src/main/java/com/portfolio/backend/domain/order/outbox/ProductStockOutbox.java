@@ -1,8 +1,9 @@
 package com.portfolio.backend.domain.order.outbox;
 
+import com.portfolio.backend.domain.common.outbox.OutboxStatus;
+import com.portfolio.backend.domain.common.outbox.SagaStatus;
+import com.portfolio.backend.domain.common.outbox.SagaType;
 import com.portfolio.backend.domain.order.entity.OrderStatus;
-import com.portfolio.backend.service.common.outbox.OutboxStatus;
-import com.portfolio.backend.service.common.outbox.SagaStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -26,6 +27,9 @@ public class ProductStockOutbox {
 
     @Column(nullable = false)
     private UUID orderId;
+
+    @Column(nullable = false)
+    private SagaType sagaType;
 
     @Column(nullable = false)
     private LocalDateTime createdAt;

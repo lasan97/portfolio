@@ -11,7 +11,7 @@ import com.portfolio.backend.common.exception.UnprocessableEntityException;
 import com.portfolio.backend.domain.common.value.Money;
 import com.portfolio.backend.domain.user.outbox.UserCreditOrderOutbox;
 import com.portfolio.backend.domain.user.repository.UserCreditOrderOutboxRepository;
-import com.portfolio.backend.service.common.outbox.OutboxStatus;
+import com.portfolio.backend.domain.common.outbox.OutboxStatus;
 import com.portfolio.backend.service.order.outbox.event.UserCreditPaymentResponseEvent;
 import com.portfolio.backend.service.user.UserCreditService;
 import lombok.RequiredArgsConstructor;

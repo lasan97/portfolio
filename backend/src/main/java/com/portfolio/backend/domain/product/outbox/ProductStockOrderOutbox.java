@@ -1,8 +1,7 @@
 package com.portfolio.backend.domain.product.outbox;
 
 import com.portfolio.backend.common.event.ProductStockStatus;
-import com.portfolio.backend.domain.order.entity.OrderStatus;
-import com.portfolio.backend.service.common.outbox.OutboxStatus;
+import com.portfolio.backend.domain.common.outbox.OutboxStatus;
 import jakarta.persistence.*;
 import lombok.*;
 

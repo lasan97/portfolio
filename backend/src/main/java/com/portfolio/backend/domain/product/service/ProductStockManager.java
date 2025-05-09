@@ -38,6 +38,12 @@ public class ProductStockManager {
     }
 
     @Transactional
+    public void refund(List<ProductStockItemDto> productStockItems) {
+        productStockItems.forEach(item ->
+                refund(item.getProductId(), item.getQuantity()));
+    }
+
+    @Transactional
     public void sale(Long productId, int quantity) {
         ProductStock productStock = getLockedByProductId(productId);
         Product product = productStock.getProduct();
