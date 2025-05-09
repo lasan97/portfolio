@@ -113,6 +113,14 @@ export function useOrderWithAuth() {
     }, '주문 상세 조회 중 오류가 발생했습니다.');
   };
 
+  // 주문 취소 (인증 체크 포함)
+  const cancelOrder = async (orderId: string): Promise<boolean | null | false> => {
+    return withAuthCheck(async () => {
+      console.log('주문을 취소합니다:', orderId);
+      return await orderStore.cancelOrder(orderId);
+    }, '주문 취소 중 오류가 발생했습니다.');
+  };
+
   return {
     // 주문 스토어에서 가져온 정보
     orders: orderStore.orders,
@@ -126,6 +134,7 @@ export function useOrderWithAuth() {
     createOrder,
     fetchOrders,
     fetchOrderDetails,
+    cancelOrder,
 
     // 인증 상태
     isLoggedIn: checkAuth

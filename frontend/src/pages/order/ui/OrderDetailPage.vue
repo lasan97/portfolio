@@ -196,7 +196,7 @@ export default defineComponent({
   setup() {
     const route = useRoute();
     const router = useRouter();
-    const { fetchOrderDetails, loading } = useOrderWithAuth();
+    const { fetchOrderDetails, cancelOrder: cancelOrderApi, loading } = useOrderWithAuth();
 
     // 현재 주문 정보
     const order = ref<Order | null>(null);
@@ -305,15 +305,25 @@ export default defineComponent({
       router.push('/orders');
     };
 
-    // 주문 취소 (실제 구현 필요)
+    // 주문 취소
     const cancelOrder = async () => {
       try {
         if (!order.value) return;
 
-        // 실제 주문 취소 API 호출이 필요합니다
-        // const result = await orderRepository.cancelOrder(order.value.id);
+        // 사용자 확인
+        if (!confirm('정말로 주문을 취소하시겠습니까?')) {
+          return;
+        }
 
-        // 임시로 성공 메시지만 표시
+        // 주문 취소 API 호출 
+        const result = await cancelOrderApi(order.value.id);
+        
+        if (result === false || result === null) {
+          // 인증 실패 또는 오류 발생 - withAuthCheck 함수 내에서 처리됨
+          return;
+        }
+
+        // 성공 메시지 표시
         ToastService.success('주문이 취소되었습니다.');
 
         // 주문 내역 페이지로 이동

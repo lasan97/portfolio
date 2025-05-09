@@ -16,6 +16,13 @@ export const orderRepository = {
   },
 
   /**
+   * 주문 취소
+   */
+  async cancelOrder(orderId: string): Promise<void> {
+    await apiInstance.post(`/api/orders/cancel/${orderId}`);
+  },
+
+  /**
    * 주문 목록 조회 (페이징)
    */
   async getOrderPage(page: number = 0, size: number = 10): Promise<{

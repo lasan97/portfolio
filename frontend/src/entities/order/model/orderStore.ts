@@ -157,6 +157,33 @@ export const useOrderStore = defineStore('order', {
       }
     },
 
+    // 주문 취소
+    async cancelOrder(orderId: string): Promise<boolean> {
+      try {
+        const authStore = useAuthStore();
+        if (!authStore.isAuthenticated) {
+          throw new Error('로그인이 필요합니다.');
+        }
+
+        this.loading = true;
+        this.error = null;
+
+        // API 요청
+        await orderRepository.cancelOrder(orderId);
+
+        // 주문 상세 정보 다시 가져오기
+        await this.fetchOrderDetails(orderId);
+
+        return true;
+      } catch (error: any) {
+        console.error('주문 취소 중 오류 발생:', error);
+        this.error = error.message || '주문 취소 중 오류가 발생했습니다.';
+        throw error;
+      } finally {
+        this.loading = false;
+      }
+    },
+
     // 주문 초기화 (스토어 초기화)
     clearOrders() {
       this.orders = [];
