@@ -19,3 +19,5 @@ build/
 out/
 !**/src/main/**/out/
 !**/src/test/**/out/
+
+backend/src/main/resources/application-prod.yml
