@@ -304,9 +304,10 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onMounted, computed, reactive } from 'vue';
+import { defineComponent, ref, onMounted, computed, reactive, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useCartStore } from '@entities/cart';
+import { useCartWithAuth } from '@features/cart';
 import { useAuthStore } from '@features/auth';
 import { ProductCategory } from '@entities/product';
 import { ToastService } from '@shared/ui/toast';
@@ -336,6 +337,7 @@ export default defineComponent({
     const router = useRouter();
     const cartStore = useCartStore();
     const authStore = useAuthStore();
+    const { updateQuantity: apiUpdateQuantity } = useCartWithAuth();
     
     const loading = ref(true);
     const isClearing = ref(false);
@@ -414,7 +416,7 @@ export default defineComponent({
       router.push('/products');
     };
     
-    // 아이템 수량 업데이트 (UI 즉시 반영)
+    // 아이템 수량 업데이트 (UI 즉시 반영 + API 호출)
     const updateItemQuantity = async (productId: number, quantity: number) => {
       // 이미 업데이트 중인 아이템이면 무시
       if (updatingItemIds.has(productId)) return;
@@ -426,11 +428,26 @@ export default defineComponent({
         // 즉시 UI에 반영 (낙관적 업데이트)
         const itemToUpdate = cartStore.items.find(item => item.product.id === productId);
         if (itemToUpdate) {
+          const oldQuantity = itemToUpdate.quantity;
           itemToUpdate.quantity = quantity;
+          
+          // API 호출로 서버 상태 업데이트
+          try {
+            console.log(`장바구니 수량 업데이트 API 호출: 상품ID ${productId}, 수량 ${quantity}`);
+            await cartStore.updateQuantity(productId, quantity);
+            // API 호출 성공 시 토스트 메시지 표시
+            if (oldQuantity < quantity) {
+              ToastService.success('상품 수량이 증가되었습니다.');
+            } else {
+              ToastService.success('상품 수량이 감소되었습니다.');
+            }
+          } catch (apiError) {
+            console.error('API 호출 실패:', apiError);
+            // API 호출 실패 시 UI 롤백
+            itemToUpdate.quantity = oldQuantity;
+            throw apiError;
+          }
         }
-        
-        // API 호출로 서버 상태 업데이트
-        await cartStore.updateQuantity(productId, quantity);
       } catch (error) {
         console.error('수량 업데이트 실패:', error);
         ToastService.error('수량 변경에 실패했습니다. 다시 시도해주세요.');

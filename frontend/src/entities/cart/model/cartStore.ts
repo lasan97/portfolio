@@ -178,17 +178,18 @@ export const useCartStore = defineStore('cart', {
         const item = this.items.find(item => item.product.id === productId);
         
         if (item) {
-          // 기존 방식: 제거 후 추가 -> 바로 수량 업데이트로 변경
-          // 최적화: 불필요한 API 호출을 줄이기 위해 기존 수량과 새 수량이 다른 경우만 API 호출
-          if (item.quantity !== quantity) {
-            // 필요한 경우 백엔드에 removeCartItem API 추가 필요
-            await cartRepository.removeCartItem(productId);
-            await cartRepository.addCartItem(productId, quantity);
-            
-            // 로컬 상태 업데이트
-            item.quantity = quantity;
-            console.log(`상품 수량 업데이트: 상품ID ${productId}, 새 수량: ${quantity}`);
-          }
+          console.log(`서버 API 호출: 장바구니 상품 수량 변경 요청 - 상품ID ${productId}, 새 수량: ${quantity}`);
+
+          // API 호출 시작: 기존 아이템 제거 후 새 수량으로 추가
+          await cartRepository.removeCartItem(productId);
+          await cartRepository.addCartItem(productId, quantity);
+
+          // 로컬 상태 업데이트
+          item.quantity = quantity;
+          console.log(`상품 수량 업데이트 완료: 상품ID ${productId}, 새 수량: ${quantity}`);
+        } else {
+          console.error(`장바구니에서 해당 상품을 찾을 수 없음: 상품ID ${productId}`);
+          throw new Error('장바구니에서 해당 상품을 찾을 수 없습니다.');
         }
         
         return true;
