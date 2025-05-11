@@ -27,6 +27,7 @@ public class User extends AggregateRoot {
     @Column
     private String nickname;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Oauth2ProviderType provider;
 

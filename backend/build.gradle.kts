@@ -45,6 +45,8 @@ dependencies {
     testAnnotationProcessor("org.projectlombok:lombok")
 
     runtimeOnly("com.h2database:h2")
+    runtimeOnly("org.postgresql:postgresql")
+    runtimeOnly("org.flywaydb:flyway-core")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.security:spring-security-test")

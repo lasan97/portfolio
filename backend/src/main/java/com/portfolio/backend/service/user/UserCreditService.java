@@ -2,6 +2,7 @@ package com.portfolio.backend.service.user;
 
 import com.portfolio.backend.common.exception.DomainException;
 import com.portfolio.backend.common.event.EventPublisher;
+import com.portfolio.backend.common.util.RetryUtils;
 import com.portfolio.backend.domain.common.value.Money;
 import com.portfolio.backend.domain.user.entity.UserCredit;
 import com.portfolio.backend.domain.user.repository.UserCreditHistoryRepository;
@@ -34,29 +35,32 @@ public class UserCreditService {
 
     @Transactional
     public void pay(Long userId, Money amount, String description) {
-        UserCredit credit = getLockedCreditByUserId(userId);
-
-        credit.subtract(amount, description);
-
-        eventPublisher.publishDomainEventsFrom(credit);
+        RetryUtils.executeWithRetry(() -> {
+            UserCredit credit = getLockedCreditByUserId(userId);
+            credit.subtract(amount, description);
+            eventPublisher.publishDomainEventsFrom(credit);
+            return null;
+        }, "UserCredit Pay");
     }
 
     @Transactional
     public void refund(Long userId, Money amount, String description) {
-        UserCredit credit = getLockedCreditByUserId(userId);
-
-        credit.add(amount, description);
-
-        eventPublisher.publishDomainEventsFrom(credit);
+        RetryUtils.executeWithRetry(() -> {
+            UserCredit credit = getLockedCreditByUserId(userId);
+            credit.add(amount, description);
+            eventPublisher.publishDomainEventsFrom(credit);
+            return null;
+        }, "UserCredit Refund");
     }
 
     @Transactional
     public void increase(Long userId, UserCreditServiceRequest.Increase request) {
-        UserCredit credit = getLockedCreditByUserId(userId);
-
-        credit.add(request.amount());
-
-        eventPublisher.publishDomainEventsFrom(credit);
+        RetryUtils.executeWithRetry(() -> {
+            UserCredit credit = getLockedCreditByUserId(userId);
+            credit.add(request.amount());
+            eventPublisher.publishDomainEventsFrom(credit);
+            return null;
+        }, "UserCredit Increase");
     }
 
     private UserCredit getCreditByUserId(Long userId) {
@@ -71,7 +75,6 @@ public class UserCreditService {
 
     @Transactional(readOnly = true)
     public Page<GetHistoryPage> getHistoryPage(Long userId, Pageable pageable) {
-
         UserCredit credit = getCreditByUserId(userId);
 
         return userCreditHistoryRepository.findAllByUserCreditId(credit.getId(), pageable)

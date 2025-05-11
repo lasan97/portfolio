@@ -26,7 +26,7 @@ import java.util.UUID;
 public class Order extends AggregateRoot {
 
     @Id
-    @Column(columnDefinition = "BINARY(16)", nullable = false)
+    @Column(columnDefinition = "UUID", nullable = false)
     private UUID id;
 
     @Enumerated(EnumType.STRING)

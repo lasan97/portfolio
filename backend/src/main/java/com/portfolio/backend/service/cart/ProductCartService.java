@@ -28,7 +28,7 @@ public class ProductCartService {
 
     public final ProductCartServiceMapper mapper;
 
-    @Transactional(readOnly = true)
+    @Transactional
     public List<ProductCartServiceResponse.Get> getCartItems(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("해당 사용자가 존재하지 않습니다."));

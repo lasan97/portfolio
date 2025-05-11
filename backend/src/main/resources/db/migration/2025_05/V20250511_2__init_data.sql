@@ -12,7 +12,7 @@ VALUES
     (9, '로봇 청소기', 459000, 399000, '스마트 맵핑 기능이 있는 자동 로봇 청소기', 'https://martin--portfolio.s3.ap-northeast-2.amazonaws.com/2025/04/20/979367ff-b245-4b92-a14e-db3b72821357.jpeg', 'ELECTRONICS', 'SOLD_OUT', NOW(), NOW()),
     (10, '게이밍 키보드', 179000, 149000, 'RGB 백라이트와 기계식 스위치의 게이밍 키보드', 'https://martin--portfolio.s3.ap-northeast-2.amazonaws.com/2025/04/20/68cf6bbd-fbe6-410d-9e93-d58becb7dbdb.jpeg', 'ELECTRONICS', 'ACTIVE', NOW(), NOW());
 
-ALTER TABLE products ALTER COLUMN id RESTART WITH 100;
+ALTER SEQUENCE products_id_seq RESTART WITH 100;
 
 -- 상품 재고 데이터 초기화
 INSERT INTO product_stocks (product_id, quantity,version, created_at, updated_at)

@@ -4,13 +4,17 @@
     <property name="LOG_PATH" value="/home/ec2-user/app/backend/logs"/>
     <property name="LOG_FILE_NAME" value="backend"/>
 
-    <timestamp key="byDay" datePattern="yyyy-MM-dd"/>
-
-    <appender name="FILE" class="ch.qos.logback.core.FileAppender">
-        <file>${LOG_PATH}/${LOG_FILE_NAME}-${byDay}.log</file>
+    <appender name="ROLLING_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/${LOG_FILE_NAME}.log</file>
         <encoder>
             <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n</pattern>
         </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- 날짜별 로그 파일 패턴 -->
+            <fileNamePattern>${LOG_PATH}/${LOG_FILE_NAME}-%d{yyyy-MM-dd}.log</fileNamePattern>
+            <!-- 보관할 로그 파일 기간 (30일) -->
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
     </appender>
 
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
@@ -22,7 +26,7 @@
     <springProfile name="prod">
         <root level="INFO">
             <appender-ref ref="CONSOLE"/>
-            <appender-ref ref="FILE"/>
+            <appender-ref ref="ROLLING_FILE"/>
         </root>
     </springProfile>
 
