@@ -4,7 +4,7 @@
       <div class="flex justify-between items-center">
         <router-link to="/" class="flex items-center">
           <img src="/image/logo.png" alt="h-martin 로고" class="h-8 w-auto mr-2" />
-          <span class="text-xl font-bold text-blue-600">h-martin 포트폴리오</span>
+          <span class="text-xl font-bold text-blue-600">han-martin</span>
         </router-link>
 
         <nav class="flex items-center space-x-4">
