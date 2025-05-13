@@ -1,19 +1,23 @@
 <template>
-  <div class="introduction-page container mx-auto px-4 py-8">
-
+  <div class="introduction-page bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen">
     <!-- 로딩 중 표시 -->
-    <div v-if="initialLoading || loading" class="flex justify-center items-center py-10">
-      <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-gray-900"></div>
+    <div v-if="initialLoading || loading" class="flex justify-center items-center py-20">
+      <div class="relative">
+        <div class="animate-spin rounded-full h-16 w-16 border-4 border-blue-200 border-t-blue-600"></div>
+        <div class="absolute inset-0 rounded-full bg-blue-50 opacity-20"></div>
+      </div>
     </div>
 
     <!-- 에디터 모드 -->
     <template v-else-if="isEditing || isCreating">
-      <IntroductionEditor 
-        :introduction="introduction" 
-        :isCreate="isCreating"
-        @save="saveIntroduction" 
-        @cancel="cancelEditing" 
-      />
+      <div class="py-8">
+        <IntroductionEditor 
+          :introduction="introduction" 
+          :isCreate="isCreating"
+          @save="saveIntroduction" 
+          @cancel="cancelEditing" 
+        />
+      </div>
     </template>
 
     <!-- 보기 모드 - 자기소개가 있는 경우 -->
@@ -27,29 +31,45 @@
 
     <!-- 자기소개가 없는 경우 (초기 로딩이 완료된 후에만 표시) -->
     <template v-else-if="!initialLoading">
-      <div class="bg-white shadow-md rounded-lg p-8 text-center">
-        <div class="mb-6">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-blue-500 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-          </svg>
-          <div class="text-gray-700 text-2xl font-medium mb-2">자기소개가 준비 중입니다</div>
-          <p class="text-gray-600 mb-6">현재 등록된 자기소개 정보가 없습니다. 조금만 기다려주세요!</p>
-        </div>
+      <div class="py-20">
+        <div class="max-w-md mx-auto bg-white rounded-2xl shadow-xl p-8 text-center transform hover:scale-105 transition-all duration-300">
+          <div class="mb-8">
+            <!-- 애니메이션 효과가 있는 아이콘 -->
+            <div class="relative mx-auto w-24 h-24 mb-6">
+              <div class="absolute inset-0 bg-blue-100 rounded-full animate-ping opacity-20"></div>
+              <div class="absolute inset-2 bg-blue-50 rounded-full animate-pulse"></div>
+              <div class="absolute inset-4 bg-blue-600 rounded-full flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
+            </div>
+            
+            <h2 class="text-2xl font-bold text-gray-800 mb-3">자기소개가 준비 중입니다</h2>
+            <p class="text-gray-600 mb-6">현재 등록된 자기소개 정보가 없습니다. 조금만 기다려주세요!</p>
+          </div>
 
-        <button 
-          v-if="isAdmin"
-          @click="startCreating" 
-          class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-full transition shadow-md"
-        >
-          자기소개 등록하기
-        </button>
-        <button 
-          v-else
-          @click="goToHome" 
-          class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-6 rounded-full transition shadow-md"
-        >
-          홈으로 돌아가기
-        </button>
+          <button 
+            v-if="isAdmin"
+            @click="startCreating" 
+            class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium py-3 px-6 rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            자기소개 등록하기
+          </button>
+          <button 
+            v-else
+            @click="goToHome" 
+            class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 px-6 rounded-xl transition-all duration-200 shadow-md"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+            </svg>
+            홈으로 돌아가기
+          </button>
+        </div>
       </div>
     </template>
   </div>
