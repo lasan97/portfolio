@@ -31,9 +31,15 @@
             <input
               id="phone"
               v-model="form.phone"
-              type="tel"
+              @input="handlePhoneInput"
+              @keydown="preventNonNumeric"
+              @compositionstart="handleComposition"
+              @compositionend="handleComposition"
+              type="text"
+              inputmode="numeric"
               class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
               placeholder="010-0000-0000"
+              maxlength="13"
               required
             />
             <p v-if="errors.phone" class="mt-1 text-sm text-red-600">{{ errors.phone }}</p>
@@ -223,12 +229,8 @@ export default defineComponent({
     
     // 주소 검색
     const openAddressSearch = () => {
-      // 만약 Daum 주소 API를 사용한다면 구현
-      alert('주소 검색 기능은 실제 구현 시 Daum 주소 API 등을 연동하세요.');
-      
-      // 테스트용 주소 설정
       form.value.postCode = '12345';
-      form.value.address = '서울특별시 강남구 테헤란로 123';
+      form.value.address = '서울특별시 강남구 테헤란로 0';
     };
     
     // 폼 검증
@@ -245,7 +247,7 @@ export default defineComponent({
         errors.value.name = '이름을 입력해주세요.';
         isValid = false;
       }
-      
+
       if (!form.value.phone.trim()) {
         errors.value.phone = '연락처를 입력해주세요.';
         isValid = false;
@@ -302,7 +304,58 @@ export default defineComponent({
         alert('주문 처리 중 오류가 발생했습니다. 다시 시도해주세요.');
       }
     };
-    
+
+    const formatPhoneNumber = (value: string) => {
+      const numbers = value.replace(/[^\d]/g, '').slice(0, 11);
+
+      if (numbers.length <= 3) {
+        return numbers;
+      } else if (numbers.length <= 7) {
+        return numbers.slice(0, 3) + '-' + numbers.slice(3);
+      } else {
+        return numbers.slice(0, 3) + '-' + numbers.slice(3, 7) + '-' + numbers.slice(7);
+      }
+    };
+
+    const isComposing = ref(false);
+
+    const handleComposition = (event: CompositionEvent) => {
+      isComposing.value = event.type === 'compositionstart';
+
+      if (event.type === 'compositionend') {
+        const input = event.target as HTMLInputElement;
+        form.value.phone = formatPhoneNumber(input.value);
+      }
+    };
+
+    const handlePhoneInput = (event: Event) => {
+      if (isComposing.value) {
+        return;
+      }
+
+      const input = event.target as HTMLInputElement;
+      form.value.phone = formatPhoneNumber(input.value);
+    };
+
+    const preventNonNumeric = (event: KeyboardEvent) => {
+      // 허용할 키들: 숫자, Backspace, Delete, Tab, Arrow keys, Home, End
+      const allowedKeys = [
+        'Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight',
+        'ArrowUp', 'ArrowDown', 'Home', 'End'
+      ];
+
+      // 숫자 키패드도 허용
+      const isNumeric = /^[0-9]$/.test(event.key);
+
+      // Ctrl/Cmd + A/C/V/X 허용
+      const isCopyPaste = (event.ctrlKey || event.metaKey) &&
+          ['a', 'c', 'v', 'x'].includes(event.key.toLowerCase());
+
+      if (!isNumeric && !allowedKeys.includes(event.key) && !isCopyPaste) {
+        event.preventDefault();
+      }
+    };
+
     // 컴포넌트 마운트 시 카트 아이템이 있는지 확인
     onMounted(() => {
       if (cartStore.isEmpty) {
@@ -322,7 +375,10 @@ export default defineComponent({
       loading,
       openAddressSearch,
       handleSubmit,
-      formatPrice
+      formatPrice,
+      handlePhoneInput,
+      preventNonNumeric,
+      handleComposition
     };
   }
 });

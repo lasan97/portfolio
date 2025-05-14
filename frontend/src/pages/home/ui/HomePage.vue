@@ -104,12 +104,12 @@
                 <div class="bg-gray-50 p-3 rounded-md font-mono text-sm text-gray-600">
                   <pre class="whitespace-pre-wrap">
 src/
-├── app/         # 앱 초기화, 전역 설정
-├── pages/       # 페이지 컴포넌트
-├── widgets/     # 복합 UI 블록 (헤더, 푸터 등)
-├── features/    # 사용자 상호작용 기능
-├── entities/    # 비즈니스 엔티티 (사용자, 제품 등)
-└── shared/      # 공유 유틸리티, UI 키트</pre>
+├── app/      # 앱 초기화, 전역 설정
+├── pages/    # 페이지 컴포넌트
+├── widgets/  # 복합 UI 블록 (헤더, 푸터 등)
+├── features/ # 사용자 상호작용 기능
+├── entities/ # 비즈니스 엔티티 (사용자, 제품 등)
+└── shared/   # 공유 유틸리티, UI 키트</pre>
                 </div>
               </div>
             </div>
@@ -153,6 +153,10 @@ src/
                   <li class="flex items-start text-gray-700">
                     <span class="w-2 h-2 bg-green-200 rounded-full mr-2 mt-1.5"></span>
                     <span>포트폴리오 자기소개 CRUD API</span>
+                  </li>
+                  <li class="flex items-start text-gray-700">
+                    <span class="w-2 h-2 bg-green-200 rounded-full mr-2 mt-1.5"></span>
+                    <span>fake 상품 주문 및 관리 API</span>
                   </li>
                 </ul>
               </div>
