@@ -2,13 +2,32 @@
 
 본 문서는 프론트엔드 애플리케이션의 구조와 개발 가이드를 제공합니다.
 
-## 목차
+## 핵심 문서
 
-1. [FSD 아키텍처 개요](./fsd-architecture-guide.md)
-2. [컴포넌트 개발 가이드](./component-development-guide.md)
-3. [API 통합 가이드](./api-integration-guide.md)
-4. [Enum 패턴 가이드](./enum-patterns-guide.md)
-5. [상태 관리 가이드](./state-management-guide.md)
-6. [페이지 구현 가이드](./page-implementation-guide.md)
-7. [폴더 및 파일 구조 가이드](./folder-structure-guide.md)
-8. [모범 사례 및 패턴](./best-practices.md)
+1. [코드 컨벤션 가이드](./code-convention-guide.md) - 코드 작성 규칙 및 패턴
+2. [FSD 아키텍처 가이드](./fsd-architecture-guide.md) - 아키텍처 설계 원칙 및 구조
+3. [페이지 구현 가이드](./page-implementation-guide.md) - 페이지 컴포넌트 개발 방법
+4. [슬라이스 통신 패턴](./slice-communication-patterns.md) - 모듈 간 통신 패턴
+5. [개선 로드맵](./improvement-roadmap.md) - 코드 개선 방향 및 전략
+
+## 문서 개요
+
+- **코드 컨벤션 가이드**: 일관된 코드 스타일, 네이밍 규칙, TypeScript 사용법, Vue 컴포넌트 작성 가이드, API 통신 패턴, 상태 관리 패턴 등을 포함합니다.
+
+- **FSD 아키텍처 가이드**: Feature-Sliced Design 아키텍처 설계 원칙, 레이어 구조, 슬라이스 조직화 방법, 의존성 규칙 등을 설명합니다.
+
+- **페이지 구현 가이드**: 페이지 컴포넌트 구현 방법, 라우팅 통합, 데이터 페칭, 레이아웃 관리, 페이지 간 통신 등을 설명합니다.
+
+- **슬라이스 통신 패턴**: 레이어 및 슬라이스 간 통신 패턴, 이벤트 버스, 의존성 주입, 공유 모델 패턴 등을 제시합니다.
+
+- **개선 로드맵**: 현재 코드베이스 분석, 단기/중기/장기 개선 목표, 성능 최적화, 테스트 전략, 기술 부채 관리 방안 등을 제시합니다.
+
+## 코드베이스 탐색 시작하기
+
+프로젝트에 처음 참여하는 개발자는 다음 순서로 문서를 읽는 것을 권장합니다:
+
+1. 코드 컨벤션 가이드
+2. FSD 아키텍처 가이드
+3. 페이지 구현 가이드
+4. 슬라이스 통신 패턴
+5. 개선 로드맵
